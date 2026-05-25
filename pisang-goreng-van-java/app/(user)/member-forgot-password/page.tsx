@@ -82,7 +82,7 @@ export default function MemberForgotPasswordPage() {
   const item    = { hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } } }
 
   const inputCls = `w-full px-4 py-3 text-sm rounded-xl outline-none transition-all
-                    bg-[var(--surface-custom)] border border-[var(--border-custom)]
+                    bg-[var(--surface-custom)] border border-zinc-400 dark:border-zinc-600
                     text-[var(--text-custom)] placeholder:text-[var(--on-surface-variant)]
                     focus:ring-2 focus:ring-amber-brand/40 focus:border-amber-brand`
 

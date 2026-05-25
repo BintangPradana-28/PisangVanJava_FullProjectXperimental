@@ -10,23 +10,23 @@ import { useLanguage } from '@/context/LanguageContext'
 
 // ── Tipe Adonan (Base Type) — shown as primary sticky tabs ──────────────────
 const BASE_TABS = [
-  { key: 'all',    label: '🍌 Semua',    emoji: '' },
+  { key: 'all', label: '🍌 Semua', emoji: '' },
   { key: 'Kembung', label: '🥟 Kembung', emoji: '🥟' },
-  { key: 'Lumpia',  label: '🌯 Lumpia',  emoji: '🌯' },
-  { key: 'Krispy',  label: '🥨 Krispy',  emoji: '🥨' },
+  { key: 'Lumpia', label: '🌯 Lumpia', emoji: '🌯' },
+  { key: 'Krispy', label: '🥨 Krispy', emoji: '🥨' },
 ]
 
 // ── Kategori Rasa — shown as secondary swipeable chips ───────────────────────
 const FLAVOR_CHIPS = [
-  { key: 'all',      label: 'Semua Rasa' },
-  { key: 'Cokelat',  label: '🍫 Cokelat'   },
-  { key: 'Matcha',   label: '🍵 Matcha'    },
-  { key: 'Tiramisu', label: '☕ Tiramisu'  },
-  { key: 'Strawberry',label: '🍓 Strawberry'},
-  { key: 'Blueberry',label: '🫐 Blueberry' },
-  { key: 'Milky',    label: '🥛 Milky'     },
-  { key: 'Taro',     label: '🟣 Taro'      },
-  { key: 'Original', label: '✨ Original'  },
+  { key: 'all', label: 'Semua Rasa' },
+  { key: 'Cokelat', label: '🍫 Cokelat' },
+  { key: 'Matcha', label: '🍵 Matcha' },
+  { key: 'Tiramisu', label: '☕ Tiramisu' },
+  { key: 'Strawberry', label: '🍓 Strawberry' },
+  { key: 'Blueberry', label: '🫐 Blueberry' },
+  { key: 'Milky', label: '🥛 Milky' },
+  { key: 'Taro', label: '🟣 Taro' },
+  { key: 'Original', label: '✨ Original' },
 ]
 
 interface SearchFilterBarProps {
@@ -34,24 +34,24 @@ interface SearchFilterBarProps {
 }
 
 export default function SearchFilterBar({ totalItems }: SearchFilterBarProps) {
-  const router       = useRouter()
+  const router = useRouter()
   const searchParams = useSearchParams()
-  const { t }        = useLanguage()
-  const chipRowRef   = useRef<HTMLDivElement>(null)
+  const { t } = useLanguage()
+  const chipRowRef = useRef<HTMLDivElement>(null)
 
-  const [search,      setSearch]      = useState(searchParams.get('q')      ?? '')
-  const [baseFilter,  setBaseFilter]  = useState(searchParams.get('filter') ?? 'all')
+  const [search, setSearch] = useState(searchParams.get('q') ?? '')
+  const [baseFilter, setBaseFilter] = useState(searchParams.get('filter') ?? 'all')
   const [flavorFilter, setFlavorFilter] = useState(searchParams.get('flavor') ?? 'all')
-  const [isDragging,  setIsDragging]  = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
   const dragStart = useRef<{ x: number; scrollLeft: number }>({ x: 0, scrollLeft: 0 })
 
   // ── Debounced URL sync ───────────────────────────────────────────────────────
   useEffect(() => {
     const timer = setTimeout(() => {
       const params = new URLSearchParams()
-      if (search)                  params.set('q',      search)
-      if (baseFilter  !== 'all')   params.set('filter', baseFilter)
-      if (flavorFilter !== 'all')  params.set('flavor', flavorFilter)
+      if (search) params.set('q', search)
+      if (baseFilter !== 'all') params.set('filter', baseFilter)
+      if (flavorFilter !== 'all') params.set('flavor', flavorFilter)
       router.push(`?${params.toString()}`, { scroll: false })
     }, 400)
     return () => clearTimeout(timer)
@@ -66,11 +66,11 @@ export default function SearchFilterBar({ totalItems }: SearchFilterBarProps) {
     el.style.cursor = 'grabbing'
   }
   const onMouseLeave = () => { setIsDragging(false); if (chipRowRef.current) chipRowRef.current.style.cursor = 'grab' }
-  const onMouseUp    = () => { setIsDragging(false); if (chipRowRef.current) chipRowRef.current.style.cursor = 'grab' }
-  const onMouseMove  = (e: React.MouseEvent<HTMLDivElement>) => {
+  const onMouseUp = () => { setIsDragging(false); if (chipRowRef.current) chipRowRef.current.style.cursor = 'grab' }
+  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isDragging || !chipRowRef.current) return
     e.preventDefault()
-    const x    = e.pageX - chipRowRef.current.offsetLeft
+    const x = e.pageX - chipRowRef.current.offsetLeft
     const walk = (x - dragStart.current.x) * 1.4
     chipRowRef.current.scrollLeft = dragStart.current.scrollLeft - walk
   }
@@ -101,8 +101,8 @@ export default function SearchFilterBar({ totalItems }: SearchFilterBarProps) {
             className="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl outline-none transition-all"
             style={{
               background: 'var(--surface-custom)',
-              border:     '1px solid var(--border-custom)',
-              color:      'var(--text-custom)',
+              border: '1px solid var(--border-custom)',
+              color: 'var(--text-custom)',
             }}
           />
           {search && (

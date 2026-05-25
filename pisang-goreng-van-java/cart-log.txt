@@ -290,3 +290,69 @@
 2026-05-24T20:58:29.987Z Data to insert: [{"cartId":"cmpjku7gs00016oddgomeukx8","variantId":"cmph24ozy0001iq3c9klniabt","toppingId":null,"baseType":"Kembung","quantity":1,"notes":""},{"cartId":"cmpjku7gs00016oddgomeukx8","variantId":"cmph24ozy0001iq3c9klniabt","toppingId":null,"baseType":"Kembung","quantity":1,"notes":""}]
 2026-05-24T20:58:30.996Z Created 2 items
 2026-05-24T20:58:30.997Z SUCCESS
+2026-05-25T07:10:30.635Z --- POST /api/cart CALLED ---
+2026-05-25T07:10:30.649Z User ID: cmph6tetj0000y2o8pyrzxhwf
+2026-05-25T07:10:30.664Z Payload items length: 0
+2026-05-25T07:10:31.183Z Cart ID: cmpjm5odn0001124965y7fsbl
+2026-05-25T07:10:31.714Z Deleted 0 old items
+2026-05-25T07:10:31.717Z SUCCESS
+2026-05-25T07:12:49.847Z --- POST /api/cart CALLED ---
+2026-05-25T07:12:49.854Z User ID: cmph6tetj0000y2o8pyrzxhwf
+2026-05-25T07:12:49.859Z Payload items length: 0
+2026-05-25T07:12:50.855Z Cart ID: cmpjm5odn0001124965y7fsbl
+2026-05-25T07:12:51.779Z Deleted 0 old items
+2026-05-25T07:12:51.782Z SUCCESS
+2026-05-25T07:13:18.798Z --- POST /api/cart CALLED ---
+2026-05-25T07:13:18.804Z User ID: cmph24m6x0000iq3cel3kudcd
+2026-05-25T07:13:18.809Z Payload items length: 2
+2026-05-25T07:13:19.353Z Cart ID: cmpjku7gs00016oddgomeukx8
+2026-05-25T07:13:19.877Z Deleted 2 old items
+2026-05-25T07:13:19.879Z Inserting new items...
+2026-05-25T07:13:19.881Z Data to insert: [{"cartId":"cmpjku7gs00016oddgomeukx8","variantId":"cmph24ozy0001iq3c9klniabt","toppingId":null,"baseType":"Kembung","quantity":1,"notes":""},{"cartId":"cmpjku7gs00016oddgomeukx8","variantId":"cmph24ozy0001iq3c9klniabt","toppingId":null,"baseType":"Kembung","quantity":1,"notes":""}]
+2026-05-25T07:13:20.454Z Created 2 items
+2026-05-25T07:13:20.457Z SUCCESS
+2026-05-25T07:44:42.066Z --- POST /api/cart CALLED ---
+2026-05-25T07:44:42.076Z User ID: cmph24m6x0000iq3cel3kudcd
+2026-05-25T07:44:42.097Z Payload items length: 2
+2026-05-25T07:44:42.773Z Cart ID: cmpjku7gs00016oddgomeukx8
+2026-05-25T07:44:43.577Z Deleted 2 old items
+2026-05-25T07:44:43.579Z Inserting new items...
+2026-05-25T07:44:43.582Z Data to insert: [{"cartId":"cmpjku7gs00016oddgomeukx8","variantId":"cmph24ozy0001iq3c9klniabt","toppingId":null,"baseType":"Kembung","quantity":1,"notes":""},{"cartId":"cmpjku7gs00016oddgomeukx8","variantId":"cmph24ozy0001iq3c9klniabt","toppingId":null,"baseType":"Kembung","quantity":1,"notes":""}]
+2026-05-25T07:44:44.290Z Created 2 items
+2026-05-25T07:44:44.292Z SUCCESS
+2026-05-25T07:44:47.265Z --- POST /api/cart CALLED ---
+2026-05-25T07:44:47.272Z User ID: cmph24m6x0000iq3cel3kudcd
+2026-05-25T07:44:47.277Z Payload items length: 2
+2026-05-25T07:44:47.968Z Cart ID: cmpjku7gs00016oddgomeukx8
+2026-05-25T07:44:48.559Z Deleted 2 old items
+2026-05-25T07:44:48.593Z Inserting new items...
+2026-05-25T07:44:48.609Z Data to insert: [{"cartId":"cmpjku7gs00016oddgomeukx8","variantId":"cmph24ozy0001iq3c9klniabt","toppingId":null,"baseType":"Kembung","quantity":1,"notes":""},{"cartId":"cmpjku7gs00016oddgomeukx8","variantId":"cmph24ozy0001iq3c9klniabt","toppingId":null,"baseType":"Kembung","quantity":1,"notes":""}]
+2026-05-25T07:44:49.240Z Created 2 items
+2026-05-25T07:44:49.243Z SUCCESS
+2026-05-25T07:47:12.546Z --- POST /api/cart CALLED ---
+2026-05-25T07:47:12.557Z User ID: cmph24m6x0000iq3cel3kudcd
+2026-05-25T07:47:12.569Z Payload items length: 2
+2026-05-25T07:47:13.381Z Cart ID: cmpjku7gs00016oddgomeukx8
+2026-05-25T07:47:14.132Z Deleted 2 old items
+2026-05-25T07:47:14.139Z Inserting new items...
+2026-05-25T07:47:14.142Z Data to insert: [{"cartId":"cmpjku7gs00016oddgomeukx8","variantId":"cmph24ozy0001iq3c9klniabt","toppingId":null,"baseType":"Kembung","quantity":1,"notes":""},{"cartId":"cmpjku7gs00016oddgomeukx8","variantId":"cmph24ozy0001iq3c9klniabt","toppingId":null,"baseType":"Kembung","quantity":1,"notes":""}]
+2026-05-25T07:47:14.832Z Created 2 items
+2026-05-25T07:47:14.836Z SUCCESS
+2026-05-25T10:06:18.859Z --- POST /api/cart CALLED ---
+2026-05-25T10:06:18.913Z User ID: cmph6tetj0000y2o8pyrzxhwf
+2026-05-25T10:06:18.928Z Payload items length: 0
+2026-05-25T10:06:20.947Z Cart ID: cmpjm5odn0001124965y7fsbl
+2026-05-25T10:06:21.807Z Deleted 0 old items
+2026-05-25T10:06:21.813Z SUCCESS
+2026-05-25T11:12:53.177Z --- POST /api/cart CALLED ---
+2026-05-25T11:12:53.189Z User ID: cmph6tetj0000y2o8pyrzxhwf
+2026-05-25T11:12:53.216Z Payload items length: 0
+2026-05-25T11:12:53.958Z Cart ID: cmpjm5odn0001124965y7fsbl
+2026-05-25T11:12:54.767Z Deleted 0 old items
+2026-05-25T11:12:54.769Z SUCCESS
+2026-05-25T11:13:28.052Z --- POST /api/cart CALLED ---
+2026-05-25T11:13:28.061Z User ID: cmph6tetj0000y2o8pyrzxhwf
+2026-05-25T11:13:28.075Z Payload items length: 0
+2026-05-25T11:13:28.967Z Cart ID: cmpjm5odn0001124965y7fsbl
+2026-05-25T11:13:29.670Z Deleted 0 old items
+2026-05-25T11:13:29.672Z SUCCESS

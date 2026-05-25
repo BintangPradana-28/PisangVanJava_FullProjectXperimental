@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { deleteAccountPermanently } from '@/src/features/user/actions'
 
 const profileSchema = z.object({
   name: z.string().min(1, "Nama tidak boleh kosong"),
@@ -25,6 +26,8 @@ export default function ProfilePage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const {
     register,
@@ -189,8 +192,77 @@ export default function ProfilePage() {
               </button>
             </div>
           </form>
+
+          {/* DANGER ZONE */}
+          <div className="mt-12 pt-8 border-t border-red-500/20">
+            <h2 className="text-xl font-bold text-red-600 dark:text-red-500 mb-2">Zona Berbahaya (Danger Zone)</h2>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6">
+              Tindakan di bawah ini tidak dapat dibatalkan. Menghapus akun akan menghapus seluruh data personal, riwayat pesanan, dan preferensi Anda secara permanen.
+            </p>
+            <button
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 dark:bg-red-950/30 dark:border-red-900/50 dark:hover:bg-red-900/50 dark:text-red-400 font-bold py-3 px-6 rounded-xl transition-all"
+            >
+              Hapus Akun Saya Secara Permanen
+            </button>
+          </div>
         </motion.div>
       </div>
+
+      {/* DELETE ACCOUNT MODAL */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-zinc-900 rounded-3xl p-8 max-w-md w-full shadow-2xl border border-red-500/30"
+          >
+            <h3 className="text-2xl font-bold text-red-600 dark:text-red-500 mb-4">Peringatan Terakhir</h3>
+            <p className="text-zinc-600 dark:text-zinc-400 mb-6">
+              Anda akan kehilangan akses secara permanen. Silakan ketik <strong>HAPUS AKUN SAYA</strong> untuk mengonfirmasi tindakan ini.
+            </p>
+            
+            <form action={async (formData) => {
+              setIsDeleting(true);
+              const result = await deleteAccountPermanently(formData);
+              if (result.success) {
+                toast.success(result.message || "Akun berhasil dihapus.");
+                await signOut({ callbackUrl: '/' });
+              } else {
+                toast.error(result.error || "Gagal menghapus akun.");
+                setIsDeleting(false);
+              }
+            }}>
+              <input
+                type="text"
+                name="confirmationString"
+                required
+                className="w-full p-4 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20 text-red-900 dark:text-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 mb-6"
+                placeholder="HAPUS AKUN SAYA"
+              />
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => setIsDeleteModalOpen(false)}
+                  className="flex-1 py-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isDeleting}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isDeleting ? (
+                    <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  ) : 'Ya, Hapus'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
     </div>
   )
 }

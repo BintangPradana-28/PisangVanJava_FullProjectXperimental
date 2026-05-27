@@ -32,7 +32,7 @@ export default function QuickViewModal({ product, allProducts = [], onClose }: Q
   const { getSetting } = useSettings()
   const isStoreOpen = getSetting('store_open', 'true') === 'true'
   const { data: session } = useSession()
-  const isReseller = (session?.user as { role?: string })?.role === 'RESELLER'
+  const isReseller = session?.user.role === 'RESELLER'
   const router = useRouter()
 
   // State Management sesuai instruksi
@@ -137,7 +137,8 @@ export default function QuickViewModal({ product, allProducts = [], onClose }: Q
       toppingPrice: toppingsPrice,
       quantity,
       notes,
-      toppingId
+      toppingId,
+      baseType: selectedType,
     })
 
     toast.success(t('toast_added'), {

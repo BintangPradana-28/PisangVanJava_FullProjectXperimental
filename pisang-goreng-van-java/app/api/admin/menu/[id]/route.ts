@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { updateMenuVariantSchema } from "@/src/features/menu/schemas";
 import { authOptions } from "@/src/features/auth/authOptions";
 import { sseEmitter } from "@/lib/eventEmitter";
+import { revalidatePath, revalidateTag } from "next/cache";
+import xss from "xss";
 // GET /api/admin/menu/[id]
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -32,6 +34,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 // PUT /api/admin/menu/[id]
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== "ADMIN") {
+      return NextResponse.json({ success: false, message: "Unauthorized: Admin access required" }, { status: 403 });
+    }
+
     const { id } = await params;
     const body = await req.json();
 
@@ -59,9 +66,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       );
     }
 
+    const dataToUpdate = { ...parsedData.data };
+    if (dataToUpdate.flavorName) dataToUpdate.flavorName = xss(dataToUpdate.flavorName);
+    if (dataToUpdate.deskripsi_topping) dataToUpdate.deskripsi_topping = xss(dataToUpdate.deskripsi_topping);
+    if (dataToUpdate.imageUrl) dataToUpdate.imageUrl = xss(dataToUpdate.imageUrl);
+
     const updatedVariant = await prisma.menuVariant.update({
       where: { id },
-      data: parsedData.data,
+      data: dataToUpdate,
     });
 
     const session = await getServerSession(authOptions);
@@ -80,6 +92,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     sseEmitter.emit("menuUpdated", { action: "UPDATE", data: updatedVariant });
 
+    // 🛡️ ZERO-TRUST REVALIDATION
+    revalidatePath("/");
+    revalidatePath("/menu-spesial");
+    // revalidateTag("menu-data");
+
     return NextResponse.json({ success: true, data: updatedVariant });
   } catch (error) {
     console.error("PUT /api/admin/menu/[id] Error:", error);
@@ -93,6 +110,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 // DELETE /api/admin/menu/[id]
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== "ADMIN") {
+      return NextResponse.json({ success: false, message: "Unauthorized: Admin access required" }, { status: 403 });
+    }
+
     const { id } = await params;
     const existing = await prisma.menuVariant.findUnique({
       where: { id, isDeleted: false },
@@ -126,6 +148,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     });
 
     sseEmitter.emit("menuUpdated", { action: "DELETE", data: { id } });
+
+    // 🛡️ ZERO-TRUST REVALIDATION
+    revalidatePath("/");
+    revalidatePath("/menu-spesial");
+    // revalidateTag("menu-data");
 
     return NextResponse.json({ success: true, message: "Variant berhasil dihapus" });
   } catch (error) {

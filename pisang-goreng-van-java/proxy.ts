@@ -1,7 +1,10 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
-export default withAuth(
+import { NextRequest } from "next/server";
+import { globalRateLimit } from "@/lib/redis";
+
+const authMiddleware = withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
 
@@ -26,8 +29,26 @@ export default withAuth(
   }
 );
 
+export default async function middleware(req: NextRequest) {
+  try {
+    const ip = req.headers.get("x-forwarded-for") || req.ip || "127.0.0.1";
+    const { success } = await globalRateLimit.limit(`global_${ip}`);
+    
+    if (!success) {
+      return new NextResponse("Too Many Requests", { status: 429 });
+    }
+  } catch (error) {
+    // Fail open if Redis is down
+    console.error("[SECURITY] Global Rate Limiter failed, bypassing...", error);
+  }
+
+  // Pass to NextAuth middleware
+  return (authMiddleware as any)(req, null as any);
+}
+
 export const config = {
   matcher: [
+    // Admin Routes
     "/dashboard/:path*",
     "/manage-menu/:path*",
     "/orders/:path*",
@@ -35,5 +56,11 @@ export const config = {
     "/settings/:path*",
     "/toppings/:path*",
     "/api/admin/:path*",
+    
+    // Customer Protected Routes
+    "/checkout/:path*",
+    "/profile/:path*",
+    "/track-order/:path*",
+    "/api/cart/:path*"
   ],
 };

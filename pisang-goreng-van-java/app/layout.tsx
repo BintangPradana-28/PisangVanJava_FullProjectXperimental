@@ -5,6 +5,7 @@ import '../styles/globals.css'
 import { Providers } from './providers'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
+import Script from 'next/script'
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['latin'],
@@ -17,6 +18,8 @@ const newsreader = Newsreader({
   style: ['normal', 'italic'],
   weight: ['600', '700'],
   variable: '--font-serif',
+  display: 'swap',
+  adjustFontFallback: false,
 })
 
 export const metadata: Metadata = {
@@ -34,29 +37,66 @@ export const metadata: Metadata = {
   },
 }
 
+const themeInitScript = `
+  (function() {
+    try {
+      var saved = localStorage.getItem('theme');
+      var system = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = saved || (system ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    } catch (e) {}
+  })()
+`
+
+const localBusinessJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FoodEstablishment',
+  name: 'Pisang Goreng Van Java',
+  image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCuoAcWHG4QUqFwzpuBNIiaBkLcJz1LV9m6p9PxV2_qn2WSGWrEBvMDt8FRrqMy_OoFbvbxPhWt-rkUfOJb6etQcez1ASToorW3mXf5JS_xl10v3v70igMCcIrAMpBGGaEu04I3Of3ciTtE2-7xONBem-5vFcik2fJR33PPVUjV0FJFGjlkjfzgQPrhIoCaiuE8cwWt7W1RSkuSY1Z9FKR9sgdyodxJg59Nruc3CsWtal9atky3HkE_WCrMJk7WkLsMqPddUVASBgtH',
+  '@id': '',
+  url: 'https://pisanggorengvanjava.com',
+  telephone: '+6281312167554',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: 'Jl. Raya Cilangkap l Rt.2/Rw.5, Cilangkap',
+    addressLocality: 'Jakarta Timur',
+    addressRegion: 'DKI Jakarta',
+    postalCode: '13870',
+    addressCountry: 'ID',
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: -7.7289873,
+    longitude: 110.2958252,
+  },
+  openingHoursSpecification: {
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ],
+    opens: '10:00',
+    closes: '21:00',
+  },
+  servesCuisine: 'Indonesian Fritters, Snacks',
+  priceRange: '$',
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id" className={`${beVietnamPro.variable} ${newsreader.variable}`} suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var saved = localStorage.getItem('theme');
-                  var system = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  var theme = saved || (system ? 'dark' : 'light');
-                  document.documentElement.setAttribute('data-theme', theme);
-                  if (theme === 'dark') {
-                    document.documentElement.classList.add('dark');
-                  } else {
-                    document.documentElement.classList.remove('dark');
-                  }
-                } catch (e) {}
-              })()
-            `,
-          }}
-        />
+        <Script id="theme-init" strategy="beforeInteractive">{themeInitScript}</Script>
       </head>
       <body className="min-h-screen flex flex-col">
         <Providers>
@@ -64,49 +104,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Providers>
         
         {/* LocalBusiness JSON-LD Schema Markup for SEO */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "FoodEstablishment",
-              "name": "Pisang Goreng Van Java",
-              "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuCuoAcWHG4QUqFwzpuBNIiaBkLcJz1LV9m6p9PxV2_qn2WSGWrEBvMDt8FRrqMy_OoFbvbxPhWt-rkUfOJb6etQcez1ASToorW3mXf5JS_xl10v3v70igMCcIrAMpBGGaEu04I3Of3ciTtE2-7xONBem-5vFcik2fJR33PPVUjV0FJFGjlkjfzgQPrhIoCaiuE8cwWt7W1RSkuSY1Z9FKR9sgdyodxJg59Nruc3CsWtal9atky3HkE_WCrMJk7WkLsMqPddUVASBgtH",
-              "@id": "",
-              "url": "https://pisanggorengvanjava.com",
-              "telephone": "+6281312167554",
-              "address": {
-                "@type": "PostalAddress",
-                "streetAddress": "Jl. Raya Cilangkap l Rt.2/Rw.5, Cilangkap",
-                "addressLocality": "Jakarta Timur",
-                "addressRegion": "DKI Jakarta",
-                "postalCode": "13870",
-                "addressCountry": "ID"
-              },
-              "geo": {
-                "@type": "GeoCoordinates",
-                "latitude": -7.7289873,
-                "longitude": 110.2958252
-              },
-              "openingHoursSpecification": {
-                "@type": "OpeningHoursSpecification",
-                "dayOfWeek": [
-                  "Monday",
-                  "Tuesday",
-                  "Wednesday",
-                  "Thursday",
-                  "Friday",
-                  "Saturday",
-                  "Sunday"
-                ],
-                "opens": "10:00",
-                "closes": "21:00"
-              },
-              "servesCuisine": "Indonesian Fritters, Snacks",
-              "priceRange": "$"
-            })
-          }}
-        />
+        <script type="application/ld+json" suppressHydrationWarning>
+          {JSON.stringify(localBusinessJsonLd)}
+        </script>
         <Analytics />
         <SpeedInsights />
       </body>

@@ -10,7 +10,7 @@ async function main() {
   const hashedPassword = await bcrypt.hash('admin123', 12)
   await prisma.user.upsert({
     where: { email: 'admin@admin.com' },
-    update: {},
+    update: { passwordHash: hashedPassword },
     create: {
       name: 'Super Admin',
       email: 'admin@admin.com',
@@ -121,11 +121,13 @@ async function main() {
     { key: 'site_name', value: 'Pisang Goreng Van Java', label: 'Nama Website', group: 'general' },
     { key: 'site_description', value: 'Pisang goreng renyah dengan lelehan topping premium terlezat se-Jawa.', label: 'Deskripsi Website', group: 'general' },
     { key: 'nomor_wa', value: '6281312167554', label: 'Nomor WhatsApp (Format: 628...)', group: 'contact' },
+    { key: 'kontak_whatsapp', value: '6281312167554', label: 'Nomor WhatsApp Checkout', group: 'contact' },
     { key: 'alamat', value: 'Jl. Raya Cilangkap l Rt.2/Rw.5, Cilangkap, Kec. Cipayung, Kota Jakarta Timur', label: 'Alamat Toko', group: 'contact' },
     { key: 'jam_operasional', value: 'Senin–Minggu: 09.00–21.00 WIB', label: 'Jam Operasional', group: 'contact' },
     { key: 'instagram', value: 'https://instagram.com/pisanggorengvanjava', label: 'Link Instagram', group: 'social' },
     { key: 'tiktok', value: 'https://tiktok.com/@pisanggorengvanjava', label: 'Link TikTok', group: 'social' },
     { key: 'store_open', value: 'true', label: 'Status Toko (true = Buka, false = Tutup)', group: 'general' },
+    { key: 'store_delivery_fee', value: '0', label: 'Ongkos Kirim Default', group: 'checkout' },
     { key: 'promo_marquee_active', value: 'false', label: 'Status Promo Berjalan (true = Aktif, false = Nonaktif)', group: 'general' },
     { key: 'promo_marquee_text', value: 'PROMO SPESIAL: Diskon 20% untuk semua varian Matcha hari ini!', label: 'Teks Promo Berjalan', group: 'general' },
   ]

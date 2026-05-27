@@ -38,7 +38,7 @@ export default function AdminLoginPage() {
           window.location.href = '/manage-menu'
         }, 800)
       }
-    } catch (err: any) {
+    } catch {
       toast.dismiss('login-toast')
       toast.error('Koneksi bermasalah. Coba lagi.')
     } finally {

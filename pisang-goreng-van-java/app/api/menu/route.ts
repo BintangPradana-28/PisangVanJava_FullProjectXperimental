@@ -27,6 +27,7 @@ type VariantPublicDTO = {
   priceKembung: number;
   priceLumpia: number;
   priceKrispy: number;
+  isAvailable: boolean;
   imageUrl: string | null;
   rating?: number;
   reviewCount?: number;
@@ -55,6 +56,7 @@ function toVariantDTO(v: MenuVariant & { reviews?: { rating: number }[] }): Vari
     priceKembung: v.priceKembung,
     priceLumpia: v.priceLumpia,
     priceKrispy: v.priceKrispy,
+    isAvailable: v.isAvailable,
     imageUrl: v.imageUrl ?? null,
     rating,
     reviewCount

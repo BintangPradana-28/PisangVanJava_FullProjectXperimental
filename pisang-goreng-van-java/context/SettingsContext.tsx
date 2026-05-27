@@ -21,11 +21,13 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   site_name: 'Pisang Goreng Van Java',
   site_description: 'Pisang goreng renyah dengan lelehan topping premium terlezat se-Jawa.',
   nomor_wa: '6281312167554',
+  kontak_whatsapp: '6281312167554',
   alamat: 'Jl. Raya Cilangkap l Rt.2/Rw.5, Cilangkap, Kec. Cipayung, Kota Jakarta Timur',
   jam_operasional: 'Senin–Minggu: 09.00–21.00 WIB',
   instagram: 'https://instagram.com/pisanggorengvanjava',
   tiktok: 'https://tiktok.com/@pisanggorengvanjava',
   store_open: 'true',
+  store_delivery_fee: '0',
 }
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {

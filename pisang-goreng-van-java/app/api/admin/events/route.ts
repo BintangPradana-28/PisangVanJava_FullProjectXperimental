@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     start(controller) {
-      const onMenuUpdated = (data: any) => {
+      const onMenuUpdated = (data: unknown) => {
         const message = `data: ${JSON.stringify(data)}\n\n`;
         controller.enqueue(encoder.encode(message));
       };

@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { createMenuVariantSchema } from "@/src/features/menu/schemas";
 import { authOptions } from "@/src/features/auth/authOptions";
 import { sseEmitter } from "@/lib/eventEmitter";
+import { revalidatePath, revalidateTag } from "next/cache";
+import xss from "xss";
 
 // GET /api/admin/menu
 export async function GET(req: NextRequest) {
@@ -27,6 +29,11 @@ export async function GET(req: NextRequest) {
 // POST /api/admin/menu
 export async function POST(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== "ADMIN") {
+      return NextResponse.json({ success: false, message: "Unauthorized: Admin access required" }, { status: 403 });
+    }
+
     const body = await req.json();
     
     // Zero Trust Validation
@@ -46,15 +53,15 @@ export async function POST(req: NextRequest) {
 
     const newVariant = await prisma.menuVariant.create({
       data: {
-        flavorName,
+        flavorName: xss(flavorName),
         priceKembung,
         priceLumpia,
         priceKrispy,
         wholesaleKembung,
         wholesaleLumpia,
         wholesaleKrispy,
-        imageUrl: imageUrl || null,
-        deskripsi_topping: deskripsi_topping || null,
+        imageUrl: imageUrl ? xss(imageUrl) : null,
+        deskripsi_topping: deskripsi_topping ? xss(deskripsi_topping) : null,
         isActive: isActive !== undefined ? isActive : true,
         isAvailable: isAvailable !== undefined ? isAvailable : true,
         tags: tags || [],
@@ -76,6 +83,11 @@ export async function POST(req: NextRequest) {
     });
 
     sseEmitter.emit("menuUpdated", { action: "CREATE", data: newVariant });
+
+    // 🛡️ ZERO-TRUST REVALIDATION: Hancurkan cache menu lama
+    revalidatePath("/");
+    revalidatePath("/menu-spesial");
+    // revalidateTag("menu-data");
 
     return NextResponse.json({ success: true, data: newVariant }, { status: 201 });
   } catch (error) {

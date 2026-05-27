@@ -29,7 +29,7 @@ export default function SettingsClient({ settings, adminName }: Props) {
     try {
       if (activeTab === 'about' || activeTab === 'home' || activeTab === 'contact' || activeTab === 'store') {
         const payload = Object.fromEntries(
-          Object.entries(values).filter(([key]) => key.startsWith(activeTab + '_') || (activeTab === 'contact' && key.startsWith('kontak_')))
+          Object.entries(values).filter(([key]) => key.startsWith(activeTab + '_') || (activeTab === 'contact' && ['nomor_wa', 'alamat', 'jam_operasional'].includes(key)))
         )
         const res = await fetch('/api/admin/settings/bulk-update', {
           method: 'POST',
@@ -220,11 +220,15 @@ export default function SettingsClient({ settings, adminName }: Props) {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-brown-700 mb-1">WhatsApp CS</label>
-                  <input type="text" value={values['kontak_whatsapp'] || ''} onChange={e => setValues({ ...values, ['kontak_whatsapp']: e.target.value })} className="w-full bg-cream-50 border border-cream-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-brand/50 transition-all" placeholder="628123456789" />
+                  <input type="text" value={values['nomor_wa'] || ''} onChange={e => setValues({ ...values, ['nomor_wa']: e.target.value })} className="w-full bg-cream-50 border border-cream-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-brand/50 transition-all" placeholder="628123456789" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-brown-700 mb-1">Alamat Lengkap</label>
-                  <textarea value={values['kontak_alamat'] || ''} onChange={e => setValues({ ...values, ['kontak_alamat']: e.target.value })} className="w-full bg-cream-50 border border-cream-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-brand/50 transition-all" rows={3} />
+                  <textarea value={values['alamat'] || ''} onChange={e => setValues({ ...values, ['alamat']: e.target.value })} className="w-full bg-cream-50 border border-cream-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-brand/50 transition-all" rows={3} />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-brown-700 mb-1">Jam Operasional</label>
+                  <input type="text" value={values['jam_operasional'] || ''} onChange={e => setValues({ ...values, ['jam_operasional']: e.target.value })} className="w-full bg-cream-50 border border-cream-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-brand/50 transition-all" placeholder="Senin-Minggu: 09.00-21.00 WIB" />
                 </div>
               </div>
             </div>

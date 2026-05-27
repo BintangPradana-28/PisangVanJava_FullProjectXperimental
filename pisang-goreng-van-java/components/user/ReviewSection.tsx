@@ -2,7 +2,7 @@
 
 // components/user/ReviewSection.tsx
 // Orchestrator: fetches reviews and shows StarRating + ReviewList on the same page.
-// Drop this into any page that receives a `variantId`.
+// Drop this into a page that receives a `variantId`.
 
 import { useEffect, useState } from 'react'
 import { useSession }          from 'next-auth/react'

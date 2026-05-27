@@ -9,31 +9,79 @@ import { formatPrice } from '@/lib/utils'
 import { useLanguage } from '@/context/LanguageContext'
 import { useCart } from '@/context/CartContext'
 import toast from 'react-hot-toast'
+import { z } from 'zod'
 
-const STATUS_STEPS = ['pending', 'confirmed', 'ready', 'done']
+const STATUS_STEPS = ['pending', 'paid', 'confirmed', 'ready', 'done']
 const STATUS_ICONS: Record<string, string> = {
   pending:   '⏳',
+  paid:      '💳',
   confirmed: '✅',
   ready:     '🍌',
   done:      '🎉',
   cancelled: '❌',
 }
 
-interface OrderItem {
-  baseType: string
-  quantity:  number
-  subtotal:  number
-  variant: { flavorName?: string; nama_varian?: string }
-  topping?: { name: string; emoji?: string } | null
-}
+const orderItemSchema = z.object({
+  id: z.string().min(1),
+  baseType: z.string().min(1),
+  quantity: z.number().int().min(1),
+  subtotal: z.number().finite().min(0),
+  variant: z.object({
+    flavorName: z.string().optional(),
+    nama_varian: z.string().optional(),
+  }).strict(),
+  topping: z.object({
+    name: z.string(),
+    emoji: z.string().nullable().optional(),
+  }).strict().nullable(),
+}).strict()
 
-interface Order {
-  id:           string
-  customerName: string
-  status:       string
-  totalPrice:   number
-  createdAt:    string
-  items:        OrderItem[]
+const orderSchema = z.object({
+  id: z.string().min(1),
+  customerName: z.string().min(1),
+  status: z.string().min(1),
+  totalPrice: z.number().finite().min(0),
+  createdAt: z.string().min(1),
+  items: z.array(orderItemSchema),
+}).strict()
+
+const trackOrdersResponseSchema = z.discriminatedUnion('success', [
+  z.object({
+    success: z.literal(true),
+    data: z.array(orderSchema),
+  }).strict(),
+  z.object({
+    success: z.literal(false),
+    error: z.string().min(1),
+  }).strict(),
+])
+
+const liveProductSchema = z.object({
+  id: z.string().min(1),
+  flavorName: z.string().min(1),
+  priceKembung: z.number().finite().min(0),
+  priceLumpia: z.number().finite().min(0),
+  priceKrispy: z.number().finite().min(0),
+  isAvailable: z.boolean(),
+}).strict()
+
+const menuResponseSchema = z.object({
+  success: z.literal(true),
+  data: z.object({
+    variants: z.array(liveProductSchema),
+  }).strict(),
+}).strict()
+
+type OrderItem = z.infer<typeof orderItemSchema>
+type Order = z.infer<typeof orderSchema>
+
+type LiveProduct = z.infer<typeof liveProductSchema>
+
+function resolveBasePrice(baseType: string, product: LiveProduct) {
+  const normalized = baseType.toLowerCase()
+  if (normalized === 'lumpia') return product.priceLumpia
+  if (normalized === 'krispy') return product.priceKrispy
+  return product.priceKembung
 }
 
 // ── Reorder Button ─────────────────────────────────────────────────────────────
@@ -46,15 +94,12 @@ function ReorderButton({ order }: { order: Order }) {
     try {
       // Fetch current prices from the menu API to avoid stale price data
       const res  = await fetch('/api/menu')
-      const json = await res.json()
-      const liveProducts: Array<{
-        id: string
-        flavorName: string
-        priceKembung: number
-        priceLumpia:  number
-        priceKrispy:  number
-        isAvailable:  boolean
-      }> = json.data ?? json ?? []
+      const json: unknown = await res.json()
+      const parsedMenu = menuResponseSchema.safeParse(json)
+      if (!parsedMenu.success) {
+        throw new Error('INVALID_MENU_RESPONSE')
+      }
+      const liveProducts = parsedMenu.data.data.variants
 
       let addedCount  = 0
       let skippedCount = 0
@@ -70,10 +115,7 @@ function ReorderButton({ order }: { order: Order }) {
           continue
         }
 
-        // Resolve base price by baseType
-        const baseType  = item.baseType as 'kembung' | 'lumpia' | 'krispy'
-        const priceMap  = { kembung: live.priceKembung, lumpia: live.priceLumpia, krispy: live.priceKrispy }
-        const basePrice = priceMap[baseType] ?? live.priceKembung
+        const basePrice = resolveBasePrice(item.baseType, live)
 
         addToCart({
           productId:    live.id,
@@ -136,6 +178,7 @@ export default function TrackOrderPage() {
 
   const STATUS_LABELS: Record<string, string> = {
     pending:   t('status_pending'),
+    paid:      t('status_paid'),
     confirmed: t('status_confirmed'),
     ready:     t('status_ready'),
     done:      t('status_done'),
@@ -147,9 +190,14 @@ export default function TrackOrderPage() {
     setLoading(true); setError(''); setOrders(null)
     try {
       const res  = await fetch(`/api/orders/track?phone=${encodeURIComponent(phone.trim())}`)
-      const data = await res.json()
-      if (data.success) setOrders(data.data)
-      else setError(data.error || t('track_toast_not_found'))
+      const data: unknown = await res.json()
+      const parsedData = trackOrdersResponseSchema.safeParse(data)
+      if (!parsedData.success) {
+        setError(t('track_toast_conn_error'))
+        return
+      }
+      if (parsedData.data.success) setOrders(parsedData.data.data)
+      else setError(parsedData.data.error || t('track_toast_not_found'))
     } catch {
       setError(t('track_toast_conn_error'))
     } finally {
@@ -252,8 +300,8 @@ export default function TrackOrderPage() {
 
                       {/* Items */}
                       <div className="space-y-1.5 border-t border-zinc-100 dark:border-zinc-800 pt-3">
-                        {order.items.map((item, i) => (
-                          <div key={i} className="flex justify-between text-sm">
+                        {order.items.map((item) => (
+                          <div key={item.id} className="flex justify-between text-sm">
                             <span style={{ color: 'var(--text-custom)', opacity: 0.8 }}>
                               {item.variant.flavorName ?? item.variant.nama_varian} ({item.baseType})
                               {item.topping && (

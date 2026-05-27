@@ -13,7 +13,7 @@ export default function ReportsClient({ orders, totalVariants, totalToppings, cu
     const done       = orders.filter(o => o.status === 'done')
     const revenue    = done.reduce((s, o) => s + o.totalPrice, 0)
     const avgOrder   = done.length ? Math.round(revenue / done.length) : 0
-    const byStatus   = ['pending','confirmed','ready','done','cancelled'].map(s => ({ s, count: orders.filter(o => o.status === s).length }))
+    const byStatus   = ['pending','paid','confirmed','ready','done','cancelled'].map(s => ({ s, count: orders.filter(o => o.status === s).length }))
     const bySource   = ['whatsapp','walk-in','phone'].map(src => ({ src, count: orders.filter(o => o.source === src).length }))
 
     // Revenue by day (last 7 days)
@@ -75,11 +75,11 @@ export default function ReportsClient({ orders, totalVariants, totalToppings, cu
   const maxRevenue = Math.max(...stats.days.map(d => d.revenue), 1)
 
   const STATUS_COLORS: Record<string, string> = {
-    done: 'bg-green-500', pending: 'bg-yellow-400', confirmed: 'bg-blue-500',
+    done: 'bg-green-500', pending: 'bg-yellow-400', paid: 'bg-emerald-500', confirmed: 'bg-blue-500',
     ready: 'bg-purple-500', cancelled: 'bg-red-400',
   }
   const STATUS_LABELS: Record<string, string> = {
-    done: 'Selesai', pending: 'Pending', confirmed: 'Dikonfirmasi', ready: 'Siap', cancelled: 'Dibatalkan',
+    done: 'Selesai', pending: 'Pending', paid: 'Dibayar', confirmed: 'Dikonfirmasi', ready: 'Siap', cancelled: 'Dibatalkan',
   }
 
   return (

@@ -9,12 +9,27 @@ async function isAdmin() {
   return !!session
 }
 
+import { z } from 'zod'
+
+const updateToppingSchema = z.object({
+  name: z.string().trim().min(2).max(50),
+  price: z.number().int().nonnegative("Harga tidak boleh negatif"),
+  emoji: z.string().max(10).nullable().optional(),
+  isActive: z.boolean().optional()
+}).strict()
+
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!(await isAdmin())) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
   try {
     const { id } = await params
-    const { name, price, emoji, isActive } = await req.json()
-    const t = await prisma.topping.update({ where: { id: id }, data: { name, price: Number(price), emoji, isActive } })
+    const body = await req.json()
+    const parsed = updateToppingSchema.safeParse(body)
+    
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: 'Validasi Gagal', details: parsed.error.flatten() }, { status: 400 })
+    }
+
+    const t = await prisma.topping.update({ where: { id: id }, data: parsed.data })
     return NextResponse.json({ success: true, data: t })
   } catch (error) {
     console.error("PUT /api/toppings/[id] Error:", error)

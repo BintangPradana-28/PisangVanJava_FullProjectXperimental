@@ -49,8 +49,8 @@ export default function ManageUsersClient() {
       
       toast.success(json.message, { id: toastId })
       setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u))
-    } catch (err: any) {
-      toast.error(err.message, { id: toastId })
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Gagal mengubah peran', { id: toastId })
     }
   }
 

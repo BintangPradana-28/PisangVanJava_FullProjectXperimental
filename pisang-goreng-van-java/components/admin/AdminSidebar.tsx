@@ -36,15 +36,6 @@ export default function AdminSidebar() {
 
   return (
     <>
-      {/* Penyesuaian padding khusus mobile agar tidak terhalang top bar */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        @media (max-width: 767px) {
-          main {
-            padding-top: 5.5rem !important;
-          }
-        }
-      `}} />
-
       {/* Top Bar Khusus Mobile */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-brown-700 flex items-center justify-between px-4 z-40 shadow-lg border-b border-white/10">
         <div className="flex items-center gap-3">

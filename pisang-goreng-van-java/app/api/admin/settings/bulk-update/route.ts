@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/src/features/auth/authOptions'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { revalidatePath } from 'next/cache'
 
 // ABSOLUTE QUARANTINE: Zod Schema to strictly validate inputs
 // Strips out script tags or highly suspicious HTML payloads as a basic XSS defense mechanism
@@ -58,8 +59,11 @@ export async function POST(req: NextRequest) {
       }
     })
 
+    // 🛡️ ZERO-TRUST REVALIDATION: Hancurkan cache lama agar perubahan instan
+    revalidatePath('/', 'layout')
+
     // DATA MASKING: Return generic success without leaking database structure
-    return NextResponse.json({ message: 'About Us settings secured and updated successfully.' }, { status: 200 })
+    return NextResponse.json({ message: 'Settings secured and updated successfully.' }, { status: 200 })
 
   } catch (error) {
     // OPAQUE ERRORS: Log actual error to internal console, return generic to client

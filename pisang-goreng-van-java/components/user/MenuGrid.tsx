@@ -213,7 +213,7 @@ export default function MenuGrid({ products }: { products: ProductType[] }) {
                               opacity: 0.8,
                             }}
                           >
-                            {(session?.user as any)?.role === "RESELLER"
+                            {session?.user.role === "RESELLER"
                               ? "Harga Grosir (Mulai)"
                               : t("menu_price_label")}
                           </div>
@@ -221,7 +221,7 @@ export default function MenuGrid({ products }: { products: ProductType[] }) {
                             className={`font-sans text-lg font-bold ${!available ? "text-zinc-500" : ""}`}
                             style={available ? { color: "#D4802A" } : {}}
                           >
-                            {(session?.user as any)?.role === "RESELLER" &&
+                            {session?.user.role === "RESELLER" &&
                             product.wholesaleKembung > 0 ? (
                               <div className="flex flex-col items-center leading-tight">
                                 <span className="text-xs line-through text-zinc-400 font-normal">

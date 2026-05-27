@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/src/features/auth/authOptions'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import type { Prisma } from '@prisma/client'
 
 const reviewSchema = z.object({
   variantId: z.string().min(1),
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest) {
   const withPhoto = req.nextUrl.searchParams.get('withPhoto') === 'true'
 
   // Build where clause
-  const where: any = {}
+  const where: Prisma.ReviewWhereInput = {}
   if (variantId) where.variantId = variantId
   if (ratingFilter) where.rating = parseInt(ratingFilter, 10)
   if (hasComment) where.comment = { not: null, gt: '' }

@@ -23,7 +23,8 @@ export default function GoogleAuthButton({ label }: GoogleAuthButtonProps) {
     try {
       setIsLoading(true)
       // Call NextAuth signIn function and redirect to menu dashboard
-      await signIn('google', { callbackUrl: '/#menu' })
+      // 🛡️ CISO FIX: Gunakan absolute root path '/' untuk mencegah Hash Routing Bug di Next.js
+      await signIn('google', { callbackUrl: '/' })
     } catch (error) {
       console.error('Failed to login with Google:', error)
       setIsLoading(false)

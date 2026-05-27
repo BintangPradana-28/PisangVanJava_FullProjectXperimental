@@ -19,7 +19,18 @@ async function getDashboardData() {
     prisma.order.findMany({
       orderBy: { createdAt: 'desc' },
       take: 5,
-      include: { items: { include: { variant: true } } }
+      select: {
+        id: true,
+        customerName: true,
+        source: true,
+        totalPrice: true,
+        createdAt: true,
+        items: {
+          select: {
+            id: true,
+          },
+        },
+      },
     }),
     prisma.order.findMany({
       where: { createdAt: { gte: today } }
@@ -61,7 +72,7 @@ async function getDashboardData() {
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
-  if (!session) redirect('/login')
+  if (!session || session.user.role !== 'ADMIN') redirect('/member-login')
 
   const data = await getDashboardData()
 
@@ -132,7 +143,7 @@ export default async function DashboardPage() {
             <div className="flex-1 space-y-4 overflow-y-auto max-h-[220px] pr-2 custom-scrollbar">
               {data.recentOrders.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-brown-300 text-sm">Belum ada pesanan masuk</div>
-              ) : data.recentOrders.map((order: any) => (
+              ) : data.recentOrders.map((order) => (
                 <div key={order.id} className="flex items-start gap-3 border-b border-cream-100 pb-3 last:border-0 last:pb-0">
                   <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center text-xs shrink-0 mt-0.5">
                     {order.source === 'whatsapp' ? '💬' : '🚶'}

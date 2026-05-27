@@ -21,7 +21,7 @@ export default function EditMenuForm({ id, initialData }: EditMenuFormProps) {
   const [previewUrl, setPreviewUrl] = useState<string>(initialData.imageUrl || '')
   const [form, setForm] = useState<MenuVariantFormData>(initialData)
 
-  const set = (key: keyof MenuVariantFormData, val: any) => setForm((p) => ({ ...p, [key]: val }))
+  const set = <K extends keyof MenuVariantFormData>(key: K, val: MenuVariantFormData[K]) => setForm((p) => ({ ...p, [key]: val }))
 
   const handleFileUpload = async (file: File) => {
     setUploading(true)
@@ -158,7 +158,7 @@ export default function EditMenuForm({ id, initialData }: EditMenuFormProps) {
           </label>
           <div className="flex items-center gap-2">
             <label className="text-xs font-semibold text-brown-400 uppercase tracking-wider">Urutan</label>
-            <input type="number" value={form.sortOrder} onChange={(e) => set('sortOrder', e.target.value)} min={0} className="form-input w-20" />
+            <input type="number" value={form.sortOrder} onChange={(e) => set('sortOrder', Number(e.target.value))} min={0} className="form-input w-20" />
           </div>
         </div>
 

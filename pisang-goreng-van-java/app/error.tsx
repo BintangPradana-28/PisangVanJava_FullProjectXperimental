@@ -1,7 +1,7 @@
 'use client'
 
 // app/error.tsx
-// Global Error Boundary. Catches unexpected runtime errors in any route segment.
+// Global Error Boundary. Catches unexpected runtime errors across route segments.
 // MUST be a Client Component per Next.js 14 spec.
 
 import { useEffect } from 'react'

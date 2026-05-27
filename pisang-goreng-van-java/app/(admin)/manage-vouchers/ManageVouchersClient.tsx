@@ -19,6 +19,16 @@ interface Voucher {
   applicableTo: string
 }
 
+function toLocalDateTimeValue(date: Date) {
+  return date.toISOString().slice(0, 16)
+}
+
+function getDefaultEndDate() {
+  const endDate = new Date()
+  endDate.setDate(endDate.getDate() + 7)
+  return toLocalDateTimeValue(endDate)
+}
+
 export default function ManageVouchersClient() {
   const [vouchers, setVouchers] = useState<Voucher[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -29,8 +39,8 @@ export default function ManageVouchersClient() {
     discountValue: '',
     minPurchase: '0',
     maxDiscount: '',
-    startDate: new Date().toISOString().slice(0, 16),
-    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
+    startDate: toLocalDateTimeValue(new Date()),
+    endDate: getDefaultEndDate(),
     usageLimit: '0',
     applicableTo: 'ALL',
     isActive: true
@@ -115,8 +125,8 @@ export default function ManageVouchersClient() {
           discountValue: '',
           minPurchase: '0',
           maxDiscount: '',
-          startDate: new Date().toISOString().slice(0, 16),
-          endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
+          startDate: toLocalDateTimeValue(new Date()),
+          endDate: getDefaultEndDate(),
           usageLimit: '0',
           applicableTo: 'ALL',
           isActive: true

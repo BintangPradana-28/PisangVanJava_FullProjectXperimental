@@ -142,8 +142,8 @@ export default function LokasiKontakPage() {
       setForm({ nama: '', pesan: '' })
       setConsent(false)
       toast.success(t('kontak_toast_success'))
-    } catch (err: any) {
-      toast.error(err.message)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Gagal memproses formulir')
     } finally {
       setSend(false)
     }

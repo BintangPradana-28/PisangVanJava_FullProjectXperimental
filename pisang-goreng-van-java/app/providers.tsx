@@ -11,14 +11,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       <ThemeProvider>
-        <LanguageProvider>
-          <SettingsProvider>
+        <SettingsProvider>
+          <LanguageProvider>
             <CartProvider>
               {children}
               <Toaster position="top-center" reverseOrder={false} />
             </CartProvider>
-          </SettingsProvider>
-        </LanguageProvider>
+          </LanguageProvider>
+        </SettingsProvider>
       </ThemeProvider>
     </SessionProvider>
   )

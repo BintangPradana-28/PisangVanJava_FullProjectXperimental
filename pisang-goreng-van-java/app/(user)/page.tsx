@@ -22,29 +22,35 @@ const getCachedMenu = unstable_cache(
       const dbProducts = await prisma.menuVariant.findMany({
         where: { isDeleted: false, isActive: true },
         orderBy: { createdAt: "desc" },
-        include: {
-          reviews: { select: { rating: true } }
-        }
       });
 
-      const products: ProductType[] = dbProducts.map((p) => ({
-        id: p.id,
-        flavorName: p.flavorName,
-        priceKembung: p.priceKembung,
-        priceLumpia: p.priceLumpia,
-        priceKrispy: p.priceKrispy,
-        imageUrl: p.imageUrl,
-        isAvailable: p.isAvailable,
-        tags: p.tags || [],
-        deskripsi_topping: p.deskripsi_topping,
-        wholesaleKembung: p.wholesaleKembung,
-        wholesaleLumpia: p.wholesaleLumpia,
-        wholesaleKrispy: p.wholesaleKrispy,
-        rating: p.reviews.length > 0
-          ? Math.round((p.reviews.reduce((s, r) => s + r.rating, 0) / p.reviews.length) * 10) / 10
-          : undefined,
-        reviewCount: p.reviews.length > 0 ? p.reviews.length : undefined,
-      }));
+      // THE CISO FIX: Aggregation Queries Instead of Massive Joins
+      const reviewAggregates = await prisma.review.groupBy({
+        by: ['variantId'],
+        _avg: { rating: true },
+        _count: { rating: true },
+      });
+      const aggregateMap = new Map(reviewAggregates.map(r => [r.variantId, r]));
+
+      const products: ProductType[] = dbProducts.map((p) => {
+        const agg = aggregateMap.get(p.id);
+        return {
+          id: p.id,
+          flavorName: p.flavorName,
+          priceKembung: p.priceKembung,
+          priceLumpia: p.priceLumpia,
+          priceKrispy: p.priceKrispy,
+          imageUrl: p.imageUrl,
+          isAvailable: p.isAvailable,
+          tags: p.tags || [],
+          deskripsi_topping: p.deskripsi_topping,
+          wholesaleKembung: p.wholesaleKembung,
+          wholesaleLumpia: p.wholesaleLumpia,
+          wholesaleKrispy: p.wholesaleKrispy,
+          rating: agg && agg._avg.rating ? Math.round(agg._avg.rating * 10) / 10 : undefined,
+          reviewCount: agg && agg._count.rating > 0 ? agg._count.rating : undefined,
+        };
+      });
 
       // Data cadangan sementara jika DB masih kosong (Mock data)
       if (products.length === 0) {
@@ -116,21 +122,57 @@ const getCachedMenu = unstable_cache(
   { revalidate: 60, tags: ['menu'] }
 );
 
+// 🛡️ CISO FIX: Absolute Quarantine & DoS Protection
+// Jangan biarkan kueri Prisma telanjang di halaman publik. Bungkus dengan cache dan try-catch.
+const getCachedBanner = unstable_cache(
+  async () => {
+    try {
+      return await prisma.banner.findFirst({
+        where: { isActive: true },
+        orderBy: { updatedAt: "desc" },
+        select: {
+          id: true,
+          title: true,
+          subtitle: true,
+          badge: true,
+          imageUrl: true,
+          linkUrl: true,
+        }
+      });
+    } catch (error) {
+      console.error("[Safe Log] Database connection error during banner fetch");
+      return null;
+    }
+  },
+  ['home-active-banner'],
+  { revalidate: 300, tags: ['banner'] }
+);
+
+const getCachedReviews = unstable_cache(
+  async () => {
+    try {
+      return await prisma.review.aggregate({
+        _avg: { rating: true },
+        _count: { rating: true },
+      });
+    } catch (error) {
+      console.error("[Safe Log] Database connection error during review aggregate fetch");
+      return { _avg: { rating: null }, _count: { rating: 0 } };
+    }
+  },
+  ['home-review-aggregates'],
+  { revalidate: 3600, tags: ['reviews'] }
+);
+
 export default async function HomePage() {
   const products = await getCachedMenu();
   const homeProducts = products.slice(0, 3); // Hanya tampilkan 3 menu teratas
 
-  // Fetch active banner
-  const activeBanner = await prisma.banner.findFirst({
-    where: { isActive: true },
-    orderBy: { updatedAt: "desc" }
-  });
+  // Fetch active banner (Now Cached & Fail-Safe)
+  const activeBanner = await getCachedBanner();
 
-  // Fetch aggregate review data for Hero Rating Indicator
-  const reviewAggregates = await prisma.review.aggregate({
-    _avg: { rating: true },
-    _count: { rating: true },
-  });
+  // Fetch aggregate review data for Hero Rating Indicator (Now Cached & Fail-Safe)
+  const reviewAggregates = await getCachedReviews();
 
   const averageRating = reviewAggregates._avg.rating ? Number(reviewAggregates._avg.rating.toFixed(1)) : 0;
   const totalReviews = reviewAggregates._count.rating || 0;

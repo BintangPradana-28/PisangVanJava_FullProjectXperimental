@@ -2,11 +2,15 @@
 const nextConfig = {
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: '**' },
+      { protocol: 'https', hostname: 'vamxyslzeimlsofhgmry.supabase.co' },
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' } // Google OAuth avatars
     ],
   },
-  experimental: {
-    serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
+  serverExternalPackages: ['@prisma/client', 'bcryptjs'],
+  // 🛡️ CISO FIX: Turbopack bukan lagi experimental di Next.js 16.
+  // Pindahkan langsung ke tingkat root untuk stabilitas.
+  turbopack: {
+    root: __dirname,
   },
   async headers() {
     return [
@@ -40,6 +44,10 @@ const nextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=(), browsing-topics=()'
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' data:; connect-src 'self' https:; frame-src 'self' https://maps.google.com https://www.google.com;"
           }
         ]
       }

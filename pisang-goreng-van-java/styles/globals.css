@@ -178,6 +178,12 @@
   }
 }
 
+@media (max-width: 767px) {
+  .admin-shell main {
+    padding-top: 5.5rem !important;
+  }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--background-custom); }

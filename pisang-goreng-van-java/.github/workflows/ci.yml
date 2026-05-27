@@ -1,0 +1,40 @@
+name: CI/CD Pipeline (Zero-Trust Security)
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  security-and-type-audit:
+    name: 🛡️ CISO & Type Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm' # Note: using npm as standard, but we can change if pnpm is strictly used
+
+      - name: Install pnpm
+        run: npm install -g pnpm@9.0.0
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Linting (ESLint) - The Iron Gate
+        run: pnpm run lint
+
+      - name: TypeScript Type Checking - Absolute Quarantine
+        run: npx tsc --noEmit
+
+      - name: Security Audit (Dependency Scan)
+        run: pnpm audit --prod --audit-level=critical

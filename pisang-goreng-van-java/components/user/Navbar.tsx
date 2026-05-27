@@ -9,7 +9,7 @@ import { useTheme } from '@/context/ThemeContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { useSettings } from '@/context/SettingsContext'
 import { useCart } from '@/context/CartContext'
-import CartDrawer from './CartDrawer'
+import CartModal from './CartModal'
 
 export default function Navbar() {
   const { data: session } = useSession()
@@ -230,7 +230,7 @@ export default function Navbar() {
                           👤 Profil Saya
                         </Link>
 
-                        {(session.user as any)?.role === 'ADMIN' && (
+                        {session.user.role === 'ADMIN' && (
                           <Link
                             href="/dashboard"
                             className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-350 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
@@ -344,7 +344,7 @@ export default function Navbar() {
       </header>
 
       {/* Cart Drawer component */}
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </>
   )
 }

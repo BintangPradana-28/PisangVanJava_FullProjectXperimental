@@ -3,6 +3,17 @@
 import { useLanguage } from '@/context/LanguageContext'
 import { useSettings } from '@/context/SettingsContext'
 import Link from 'next/link'
+
+// 🛡️ ZERO-TRUST: URL Protocol Sanitizer
+// Mencegah eksekusi Stored XSS (e.g. javascript:alert(1)) dari database
+const sanitizeUrl = (url: string) => {
+  const safeUrl = url.trim();
+  if (safeUrl.startsWith('http://') || safeUrl.startsWith('https://')) {
+    return safeUrl;
+  }
+  return '#';
+};
+
 const InstagramIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
@@ -89,9 +100,9 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2.5 text-sm">
               {[
-                { name: 'Instagram', href: getSetting('instagram', 'https://instagram.com/pisanggorengvanjava'), icon: <InstagramIcon /> },
-                { name: 'TikTok', href: getSetting('tiktok', 'https://tiktok.com/@pisanggorengvanjava'), icon: <TikTokIcon /> },
-                { name: 'WhatsApp', href: `https://wa.me/${getSetting('nomor_wa', '6281312167554')}`, icon: <WaIcon /> },
+                { name: 'Instagram', href: sanitizeUrl(getSetting('instagram', 'https://instagram.com/pisanggorengvanjava')), icon: <InstagramIcon /> },
+                { name: 'TikTok', href: sanitizeUrl(getSetting('tiktok', 'https://tiktok.com/@pisanggorengvanjava')), icon: <TikTokIcon /> },
+                { name: 'WhatsApp', href: `https://wa.me/${getSetting('nomor_wa', '6281312167554').replace(/[^0-9]/g, '')}`, icon: <WaIcon /> },
               ].map((item) => (
                 <li key={item.name}>
                   <a

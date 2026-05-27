@@ -2,103 +2,14 @@
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/features/auth/authOptions";
-import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
 
-// 1. ZOD SCHEMA: Menutup Celah Runtime Crash & Validasi Logika Bisnis
-// Memastikan semua data yang masuk memiliki struktur yang benar dan bernilai positif (> 0)
-const PriceMatrixSchema = z.object({
-  kembung: z.number().int("Harga harus angka bulat").positive("Harga Kembung tidak boleh minus/nol"),
-  lumpia: z.number().int("Harga harus angka bulat").positive("Harga Lumpia tidak boleh minus/nol"),
-  krispy: z.number().int("Harga harus angka bulat").positive("Harga Krispy tidak boleh minus/nol"),
-});
-
-const UpdateMenuSchema = z.object({
-  id: z.string().min(1, "ID Rasa tidak valid"),
-  flavorName: z.string().min(1, "Nama rasa tidak boleh kosong"),
-  prices: PriceMatrixSchema,
-});
-
-// Mengekstrak tipe TypeScript secara otomatis dari skema Zod
-export type UpdateMenuInput = z.infer<typeof UpdateMenuSchema>;
-
-// Mock database instance for the Pisang Van Java platform
-const mockDb = {
-  update: async (id: string, data: any) => {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    return { id, ...data };
-  }
-};
-
-/**
- * Server Action to update matrix pricing for specific banana flavors.
- * Controlled from the /app/(admin)/manage-menu dashboard view.
- */
-export async function updateMenuVariant(rawInput: UpdateMenuInput) {
-  try {
-    const session = await getServerSession(authOptions);
-
-    // 2. SECURITY FIX: Hard Stop (Interupsi Mutlak)
-    // Jika tidak ada sesi, fungsi langsung berhenti dan melempar error, mencegah eksekusi DB.
-    if (!session || !session.user) {
-      console.warn(`[SECURITY WARNING]: Blocked unauthorized matrix update attempt.`);
-      return { 
-        success: false, 
-        error: "Akses ditolak. Sesi tidak valid atau telah kedaluwarsa." 
-      };
-    }
-
-    // 3. RUNTIME & BUSINESS LOGIC FIX: Parsing Defensif
-    // safeParse tidak akan membuat aplikasi crash jika `rawInput` berantakan.
-    const validatedData = UpdateMenuSchema.safeParse(rawInput);
-    
-    if (!validatedData.success) {
-      console.error("[VALIDATION ERROR]:", validatedData.error.flatten().fieldErrors);
-      return {
-        success: false,
-        error: "Data yang dikirim tidak valid. Pastikan semua harga lebih dari Rp0."
-      };
-    }
-
-    const input = validatedData.data;
-
-    // Database payload mapping (sekarang dijamin 100% aman)
-    const updatedRecord = await mockDb.update(input.id, {
-      name: input.flavorName,
-      pricing: {
-        kembung: input.prices.kembung,
-        lumpia: input.prices.lumpia,
-        krispy: input.prices.krispy,
-      },
-      updatedAt: new Date().toISOString()
-    });
-
-    // Revalidate the customer-facing menu path to clear cache
-    revalidatePath("/menu");
-
-    // Audit Log
-    await logAudit("UPDATE", "MenuVariant", updatedRecord.id, {
-      kembung: input.prices.kembung,
-      lumpia: input.prices.lumpia,
-      krispy: input.prices.krispy
-    });
-
-    return { 
-      success: true, 
-      message: `Matriks harga untuk '${updatedRecord.name}' berhasil diperbarui.`,
-      data: updatedRecord 
-    };
-
-  } catch (error) {
-    console.error("[CRITICAL BACKEND ERROR]: Matrix update pipeline failed", error);
-    return { 
-      success: false, 
-      error: "Terjadi kegagalan sistem internal. Operasi dibatalkan." 
-    };
-  }
-}
+// ── Dead Code Eliminasi ───────────────────────────────────────────────────────
+// Fungsi usang (updateMenuVariant & mockDb) telah dihapus dari sistem ini.
+// Dasbor Admin kini sepenuhnya menggunakan rute REST produksi di `/api/admin/menu`
+// untuk keamanan yang lebih tinggi dan validasi Zod yang tersentralisasi.
 
 export async function toggleAvailability(id: string, isAvailable: boolean) {
   try {
@@ -116,20 +27,56 @@ export async function toggleAvailability(id: string, isAvailable: boolean) {
     revalidatePath("/");
     revalidatePath("/menu-spesial");
     revalidatePath("/(user)", "layout");
-    
+    // revalidateTag("menu-data");
+
     // Audit Log
     await logAudit("TOGGLE_AVAILABILITY", "MenuVariant", updatedRecord.id, { isAvailable });
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       message: `Status ketersediaan '${updatedRecord.flavorName}' diperbarui.`,
-      data: updatedRecord 
+      data: updatedRecord
     };
   } catch (error) {
     console.error("[CRITICAL BACKEND ERROR]: Toggle availability failed", error);
-    return { 
-      success: false, 
-      error: "Terjadi kegagalan sistem internal. Operasi dibatalkan." 
+    return {
+      success: false,
+      error: "Terjadi kegagalan sistem internal. Operasi dibatalkan."
     };
   }
 }
+
+/**
+ * 📦 1. MESIN PEMBACA (The Cache Engine)
+ * Dioptimalkan dengan Zero-Trust Data Masking.
+ */
+export const getCachedMenu = unstable_cache(
+  async () => {
+    console.log("[CACHE MISS] Menghubungi database Prisma Supabase...");
+
+    // CISO Rule: Select explicit DB fields; NEVER return whole objects.
+    const menu = await prisma.menuVariant.findMany({
+      where: {
+        isDeleted: false,
+        isActive: true,
+        isAvailable: true
+      },
+      select: {
+        id: true,
+        flavorName: true,
+        priceKembung: true,
+        priceLumpia: true,
+        priceKrispy: true,
+        imageUrl: true,
+        tags: true
+      },
+    });
+
+    return menu;
+  },
+  ['daftar-menu-pisang'], // Kunci Cache
+  {
+    tags: ['menu-data'], // Tag untuk revalidasi spesifik (Sniper)
+    revalidate: 3600 // TTL 1 jam
+  }
+);

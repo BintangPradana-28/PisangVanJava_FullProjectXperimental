@@ -25,6 +25,7 @@ model User {
   phone         String?
   address       String?
   role          Role      @default(CUSTOMER)
+  koinPisang    Int       @default(0) // Gamification (Loyalty Points)
   isDeleted     Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -34,6 +35,7 @@ model User {
   favorites     Favorite[]
   reviews       Review[]
   cart          Cart?
+  orders        Order[]
 
   @@index([email])
 }
@@ -82,6 +84,8 @@ model MenuVariant {
   imageUrl          String?     @map("foto_url")
   isActive          Boolean     @default(true)
   isAvailable       Boolean     @default(true) // Untuk stok harian
+  stock             Int         @default(999)  // Pessimistic Locking / OCC
+  version           Int         @default(1)    // Optimistic Concurrency Control
   isDeleted         Boolean     @default(false) // Untuk Soft Delete
   tags              String[]    @default([])    // Array of string for tagging (e.g., "Manis", "Gurih")
   createdAt         DateTime    @default(now())
@@ -134,20 +138,30 @@ model Topping {
 
 model Order {
   id            String      @id @default(cuid())
+  userId        String?
   customerName  String
   customerPhone String
   totalPrice    Float
-  status        String      @default("pending") // pending, confirmed, ready, done, cancelled
+  status        String      @default("pending") // pending, paid, confirmed, ready, done, cancelled
   notes         String?
-  source        String      @default("whatsapp") // whatsapp, walk-in
+  source        String      @default("whatsapp") // whatsapp, online, walk-in
   voucherCode   String?     // Nullable, if they used a voucher
   discountAmount Float      @default(0) // Total discount applied
   deliveryMethod String     @default("DELIVERY")
   deliveryFee   Float       @default(0)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+  
+  // -- Midtrans Integration --
+  midtransToken         String?  
+  midtransTransactionId String?  @unique
+  paymentStatus         String?  
+  paymentPaidAt         DateTime? 
+
+  user          User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
   items         OrderItem[]
 
+  @@index([userId])
   @@index([status])
   @@index([createdAt])
 }

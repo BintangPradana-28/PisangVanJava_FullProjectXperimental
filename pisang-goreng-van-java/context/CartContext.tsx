@@ -84,10 +84,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Helper for background sync
   const syncToDB = (items: CartItem[]) => {
+    const payloadItems = items.map((item) => ({
+      productId: item.productId,
+      toppingId: item.toppingId ?? null,
+      name: item.name,
+      quantity: item.quantity,
+      notes: item.notes,
+      baseType: item.baseType ?? null,
+    }))
+
     fetch('/api/cart', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items }),
+      body: JSON.stringify({ items: payloadItems }),
       credentials: 'include'
     }).catch(err => console.error("Failed to sync cart", err))
   }

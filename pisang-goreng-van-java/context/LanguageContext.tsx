@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { useSettings } from "@/context/SettingsContext";
 
 type Locale = "id" | "en";
 
@@ -293,6 +294,7 @@ const translations: Record<Locale, Translations> = {
     track_empty: "Tidak ada pesanan ditemukan untuk nomor ini.",
     track_total: "Total",
     status_pending: "Menunggu Konfirmasi",
+    status_paid: "Pembayaran Diterima",
     status_confirmed: "Dikonfirmasi",
     status_ready: "Siap Diambil",
     status_done: "Selesai",
@@ -604,6 +606,7 @@ const translations: Record<Locale, Translations> = {
     track_empty: "No orders found for this number.",
     track_total: "Total",
     status_pending: "Pending Confirmation",
+    status_paid: "Payment Received",
     status_confirmed: "Confirmed",
     status_ready: "Ready for Pickup",
     status_done: "Done",
@@ -644,6 +647,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>("id");
+  const { settings } = useSettings();
 
   useEffect(() => {
     const savedLocale = localStorage.getItem("locale") as Locale | null;
@@ -658,7 +662,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   };
 
   const t = (key: string): string => {
-    return translations[locale][key] || key;
+    return settings[key] || translations[locale][key] || key;
   };
 
   return (

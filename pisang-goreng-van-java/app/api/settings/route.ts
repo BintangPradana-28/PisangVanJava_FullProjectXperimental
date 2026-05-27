@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/src/features/auth/authOptions'
 import { logAudit } from '@/lib/audit'
+import { revalidatePath } from 'next/cache'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,8 +21,10 @@ export async function PUT(req: NextRequest) {
   const results = await Promise.all(updates.map(({ key, value }) =>
     prisma.siteSetting.upsert({ where: { key }, update: { value }, create: { key, value } })
   ))
-  
   await logAudit("UPDATE_SETTINGS", "SiteSetting", "bulk", updates)
+
+  // 🛡️ ZERO-TRUST REVALIDATION: Hancurkan seluruh static cache layout dan halaman depan
+  revalidatePath('/', 'layout')
 
   return NextResponse.json({ success: true, data: results })
 }

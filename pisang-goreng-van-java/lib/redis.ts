@@ -17,3 +17,10 @@ export const rateLimit = new Ratelimit({
   limiter: Ratelimit.slidingWindow(5, '15 m'), // 5 request per 15 menit
   analytics: true,
 })
+
+// Konfigurasi pelindung Global DDoS (misal: Middleware API)
+export const globalRateLimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(100, '10 s'), // 100 request per 10 detik
+  analytics: true,
+})

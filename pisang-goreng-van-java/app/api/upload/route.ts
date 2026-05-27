@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'File ditolak: Signature gambar tidak valid (Hanya JPG/PNG/WEBP murni).' }, { status: 400 })
     }
 
-    // 3. CRYPTOGRAPHIC NAMING: No Date.now() predictability
+    // 3. CRYPTOGRAPHIC NAMING: avoid predictable timestamps
     // Extract strictly validated extension
     let ext = 'jpg';
     if (isPNG) ext = 'png';
@@ -69,4 +69,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 })
   }
 }
-

@@ -1,150 +1,231 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/src/features/auth/authOptions";
-import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+
+import { prisma } from "@/lib/prisma";
+import { hasValidSameOriginHeaders, requireCheckoutActor } from "@/src/features/checkout/service";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
+const cartItemSyncSchema = z
+  .object({
+    productId: z.string().min(8).max(64).regex(/^[a-zA-Z0-9_-]+$/),
+    toppingId: z.string().min(8).max(64).regex(/^[a-zA-Z0-9_-]+$/).nullable(),
+    name: z.string().min(1).max(160),
+    quantity: z.number().int().min(1).max(99),
+    notes: z.string().max(160),
+    baseType: z.string().max(20).nullable(),
+  })
+  .strict();
+
+const cartSyncSchema = z
+  .object({
+    items: z.array(cartItemSyncSchema).max(40),
+  })
+  .strict();
+
+type StoredBaseType = "Kembung" | "Lumpia" | "Krispy";
+
+export async function GET(_: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as any)?.id;
-    if (!session || !userId) {
-      return NextResponse.json({ success: false, data: [] }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
+    const actor = await requireCheckoutActor();
+    if (actor === null) {
+      return noStoreJson({ success: false, data: [] });
     }
 
     const cart = await prisma.cart.findUnique({
-      where: { userId },
-      include: {
+      where: { userId: actor.userId },
+      select: {
         items: {
-          include: {
-            variant: true,
-            topping: true,
-          }
-        }
-      }
+          select: {
+            variantId: true,
+            toppingId: true,
+            baseType: true,
+            quantity: true,
+            notes: true,
+            variant: {
+              select: {
+                flavorName: true,
+                priceKembung: true,
+                priceLumpia: true,
+                priceKrispy: true,
+                wholesaleKembung: true,
+                wholesaleLumpia: true,
+                wholesaleKrispy: true,
+                isDeleted: true,
+                isActive: true,
+              },
+            },
+            topping: {
+              select: {
+                name: true,
+                price: true,
+              },
+            },
+          },
+        },
+      },
     });
 
-    if (!cart) {
-      return NextResponse.json({ success: true, data: [] }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
+    if (cart === null) {
+      return noStoreJson({ success: true, data: [] });
     }
 
-    // Transform to match frontend CartItem interface
-    const isReseller = (session?.user as any)?.role === 'RESELLER';
-
-    const formattedItems = cart.items.map(item => {
-      let basePrice = 0;
-      if (item.baseType === 'Kembung') {
-        basePrice = isReseller && item.variant.wholesaleKembung > 0 ? item.variant.wholesaleKembung : item.variant.priceKembung;
-      } else if (item.baseType === 'Lumpia') {
-        basePrice = isReseller && item.variant.wholesaleLumpia > 0 ? item.variant.wholesaleLumpia : item.variant.priceLumpia;
-      } else if (item.baseType === 'Krispy') {
-        basePrice = isReseller && item.variant.wholesaleKrispy > 0 ? item.variant.wholesaleKrispy : item.variant.priceKrispy;
+    const formattedItems = cart.items
+      .filter((item) => !item.variant.isDeleted && item.variant.isActive)
+      .map((item) => {
+      const baseType = normalizeStoredBaseType(item.baseType);
+      if (baseType === null) {
+        throw new Error("INVALID_STORED_CART_BASE_TYPE");
       }
 
-      const toppingPrice = item.topping?.price || 0;
-      
+      const basePrice = selectCartBasePrice(item.variant, baseType, actor.role);
+      const toppingPrice = item.topping?.price ?? 0;
+      const notes = item.notes ?? "";
+
       return {
         productId: item.variantId,
-        name: `${item.variant.flavorName} (${item.baseType})`,
+        name: `${item.variant.flavorName} (${baseType})`,
         basePrice,
-        toppingName: item.topping?.name || null,
+        toppingName: item.topping?.name ?? null,
         toppingPrice,
         quantity: item.quantity,
-        notes: item.notes || '',
+        notes,
         totalPrice: (basePrice + toppingPrice) * item.quantity,
         toppingId: item.toppingId,
-        baseType: item.baseType,
+        baseType,
       };
     });
 
-    return NextResponse.json({ success: true, data: formattedItems }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
+    return noStoreJson({ success: true, data: formattedItems });
   } catch (error) {
-    console.error("GET /api/cart Error:", error);
+    console.error("[SECURITY] GET /api/cart failed.", error);
     return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
-  const fs = require('fs');
-  const logFile = 'cart-log.txt';
-  const log = (msg: string) => {
-    fs.appendFileSync(logFile, new Date().toISOString() + ' ' + msg + '\n');
-    console.log(msg);
-  };
-  
   try {
-    log('--- POST /api/cart CALLED ---');
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as any)?.id;
-    if (!session || !userId) {
-      log('Unauthorized: No session or userId');
+    const actor = await requireCheckoutActor();
+    if (actor === null) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
-    log(`User ID: ${userId}`);
 
-    const body = await req.json();
-    
-    const CartItemSchema = z.object({
-      productId: z.string().min(1),
-      toppingId: z.string().optional().nullable(),
-      name: z.string(),
-      quantity: z.number().int().min(1),
-      notes: z.string().optional()
-    })
+    if (!hasValidSameOriginHeaders()) {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    }
 
-    const parsedItems = z.array(CartItemSchema).safeParse(body.items)
-
-    if (!parsedItems.success) {
-      log('Invalid payload');
+    const payload = await readRequestJson(req);
+    if (payload === null) {
       return NextResponse.json({ success: false, error: "Invalid payload" }, { status: 400 });
     }
 
-    const items = parsedItems.data
-    log(`Payload items length: ${items.length}`);
-
-    // Find or create cart
-    let cart = await prisma.cart.findUnique({ where: { userId } });
-    if (!cart) {
-      log('Cart not found, creating new one');
-      cart = await prisma.cart.create({ data: { userId } });
+    const parsed = cartSyncSchema.safeParse(payload);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: "Invalid payload" }, { status: 400 });
     }
-    log(`Cart ID: ${cart.id}`);
 
-    // Completely replace items (simplest sync mechanism for small arrays)
-    // 1. Delete old items
-    const deleted = await prisma.cartItem.deleteMany({
-      where: { cartId: cart.id }
+    const cart = await prisma.cart.upsert({
+      where: { userId: actor.userId },
+      update: {},
+      create: { userId: actor.userId },
+      select: { id: true },
     });
-    log(`Deleted ${deleted.count} old items`);
 
-    // 2. Insert new items
-    if (items.length > 0) {
-      log(`Inserting new items...`);
-      const dataToInsert = items.map((item) => ({
-          cartId: cart?.id ?? '', // Safe fallback instead of non-null assertion
+    await prisma.cartItem.deleteMany({
+      where: { cartId: cart.id },
+    });
+
+    if (parsed.data.items.length > 0) {
+      const dataToInsert: Array<{
+        cartId: string;
+        variantId: string;
+        toppingId: string | null;
+        baseType: StoredBaseType;
+        quantity: number;
+        notes: string;
+      }> = [];
+      for (const item of parsed.data.items) {
+        const baseType = resolveCartBaseType(item.baseType, item.name);
+        if (baseType === null) {
+          return NextResponse.json({ success: false, error: "Invalid payload" }, { status: 400 });
+        }
+
+        dataToInsert.push({
+          cartId: cart.id,
           variantId: item.productId,
-          toppingId: item.toppingId || null,
-          baseType: item.name.includes('Kembung') ? 'Kembung' : item.name.includes('Lumpia') ? 'Lumpia' : 'Krispy',
+          toppingId: item.toppingId,
+          baseType,
           quantity: item.quantity,
-          notes: item.notes || '',
-        }));
-      log('Data to insert: ' + JSON.stringify(dataToInsert));
-      
-      const created = await prisma.cartItem.createMany({
-        data: dataToInsert
+          notes: item.notes,
+        });
+      }
+
+      await prisma.cartItem.createMany({
+        data: dataToInsert,
       });
-      log(`Created ${created.count} items`);
     }
 
-    log('SUCCESS');
     return NextResponse.json({ success: true });
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      log(`ERROR: ${error.message} ${error.stack}`);
-    }
-    console.error("POST /api/cart Error:", error);
+  } catch (error) {
+    console.error("[SECURITY] POST /api/cart failed.", error);
     return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
   }
+}
+
+function noStoreJson(body: { success: boolean; data: unknown[] }) {
+  return NextResponse.json(body, {
+    headers: { "Cache-Control": "no-store, max-age=0" },
+  });
+}
+
+async function readRequestJson(req: NextRequest): Promise<unknown | null> {
+  try {
+    return await req.json();
+  } catch {
+    return null;
+  }
+}
+
+function normalizeStoredBaseType(value: string): StoredBaseType | null {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "kembung") return "Kembung";
+  if (normalized === "lumpia") return "Lumpia";
+  if (normalized === "krispy") return "Krispy";
+  return null;
+}
+
+function resolveCartBaseType(baseType: string | null, name: string): StoredBaseType | null {
+  if (baseType !== null) {
+    return normalizeStoredBaseType(baseType);
+  }
+
+  const match = name.match(/\((Kembung|Lumpia|Krispy|kembung|lumpia|krispy)\)$/);
+  if (match === null) {
+    return null;
+  }
+
+  return normalizeStoredBaseType(match[1]);
+}
+
+function selectCartBasePrice(
+  variant: {
+    priceKembung: number;
+    priceLumpia: number;
+    priceKrispy: number;
+    wholesaleKembung: number;
+    wholesaleLumpia: number;
+    wholesaleKrispy: number;
+  },
+  baseType: StoredBaseType,
+  role: "ADMIN" | "CUSTOMER" | "RESELLER",
+): number {
+  if (baseType === "Lumpia") {
+    return role === "RESELLER" && variant.wholesaleLumpia > 0 ? variant.wholesaleLumpia : variant.priceLumpia;
+  }
+
+  if (baseType === "Krispy") {
+    return role === "RESELLER" && variant.wholesaleKrispy > 0 ? variant.wholesaleKrispy : variant.priceKrispy;
+  }
+
+  return role === "RESELLER" && variant.wholesaleKembung > 0 ? variant.wholesaleKembung : variant.priceKembung;
 }

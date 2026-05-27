@@ -9,6 +9,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { deleteAccountPermanently } from '@/src/features/user/actions'
+import OrderHistory from '@/components/user/OrderHistory'
 
 const profileSchema = z.object({
   name: z.string().min(1, "Nama tidak boleh kosong"),
@@ -22,10 +23,14 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>
 
+type ProfileTab = 'profil' | 'pesanan'
+
 export default function ProfilePage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<ProfileTab>('profil')
+  const [userPhone, setUserPhone] = useState('')
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -62,7 +67,7 @@ export default function ProfilePage() {
         .then(data => {
           if (data.success && data.data) {
             if (data.data.name) setValue('name', data.data.name, { shouldValidate: true })
-            if (data.data.phone) setValue('phone', data.data.phone, { shouldValidate: true })
+            if (data.data.phone) { setValue('phone', data.data.phone, { shouldValidate: true }); setUserPhone(data.data.phone) }
             if (data.data.address) setValue('address', data.data.address, { shouldValidate: true })
           }
         })
@@ -101,8 +106,57 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen pt-28 pb-10 bg-surface-container-low dark:bg-zinc-950">
       <div className="max-w-2xl mx-auto px-6">
+        {/* Profile Header Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-xl border border-zinc-200/50 dark:border-zinc-800/80 mb-6"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-200 to-orange-400 text-amber-900 flex items-center justify-center text-3xl font-bold shadow-md">
+              {session?.user?.name ? session.user.name[0].toUpperCase() : '👤'}
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold font-serif text-zinc-900 dark:text-zinc-100">{session?.user?.name || 'Pelanggan'}</h1>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">{session?.user?.email}</p>
+            </div>
+          </div>
+
+          {/* Tab switcher */}
+          <div className="flex gap-2 mt-5 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-2xl">
+            {([['profil', '👤 Profil'], ['pesanan', '📋 Riwayat Pesanan']] as [ProfileTab, string][]).map(([tab, label]) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${
+                  activeTab === tab
+                    ? 'bg-white dark:bg-zinc-900 shadow-sm text-zinc-900 dark:text-zinc-100'
+                    : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Tab Content */}
+        {activeTab === 'pesanan' ? (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-xl border border-zinc-200/50 dark:border-zinc-800/80">
+              <h2 className="font-serif text-lg font-bold text-zinc-800 dark:text-zinc-100 mb-5">Riwayat Pesanan Saya</h2>
+              {userPhone ? (
+                <OrderHistory phone={userPhone} />
+              ) : (
+                <div className="text-center py-8 text-zinc-400">
+                  <p className="text-sm">Tambahkan nomor WhatsApp di tab Profil untuk melihat riwayat pesanan.</p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-zinc-200/50 dark:border-zinc-800/80"
         >
@@ -111,7 +165,7 @@ export default function ProfilePage() {
               👤
             </div>
             <div>
-              <h1 className="text-2xl font-bold font-serif text-zinc-900 dark:text-zinc-100">Profil Saya</h1>
+              <h2 className="text-2xl font-bold font-serif text-zinc-900 dark:text-zinc-100">Edit Profil</h2>
               <p className="text-sm text-zinc-500 dark:text-zinc-400">{session?.user?.email}</p>
             </div>
           </div>
@@ -207,6 +261,7 @@ export default function ProfilePage() {
             </button>
           </div>
         </motion.div>
+        )}
       </div>
 
       {/* DELETE ACCOUNT MODAL */}

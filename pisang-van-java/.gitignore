@@ -7,3 +7,6 @@ public/uploads/menu/
 coverage/
 .DS_Store
 *.log
+
+# Sentry Config File
+.env.sentry-build-plugin

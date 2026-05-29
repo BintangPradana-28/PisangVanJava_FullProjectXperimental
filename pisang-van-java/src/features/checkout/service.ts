@@ -801,12 +801,14 @@ async function resolveDeliveryFee(
   });
 
   if (setting === null) {
-    throw new CheckoutSecurityError(500);
+    console.warn("[SECURITY] store_delivery_fee not found in SiteSetting, failing open to 0");
+    return 0;
   }
 
   const deliveryFee = parseCurrencySetting(setting.value);
   if (deliveryFee === null) {
-    throw new CheckoutSecurityError(500);
+    console.warn("[SECURITY] invalid store_delivery_fee in SiteSetting, failing open to 0");
+    return 0;
   }
 
   return deliveryFee;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyMidtransSignature } from "@/src/features/payment/service";
+import * as Sentry from "@sentry/nextjs";
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
     // Zero-Trust: Verify HMAC Signature Key
     const isValid = verifyMidtransSignature(order_id, status_code, gross_amount, signature_key);
     if (!isValid) {
-      console.error("[SECURITY] Invalid Midtrans signature detected for order:", order_id);
+      Sentry.captureMessage(`[SECURITY] Invalid Midtrans signature detected for order: ${order_id}`, "fatal");
       return NextResponse.json({ success: false, error: "Forbidden: Signature mismatch" }, { status: 403 });
     }
 
@@ -34,14 +35,14 @@ export async function POST(req: NextRequest) {
     });
 
     if (!order) {
-      console.error("[SECURITY] Midtrans webhook order not found:", order_id);
+      Sentry.captureMessage(`[SECURITY] Midtrans webhook order not found: ${order_id}`, "warning");
       return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
     }
 
     // Ensure gross_amount string from Midtrans matches our database value closely
     // Midtrans might send "15000.00", parseFloat handles this.
     if (Math.abs(parseFloat(gross_amount) - order.totalPrice) > 1) {
-      console.error("[SECURITY] Midtrans webhook amount mismatch:", { received: gross_amount, expected: order.totalPrice });
+      Sentry.captureMessage(`[SECURITY] Midtrans webhook amount mismatch: received ${gross_amount}, expected ${order.totalPrice}`, "error");
       return NextResponse.json({ success: false, error: "Amount mismatch" }, { status: 400 });
     }
 
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, message: "Webhook processed" });
   } catch (error) {
-    console.error("[SECURITY] Midtrans webhook processing failed", error);
+    Sentry.captureException(error);
     return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
   }
 }

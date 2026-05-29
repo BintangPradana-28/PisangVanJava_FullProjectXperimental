@@ -68,7 +68,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const session = await getServerSession(authOptions);
     const ip = req.headers.get("x-forwarded-for") || "unknown";
     
     await prisma.auditLog.create({

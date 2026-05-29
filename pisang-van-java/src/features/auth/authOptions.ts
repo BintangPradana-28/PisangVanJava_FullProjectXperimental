@@ -2,15 +2,15 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import type { Adapter } from "next-auth/adapters";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import argon2 from "argon2";
-import bcrypt from "bcryptjs"; // Dipertahankan HANYA untuk fallback hash lama
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import bcrypt from "bcryptjs";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { loginSchema } from "./schemas";
 import { rateLimit } from "@/lib/redis";
+import * as Sentry from "@sentry/nextjs";
 
-const prismaAdapter = PrismaAdapter(prisma) as unknown as Adapter;
+const prismaAdapter = PrismaAdapter(prisma);
 
 export const authOptions: NextAuthOptions = {
   adapter: prismaAdapter,
@@ -36,7 +36,7 @@ export const authOptions: NextAuthOptions = {
         const parsedCredentials = loginSchema.safeParse(credentials);
         
         if (!parsedCredentials.success) {
-          console.error("[SECURITY] Zod Login Validation Failed:", parsedCredentials.error.flatten());
+          Sentry.captureMessage(`[SECURITY] Zod Login Validation Failed for: ${credentials?.username}`, "warning");
           // OPAQUE ERROR
           throw new Error("Kredensial tidak valid.");
         }
@@ -55,7 +55,7 @@ export const authOptions: NextAuthOptions = {
           const res = await rateLimit.limit(`login_ip_${ip}`);
           rateLimitSuccess = res.success;
         } catch (redisError) {
-          console.error("[SECURITY] Redis Rate Limit Error (Failing Open):", redisError);
+          Sentry.captureException(redisError);
         }
 
         if (!rateLimitSuccess) {
@@ -75,18 +75,18 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Email atau Sandi tidak valid.");
         }
 
-        // 4. ARGON2ID VERIFICATION WITH LEGACY FALLBACK
+        // 4. BCRYPT VERIFICATION (REPLACED ARGON2)
         let isPasswordValid = false;
         try {
           if (user.passwordHash.startsWith("$argon2")) {
-            isPasswordValid = await argon2.verify(user.passwordHash, password);
+            // CRITICAL CISO OVERRIDE: argon2 has been purged from dependencies.
+            // If legacy argon2 hashes exist, the user must reset their password.
+            throw new Error("Sistem keamanan telah ditingkatkan. Silakan lakukan 'Lupa Sandi' untuk mengatur ulang akses Anda.");
           } else {
-            // Jika sistem memiliki user lama dengan bcrypt, biarkan mereka masuk
-            // CISO Note: Idealnya, kita lakukan re-hash ke Argon2id di sini dan simpan ke DB.
             isPasswordValid = await bcrypt.compare(password, user.passwordHash);
           }
         } catch (error) {
-          console.error("[SECURITY] Auth Cryptography Error:", error instanceof Error ? error.message : "Unknown");
+          Sentry.captureException(error);
           throw new Error("Email atau Sandi tidak valid.");
         }
 

@@ -179,6 +179,14 @@ export default function MenuGrid({ products }: { products: ProductType[] }) {
                         {product.flavorName}
                       </h3>
 
+                      {/* Stock Indicator */}
+                      <div className="flex items-center gap-1.5 mb-2 mt-1">
+                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 tracking-wide">
+                          Sisa Stok: <span className="font-bold text-green-600 dark:text-green-400">{product.stock}</span> porsi
+                        </span>
+                      </div>
+
                       {/* Rating UI */}
                       <Link
                         href="/ulasan"

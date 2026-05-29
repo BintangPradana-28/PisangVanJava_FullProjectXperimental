@@ -1,6 +1,7 @@
 allowBuilds:
   '@prisma/client': true
   '@prisma/engines': true
+  '@sentry/cli': set this to true or false
   argon2: true
   msw: true
   prisma: true

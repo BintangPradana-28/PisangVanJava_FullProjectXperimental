@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import QuickViewModal from '@/components/user/QuickViewModal'
+import nextDynamic from 'next/dynamic'
+const QuickViewModal = nextDynamic(() => import('@/components/user/QuickViewModal'), { ssr: false })
 import { useLanguage } from '@/context/LanguageContext'
 import { useSession } from 'next-auth/react'
 
@@ -23,6 +24,7 @@ export interface ProductType {
   deskripsi_topping?: string | null
   rating?: number
   reviewCount?: number
+  stock: number
 }
 
 interface Props {
@@ -76,20 +78,12 @@ export default function MenuCards({ products }: Props) {
   const { data: session } = useSession()
   const isReseller = (session?.user as { role?: string })?.role === 'RESELLER'
   const [selectedProduct, setSelectedProduct] = useState<ProductType | null>(null)
-  const [isMounted, setIsMounted] = useState(false)
   const [activeTag, setActiveTag] = useState<string>(t('menu_filter_all'))
 
   const allTags = [t('menu_filter_all'), ...Array.from(new Set(products.flatMap(p => p.tags || [])))].filter(Boolean)
   const filteredProducts = activeTag === t('menu_filter_all') 
     ? products 
     : products.filter(p => p.tags?.includes(activeTag))
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsMounted(true)
-    }, 600)
-    return () => clearTimeout(timer)
-  }, [])
 
   return (
     <section id="menu" className="py-24 bg-surface-container-low border-b border-outline-variant/20 dark:bg-zinc-900/40">
@@ -139,33 +133,7 @@ export default function MenuCards({ products }: Props) {
 
         {/* Product Cards Grid / Skeleton Loader */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {!isMounted || products.length === 0 ? (
-            // Skeleton Loading State
-            Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={`skeleton-${i}`}
-                className="bg-white dark:bg-zinc-900 border border-zinc-200/50 dark:border-zinc-800/80 rounded-3xl overflow-hidden shadow-sm flex flex-col h-[440px]"
-              >
-                {/* Image Shimmer */}
-                <div className="w-full aspect-[4/3] skeleton-shimmer" />
-                {/* Content Shimmer */}
-                <div className="p-6.5 flex flex-col items-center flex-grow space-y-4 text-center">
-                  <div className="h-6 w-2/3 rounded bg-zinc-200 dark:bg-zinc-800 skeleton-shimmer" />
-                  <div className="space-y-2 flex-grow w-full flex flex-col items-center">
-                    <div className="h-4 w-full rounded bg-zinc-200 dark:bg-zinc-800 skeleton-shimmer" />
-                    <div className="h-4 w-5/6 rounded bg-zinc-200 dark:bg-zinc-800 skeleton-shimmer" />
-                  </div>
-                  <div className="flex flex-col items-center gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800 mt-auto w-full">
-                    <div className="space-y-1 flex flex-col items-center">
-                      <div className="h-2 w-8 rounded bg-zinc-200 dark:bg-zinc-800 skeleton-shimmer" />
-                      <div className="h-5 w-20 rounded bg-zinc-200 dark:bg-zinc-800 skeleton-shimmer" />
-                    </div>
-                    <div className="h-10 w-28 rounded-full bg-zinc-200 dark:bg-zinc-800 skeleton-shimmer" />
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : filteredProducts.length === 0 ? (
+          {filteredProducts.length === 0 ? (
             <div className="col-span-full text-center py-12 text-zinc-500">
               {t('menu_empty_tag')} "{activeTag}"
             </div>
@@ -208,6 +176,14 @@ export default function MenuCards({ products }: Props) {
                     <h3 className={`font-serif text-2xl font-bold text-primary dark:text-zinc-100 mb-1 w-full text-center ${!available ? 'text-zinc-500' : ''}`}>
                       {product.flavorName}
                     </h3>
+                    
+                    {/* Stock Indicator */}
+                    <div className="flex items-center gap-1.5 mb-2 mt-1">
+                      <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                      <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 tracking-wide">
+                        Sisa Stok: <span className="font-bold text-green-600 dark:text-green-400">{product.stock}</span> porsi
+                      </span>
+                    </div>
                     
                     {/* Rating UI / Sales Magnet */}
                     <Link href="/ulasan" className="flex items-center gap-1.5 mb-3 text-sm text-zinc-500 hover:text-[#D4802A] transition-colors cursor-pointer active:scale-95">

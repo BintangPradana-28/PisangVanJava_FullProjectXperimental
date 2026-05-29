@@ -76,7 +76,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       data: dataToUpdate,
     });
 
-    const session = await getServerSession(authOptions);
     const ip = req.headers.get("x-forwarded-for") || "unknown";
 
     await prisma.auditLog.create({
@@ -133,7 +132,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       data: { isDeleted: true },
     });
 
-    const session = await getServerSession(authOptions);
     const ip = req.headers.get("x-forwarded-for") || "unknown";
 
     await prisma.auditLog.create({

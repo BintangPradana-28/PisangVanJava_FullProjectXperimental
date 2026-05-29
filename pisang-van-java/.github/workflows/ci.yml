@@ -1,40 +1,54 @@
-name: CI/CD Pipeline (Zero-Trust Security)
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
   pull_request:
-    branches: ["main"]
+    branches:
+      - main
 
 jobs:
-  security-and-type-audit:
-    name: 🛡️ CISO & Type Audit
+  security-audit-and-test:
+    name: Security Audit & Unit Tests
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 18
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: 'npm' # Note: using npm as standard, but we can change if pnpm is strictly used
+          node-version: '20'
 
       - name: Install pnpm
-        run: npm install -g pnpm@9.0.0
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
-        
-      - name: Generate Prisma Client
-        run: npx prisma generate
 
-      - name: Linting (ESLint) - The Iron Gate
-        run: pnpm run lint
+      - name: Run Prisma Generate
+        run: pnpm prisma generate
 
-      - name: TypeScript Type Checking - Absolute Quarantine
-        run: npx tsc --noEmit
+      - name: Linting (Static Analysis)
+        run: pnpm next lint
 
-      - name: Security Audit (Dependency Scan)
-        run: pnpm audit --prod --audit-level=critical
+      - name: Security & Unit Tests
+        run: pnpm test

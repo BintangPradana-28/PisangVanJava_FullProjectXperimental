@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
@@ -32,20 +31,6 @@ export default function Hero({
   totalReviews?: number;
 }) {
   const { t } = useLanguage();
-
-  const containerVariants = {
-    hidden: {},
-    visible: { transition: { staggerChildren: 0.1 } },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5, ease: "easeOut" },
-    },
-  };
 
   const title = t("hero_title");
   const subtitle = t("hero_desc");
@@ -91,35 +76,23 @@ export default function Hero({
 
       <div className="relative z-10 max-w-[1200px] w-full mx-auto px-6 py-24 md:py-32 grid lg:grid-cols-2 gap-12 items-center">
         {/* Text Area */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="text-left"
-        >
+        <div className="text-left">
           {badge && (
-            <motion.div
-              variants={itemVariants}
-              className="inline-flex items-center gap-2 mb-6"
-            >
+            <div className="inline-flex items-center gap-2 mb-6">
               <span className="bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-semibold tracking-[0.25em] uppercase px-4 py-1.5 rounded-full">
                 {badge}
               </span>
-            </motion.div>
+            </div>
           )}
 
-          <motion.h1
-            variants={itemVariants}
+          <h1
             // PERBAIKAN: Pastikan text selalu white
             className="font-serif text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.1] tracking-tight mb-4 drop-shadow-lg"
           >
             {renderTitle()}
-          </motion.h1>
+          </h1>
 
-          <motion.div
-            variants={itemVariants}
-            className="flex flex-wrap items-center gap-3 mb-6"
-          >
+          <div className="flex flex-wrap items-center gap-3 mb-6">
             {totalReviews >= 5 && (
               <>
                 <Link href="/ulasan" className="group">
@@ -161,19 +134,13 @@ export default function Hero({
             <div className="hidden sm:flex items-center gap-1 text-gray-300 text-sm font-medium">
               <span>{t("hero_location")}</span>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.p
-            variants={itemVariants}
-            className="text-gray-200 text-lg leading-relaxed max-w-lg mb-8 font-sans drop-shadow-md"
-          >
+          <p className="text-gray-200 text-lg leading-relaxed max-w-lg mb-8 font-sans drop-shadow-md">
             {subtitle}
-          </motion.p>
+          </p>
 
-          <motion.div
-            variants={itemVariants}
-            className="flex flex-wrap gap-4 items-center"
-          >
+          <div className="flex flex-wrap gap-4 items-center">
             <Link
               href={ctaLink}
               className="inline-flex items-center gap-3 bg-[#D4802A] hover:bg-[#b56d24] text-white font-bold text-base px-10 py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5 active:scale-95 group focus:outline-none focus:ring-4 focus:ring-[#D4802A]/40"
@@ -181,12 +148,9 @@ export default function Hero({
               <ShoppingBagIcon />
               <span>{t("hero_order_btn")}</span>
             </Link>
-          </motion.div>
+          </div>
 
-          <motion.div
-            variants={itemVariants}
-            className="grid grid-cols-3 gap-6 max-w-sm mt-12 pt-8 border-t border-white/10"
-          >
+          <div className="grid grid-cols-3 gap-6 max-w-sm mt-12 pt-8 border-t border-white/10">
             {[
               { num: "12+", label: t("hero_stat_topping") },
               { num: "3", label: t("hero_stat_type") },
@@ -201,16 +165,11 @@ export default function Hero({
                 </div>
               </div>
             ))}
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
 
         {/* Visual Element */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
-          className="hidden lg:flex justify-end"
-        >
+        <div className="hidden lg:flex justify-end">
           <div className="relative w-full max-w-[450px] aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border-8 border-white/10 bg-black/50">
             <Image
               src={
@@ -228,21 +187,17 @@ export default function Hero({
               </div>
             )}
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* Floating Scroll Indicator */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden md:block z-20">
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="flex flex-col items-center gap-1 cursor-pointer"
-        >
+        <div className="flex flex-col items-center gap-1 cursor-pointer animate-bounce">
           <span className="text-xs text-gray-400 uppercase tracking-widest font-medium">
             Scroll Down
           </span>
           <span className="text-amber-500 text-sm">↓</span>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

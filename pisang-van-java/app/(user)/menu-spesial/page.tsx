@@ -37,6 +37,7 @@ export default async function MenuSpesialPage({
     wholesaleKrispy: p.wholesaleKrispy,
     imageUrl: p.imageUrl,
     isAvailable: p.isAvailable,
+    stock: p.stock,
     tags: p.tags || [],
     rating: p.reviews.length > 0
       ? Math.round((p.reviews.reduce((s, r) => s + r.rating, 0) / p.reviews.length) * 10) / 10

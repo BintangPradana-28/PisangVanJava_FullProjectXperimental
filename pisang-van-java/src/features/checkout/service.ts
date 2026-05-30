@@ -152,6 +152,8 @@ interface VariantRecord {
   isActive: boolean;
   isAvailable: boolean;
   isDeleted: boolean;
+  stock: number;
+  version: number;
 }
 
 interface ToppingRecord {

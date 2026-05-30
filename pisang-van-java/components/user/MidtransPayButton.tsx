@@ -41,15 +41,15 @@ export default function MidtransPayButton({ snapToken }: Props) {
     setIsPaying(true)
 
     window.snap.pay(snapToken, {
-      onSuccess: function(result: any) {
+      onSuccess: function(result: MidtransResult) {
         setIsPaying(false)
         router.push('/profile')
       },
-      onPending: function(result: any) {
+      onPending: function(result: MidtransResult) {
         setIsPaying(false)
         router.push('/profile')
       },
-      onError: function(result: any) {
+      onError: function(result: MidtransResult) {
         setIsPaying(false)
         console.error('Payment failed', result)
       },
@@ -74,9 +74,29 @@ export default function MidtransPayButton({ snapToken }: Props) {
   )
 }
 
-// Add TypeScript definition for window.snap
+interface MidtransResult {
+  transaction_id: string;
+  order_id: string;
+  gross_amount: string;
+  payment_type: string;
+  transaction_status: string;
+  status_code: string;
+  status_message: string;
+  [key: string]: unknown;
+}
+
+interface Snap {
+  pay: (token: string, options: {
+    onSuccess?: (result: MidtransResult) => void;
+    onPending?: (result: MidtransResult) => void;
+    onError?: (result: MidtransResult) => void;
+    onClose?: () => void;
+  }) => void;
+}
+
+// Add strict TypeScript definition for window.snap
 declare global {
   interface Window {
-    snap: any;
+    snap?: Snap;
   }
 }

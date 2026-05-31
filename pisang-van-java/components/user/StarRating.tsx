@@ -47,12 +47,21 @@ export default function StarRating({ variantId, existingRating, onSubmit }: Star
   const [isPending, startTransition] = useTransition()
 
   const displayRating = hovered || selected
+  const safePhotoPreview =
+    photoPreview && (photoPreview.startsWith('blob:') || photoPreview.startsWith('data:image/'))
+      ? photoPreview
+      : null
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     if (file.size > 5 * 1024 * 1024) {
       setError('Ukuran foto maksimal 5MB')
+      return
+    }
+    const allowedMimeTypes = new Set(['image/jpeg', 'image/png', 'image/webp'])
+    if (!allowedMimeTypes.has(file.type)) {
+      setError('Format foto harus JPEG, PNG, atau WEBP')
       return
     }
     setPhoto(file)
@@ -166,10 +175,10 @@ export default function StarRating({ variantId, existingRating, onSubmit }: Star
             onChange={handlePhotoChange}
           />
         </label>
-        {photoPreview && (
+        {safePhotoPreview && (
           <div className="mt-3 relative w-max">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={photoPreview} alt="Preview" className="w-24 h-24 object-cover rounded-xl border border-amber-200 shadow-sm" />
+            <img src={safePhotoPreview} alt="Preview" className="w-24 h-24 object-cover rounded-xl border border-amber-200 shadow-sm" />
             <button 
               onClick={() => { setPhoto(null); setPhotoPreview(null) }}
               className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md hover:bg-red-600"

@@ -375,7 +375,10 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
                       <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-1">Belum ada produk di keranjang Anda</p>
                     </div>
                     <button
-                      onClick={onClose}
+                      onClick={() => {
+                        onClose()
+                        router.push('/menu-spesial')
+                      }}
                       className="mt-2 px-6 py-2.5 bg-[#D4802A] text-white text-sm font-bold rounded-full hover:bg-[#b56d24] transition-all active:scale-95"
                     >
                       Mulai Belanja →

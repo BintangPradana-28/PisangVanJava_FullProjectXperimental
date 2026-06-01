@@ -1,3 +1,3 @@
 module.exports = {
-  '*.{js,jsx,ts,tsx}': () => 'next lint',
+  '*.{js,jsx,ts,tsx}': () => 'biome check --write',
 }

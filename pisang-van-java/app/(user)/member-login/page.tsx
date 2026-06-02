@@ -73,8 +73,8 @@ export default function MemberLoginPage() {
         // NextAuth melempar pesan error string (termasuk validasi Rate Limit & Ambiguous Errors)
         toast.error(res.error)
       } else { 
-        toast.success(t('login_toast_success'))
-        setTimeout(() => { window.location.href = '/#menu' }, 700) 
+        toast.success(t('login_toast_success'), { duration: 3000 })
+        setTimeout(() => { router.push('/#menu') }, 700) 
       }
     } catch {
       toast.dismiss(tid)

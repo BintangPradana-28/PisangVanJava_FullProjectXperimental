@@ -68,7 +68,14 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
           <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
             <div className="mb-6 flex items-center justify-between gap-4">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-zinc-400">Secure Checkout</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-bold uppercase tracking-wider text-zinc-400">Secure Checkout</p>
+                  {process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION !== 'true' && (
+                    <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-bold tracking-widest border border-red-200 dark:bg-red-900/30 dark:border-red-800 dark:text-red-400">
+                      🔴 SANDBOX MODE
+                    </span>
+                  )}
+                </div>
                 <h1 className="mt-1 font-serif text-2xl font-bold text-zinc-950 dark:text-white">Pembayaran Pesanan</h1>
               </div>
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#D4802A]/10 text-[#D4802A]">

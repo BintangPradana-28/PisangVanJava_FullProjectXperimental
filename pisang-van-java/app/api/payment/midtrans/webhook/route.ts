@@ -57,16 +57,40 @@ export async function POST(req: NextRequest) {
       newStatus = 'cancelled';
     }
 
-    // Update database
-    await prisma.order.update({
-      where: { id: order_id },
-      data: {
-        status: newStatus,
-        paymentStatus: transaction_status,
-        midtransTransactionId: transaction_id,
-        paymentPaidAt
-      }
-    });
+    if (newStatus === 'paid' && order.status !== 'paid') {
+      const orderWithItems = await prisma.order.findUnique({
+        where: { id: order_id },
+        include: { items: true }
+      });
+      
+      await prisma.$transaction([
+        prisma.order.update({
+          where: { id: order_id },
+          data: {
+            status: newStatus,
+            paymentStatus: transaction_status,
+            midtransTransactionId: transaction_id,
+            paymentPaidAt
+          }
+        }),
+        ...(orderWithItems?.items || []).map(item =>
+          prisma.menuVariant.update({
+            where: { id: item.variantId },
+            data: { stock: { decrement: item.quantity } }
+          })
+        )
+      ]);
+    } else {
+      await prisma.order.update({
+        where: { id: order_id },
+        data: {
+          status: newStatus,
+          paymentStatus: transaction_status,
+          midtransTransactionId: transaction_id,
+          paymentPaidAt
+        }
+      });
+    }
 
     return NextResponse.json({ success: true, message: "Webhook processed" });
   } catch (error) {

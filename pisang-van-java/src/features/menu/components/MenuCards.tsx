@@ -81,10 +81,20 @@ export default function MenuCards({ products }: Props) {
   const [selectedProduct, setSelectedProduct] = useState<ProductType | null>(null)
   const [activeTag, setActiveTag] = useState<string>(t('menu_filter_all'))
 
-  const allTags = [t('menu_filter_all'), ...Array.from(new Set(products.flatMap(p => p.tags || [])))].filter(Boolean)
+  const baseTags = ['Kembung', 'Lumpia', 'Krispy']
+  const dbTags = Array.from(new Set(products.flatMap(p => p.tags || [])))
+  const allTags = [t('menu_filter_all'), ...baseTags, ...dbTags].filter(Boolean)
+  
   const filteredProducts = activeTag === t('menu_filter_all') 
     ? products 
-    : products.filter(p => p.tags?.includes(activeTag))
+    : baseTags.includes(activeTag)
+      ? products.filter(p => {
+          if (activeTag === 'Kembung') return p.priceKembung > 0 || p.wholesaleKembung > 0
+          if (activeTag === 'Lumpia') return p.priceLumpia > 0 || p.wholesaleLumpia > 0
+          if (activeTag === 'Krispy') return p.priceKrispy > 0 || p.wholesaleKrispy > 0
+          return true
+        })
+      : products.filter(p => p.tags?.includes(activeTag))
 
   return (
     <section id="menu" className="py-24 bg-surface-container-low border-b border-outline-variant/20 dark:bg-zinc-900/40">

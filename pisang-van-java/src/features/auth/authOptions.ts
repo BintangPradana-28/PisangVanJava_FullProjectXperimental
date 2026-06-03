@@ -6,6 +6,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { Role } from "@prisma/client";
 import { loginSchema } from "./schemas";
 import { rateLimit } from "@/lib/redis";
 import * as Sentry from "@sentry/nextjs";

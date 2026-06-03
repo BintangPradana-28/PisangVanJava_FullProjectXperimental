@@ -19,7 +19,7 @@ const addressSchema = z.object({
   label: z.string().min(1, 'Label wajib diisi').max(30),
   fullAddress: z.string().min(5, 'Alamat lengkap wajib diisi').max(200),
   notes: z.string().max(100).optional(),
-  isDefault: z.boolean().default(false),
+  isDefault: z.boolean(),
 })
 type AddressValues = z.infer<typeof addressSchema>
 

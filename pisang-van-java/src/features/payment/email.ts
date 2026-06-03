@@ -43,7 +43,7 @@ export async function sendOrderConfirmationEmail(orderId: string): Promise<boole
       subtotal: formatPrice(item.subtotal),
     }))
 
-    const htmlContent = render(
+    const htmlContent = await render(
       React.createElement(OrderConfirmationEmail, {
         customerName: order.customerName,
         orderId: order.id,

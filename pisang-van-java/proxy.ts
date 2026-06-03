@@ -63,7 +63,7 @@ export const config = {
     
     // Customer Protected Routes
     "/checkout/:path*",
-    "/profile/:path*",
+    "/profil/:path*",
     "/track-order/:path*",
     "/api/cart/:path*"
   ],

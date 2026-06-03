@@ -56,8 +56,8 @@ function ReorderButton({ order }: { order: Order }) {
         const fullName = `${variant.flavorName} (${baseTypeFormatted})`
         
         // Asumsi topping menggunakan ID dari item.toppingId jika ada
-        const finalToppingId = item.toppingId || undefined
-        const finalToppingName = item.topping?.name || undefined
+        const finalToppingId = item.toppingId || null
+        const finalToppingName = item.topping?.name || null
         const finalToppingPrice = item.topping?.price || 0
 
         addToCart({

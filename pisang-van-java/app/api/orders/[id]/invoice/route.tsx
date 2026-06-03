@@ -86,10 +86,11 @@ const Invoice = ({ order }: { order: any }) => (
   </Document>
 )
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const order = await prisma.order.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         user: true,
         items: {

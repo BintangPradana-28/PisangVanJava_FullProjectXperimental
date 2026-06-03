@@ -15,16 +15,16 @@ const addressSchema = z.object({
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: addressId } = await params;
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id;
     if (!session || !userId) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const addressId = params.id;
     
     // Verifikasi kepemilikan
     const existing = await prisma.address.findUnique({ where: { id: addressId } });
@@ -81,16 +81,16 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: addressId } = await params;
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id;
     if (!session || !userId) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const addressId = params.id;
     
     const existing = await prisma.address.findUnique({ where: { id: addressId } });
     if (!existing || existing.userId !== userId) {

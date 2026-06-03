@@ -16,3 +16,8 @@ coverage/
 
 # Sentry Config File
 .sentryclirc
+
+.env.local
+.env.development
+.env.production
+.env*.local

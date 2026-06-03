@@ -177,6 +177,7 @@ export default function TrackOrderPage() {
   const [orders,  setOrders]                 = useState<Order[] | null>(null)
   const [loading, setLoading]                = useState(false)
   const [error,   setError]                  = useState('')
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected')
 
   const STATUS_LABELS: Record<string, string> = {
     pending:   t('status_pending'),
@@ -212,6 +213,7 @@ export default function TrackOrderPage() {
     if (!orders || orders.length === 0 || !supabaseBrowserClient) return
 
     const orderIds = orders.map(o => o.id)
+    setConnectionStatus('connecting')
     
     // Subscribe to changes on the "Order" table for these specific order IDs
     const channel = supabaseBrowserClient
@@ -232,9 +234,13 @@ export default function TrackOrderPage() {
           }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') setConnectionStatus('connected')
+        else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setConnectionStatus('disconnected')
+      })
 
     return () => {
+      setConnectionStatus('disconnected')
       supabaseBrowserClient?.removeChannel(channel)
     }
   }, [orders?.map(o => o.id).join(',')])
@@ -281,6 +287,35 @@ export default function TrackOrderPage() {
         <AnimatePresence>
           {orders && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+              
+              {/* Connection Status & Refresh */}
+              {orders.length > 0 && (
+                <div className="flex items-center justify-between px-2 mb-2">
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="relative flex h-2.5 w-2.5">
+                      {connectionStatus === 'connected' && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>}
+                      <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                        connectionStatus === 'connected' ? 'bg-green-500' :
+                        connectionStatus === 'connecting' ? 'bg-amber-400' : 'bg-red-500'
+                      }`}></span>
+                    </span>
+                    <span className="text-zinc-500 font-medium">
+                      {connectionStatus === 'connected' ? 'Live Tracker Aktif' :
+                       connectionStatus === 'connecting' ? 'Menghubungkan...' : 'Live Tracker Terputus'}
+                    </span>
+                  </div>
+                  {connectionStatus !== 'connected' && (
+                    <button 
+                      onClick={handleSearch}
+                      disabled={loading}
+                      className="text-xs font-bold text-amber-600 hover:text-amber-700 disabled:opacity-50"
+                    >
+                      {loading ? 'Menyegarkan...' : 'Refresh Status 🔄'}
+                    </button>
+                  )}
+                </div>
+              )}
+
               {orders.length === 0 ? (
                 <div className="text-center py-12" style={{ color: 'var(--text-custom)', opacity: 0.5 }}>
                   <div className="text-4xl mb-2">🔍</div>
@@ -356,8 +391,18 @@ export default function TrackOrderPage() {
                         </div>
                       </div>
 
-                      {/* ── Reorder & Review CTA ─────────────────────────────────── */}
-                      <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex justify-end gap-2">
+                      {/* ── Reorder & Review & Invoice CTA ────────────────────────────── */}
+                      <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex justify-end gap-2 flex-wrap">
+                        {order.status !== 'cancelled' && (
+                          <a
+                            href={`/api/orders/${order.id}/invoice`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-full transition-all duration-200 active:scale-95 border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                          >
+                            📄 Invoice
+                          </a>
+                        )}
                         {order.status === 'done' && (
                           <Link
                             href={`/ulasan?orderId=${order.id}`}

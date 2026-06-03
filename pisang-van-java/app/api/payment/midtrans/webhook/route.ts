@@ -59,6 +59,19 @@ export async function POST(req: NextRequest) {
     }
 
     if (newStatus === 'processing' && order.status !== 'processing' && order.status !== 'paid') {
+      await prisma.order.update({
+        where: { id: order_id },
+        data: {
+          status: newStatus,
+          paymentStatus: transaction_status,
+          midtransTransactionId: transaction_id,
+          paymentPaidAt
+        }
+      });
+
+      // Trigger order confirmation email in the background
+      sendOrderConfirmationEmail(order_id).catch(console.error);
+    } else if (newStatus === 'cancelled' && order.status !== 'cancelled') {
       const orderWithItems = await prisma.order.findUnique({
         where: { id: order_id },
         include: { items: true }
@@ -74,16 +87,14 @@ export async function POST(req: NextRequest) {
             paymentPaidAt
           }
         }),
+        // Restore stock when cancelled
         ...(orderWithItems?.items || []).map(item =>
-          prisma.menuVariant.update({
+          prisma.menuVariant.updateMany({
             where: { id: item.variantId },
-            data: { stock: { decrement: item.quantity } }
+            data: { stock: { increment: item.quantity } }
           })
         )
       ]);
-
-      // Trigger order confirmation email in the background
-      sendOrderConfirmationEmail(order_id).catch(console.error);
     } else {
       await prisma.order.update({
         where: { id: order_id },

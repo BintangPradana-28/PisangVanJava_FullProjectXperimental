@@ -260,16 +260,21 @@ const paymentRateLimit = new Ratelimit({
 export async function requireCheckoutActor(): Promise<CheckoutActor | null> {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
+    console.error("[SECURITY] requireCheckoutActor: session or session.user is null/undefined", session);
     return null;
   }
 
+  // Ensure role defaults to CUSTOMER if somehow undefined for social logins
+  const role = session.user.role || "CUSTOMER";
+
   const parsed = checkoutActorSchema.safeParse({
-    userId: session.user.id,
-    role: session.user.role,
+    userId: session.user.id || "",
+    role: role,
     email: session.user.email ?? null,
   });
 
   if (!parsed.success) {
+    console.error("[SECURITY] requireCheckoutActor parsing failed", parsed.error.issues, "User data:", { id: session.user.id, role: session.user.role, email: session.user.email });
     return null;
   }
 

@@ -34,6 +34,14 @@ type BaseType       = 'kembung' | 'lumpia' | 'krispy'
 
 interface AppliedVoucher { code: string; discountAmount: number }
 
+interface UserAddress {
+  id: string
+  label: string
+  fullAddress: string
+  isDefault: boolean
+  notes?: string | null
+}
+
 function resolveBaseType(nameOrType?: string): BaseType | null {
   if (!nameOrType) return null
   const n = nameOrType.trim().toLowerCase()
@@ -72,6 +80,15 @@ export default function CheckoutPage() {
   const [consent, setConsent]               = useState(false)
   const [isSubmitting, setIsSubmitting]     = useState(false)
 
+  // Address state
+  const [addresses, setAddresses]           = useState<UserAddress[]>([])
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('')
+  const [isManualAddress, setIsManualAddress] = useState(false)
+
+  // Real-time WA Validation
+  const phoneError = customerPhone.trim() && !/^(\+62|62|0)8[1-9][0-9]{6,10}$/.test(customerPhone.trim()) 
+    ? 'Format tidak valid (cth: 081234567890)' : ''
+
   // Hydrate user data from session
   // NOTE: Auth redirect is now handled by Edge Middleware (middleware.ts).
   // This effect only fetches profile data to pre-fill the form.
@@ -82,9 +99,23 @@ export default function CheckoutPage() {
         .then(r => r.json())
         .then(d => {
           if (d.success && d.data?.phone) setCustomerPhone(d.data.phone)
-          if (d.success && d.data?.address) setAddress(d.data.address)
         })
         .catch(() => {})
+
+      fetch('/api/user/addresses', { credentials: 'include' })
+        .then(r => r.json())
+        .then(d => {
+          if (d.success && d.data) {
+            setAddresses(d.data)
+            const defaultAddr = d.data.find((a: UserAddress) => a.isDefault)
+            if (defaultAddr) setSelectedAddressId(defaultAddr.id)
+            else if (d.data.length > 0) setSelectedAddressId(d.data[0].id)
+            else setIsManualAddress(true)
+          }
+        })
+        .catch(() => setIsManualAddress(true))
+    } else {
+      setIsManualAddress(true)
     }
   }, [authStatus, session])
 
@@ -137,8 +168,16 @@ export default function CheckoutPage() {
     if (!/^(\+62|62|0)8[1-9][0-9]{6,10}$/.test(customerPhone.trim())) {
       toast.error('Format nomor WhatsApp tidak valid (cth: 081234567890)'); return
     }
-    if (delivery === 'DELIVERY' && !address.trim()) {
-      toast.error('Alamat pengiriman wajib diisi'); return
+    if (customerPhone.trim() && phoneError) {
+      toast.error(phoneError); return
+    }
+    if (delivery === 'DELIVERY') {
+      if (isManualAddress && !address.trim()) {
+        toast.error('Alamat pengiriman wajib diisi'); return
+      }
+      if (!isManualAddress && !selectedAddressId) {
+        toast.error('Pilih alamat pengiriman terlebih dahulu'); return
+      }
     }
     if (delivery === 'PICKUP' && !pickupTime.trim()) {
       toast.error('Waktu pengambilan wajib diisi'); return
@@ -168,6 +207,13 @@ export default function CheckoutPage() {
       toast.error('Ada item lama yang tidak valid. Tambahkan ulang dari menu.'); return
     }
 
+    const finalAddress = (delivery === 'DELIVERY')
+      ? (isManualAddress ? address.trim() : (() => {
+          const sel = addresses.find(a => a.id === selectedAddressId)
+          return sel ? `${sel.fullAddress} ${sel.notes ? `(Catatan: ${sel.notes})` : ''}`.trim() : ''
+        })())
+      : [pickupTime ? `Waktu Ambil: ${pickupTime}` : null, notes.trim()].filter(Boolean).join(' | ') || null
+
     setIsSubmitting(true)
     try {
       const res = await fetch('/api/orders', {
@@ -179,7 +225,7 @@ export default function CheckoutPage() {
           customerPhone: customerPhone.trim(),
           deliveryMethod: delivery,
           paymentMethod,
-          notes: delivery === 'DELIVERY' ? address.trim() : [pickupTime ? `Waktu Ambil: ${pickupTime}` : null, notes.trim()].filter(Boolean).join(' | ') || null,
+          notes: finalAddress,
           voucherCode: appliedVoucher?.code ?? null,
           items,
         }),
@@ -308,8 +354,9 @@ export default function CheckoutPage() {
                         type="tel" value={customerPhone}
                         onChange={e => setCustomerPhone(e.target.value)}
                         placeholder="Contoh: 081234567890"
-                        className="w-full px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
+                        className={`w-full px-4 py-3 rounded-2xl border ${phoneError ? 'border-red-400 focus:ring-red-400' : 'border-zinc-200 dark:border-zinc-700 focus:ring-amber-400'} bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 transition-all`}
                       />
+                      {phoneError && <p className="text-xs text-red-500 font-semibold mt-1">{phoneError}</p>}
                     </div>
 
                     {/* Delivery Method */}
@@ -337,28 +384,87 @@ export default function CheckoutPage() {
 
                     {/* Address / Notes / Pickup Time */}
                     {delivery === 'PICKUP' && (
-                      <div>
-                        <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5">Waktu Pengambilan *</label>
-                        <input
-                          type="time" value={pickupTime}
-                          onChange={e => setPickupTime(e.target.value)}
-                          className="w-full px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
-                        />
+                      <div className="space-y-5">
+                        <div>
+                          <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5">Waktu Pengambilan *</label>
+                          <input
+                            type="time" value={pickupTime}
+                            onChange={e => setPickupTime(e.target.value)}
+                            className="w-full px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5">Catatan (Opsional)</label>
+                          <textarea
+                            value={notes}
+                            onChange={e => setNotes(e.target.value)}
+                            placeholder="Catatan untuk penjual..."
+                            rows={2}
+                            className="w-full px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all resize-none"
+                          />
+                        </div>
                       </div>
                     )}
 
-                    <div>
-                      <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5">
-                        {delivery === 'DELIVERY' ? 'Alamat Pengiriman Lengkap *' : 'Catatan (Opsional)'}
-                      </label>
-                      <textarea
-                        value={delivery === 'DELIVERY' ? address : notes}
-                        onChange={e => delivery === 'DELIVERY' ? setAddress(e.target.value) : setNotes(e.target.value)}
-                        placeholder={delivery === 'DELIVERY' ? 'Jl. Contoh No.1, RT/RW, Kelurahan, Kota...' : 'Catatan untuk penjual...'}
-                        rows={3}
-                        className="w-full px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all resize-none"
-                      />
-                    </div>
+                    {delivery === 'DELIVERY' && (
+                      <div className="space-y-3">
+                        <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider">
+                          Alamat Pengiriman Lengkap *
+                        </label>
+
+                        {authStatus === 'authenticated' && addresses.length > 0 && !isManualAddress ? (
+                          <div className="space-y-3">
+                            <div className="grid gap-2">
+                              {addresses.map(addr => (
+                                <button
+                                  key={addr.id}
+                                  type="button"
+                                  onClick={() => setSelectedAddressId(addr.id)}
+                                  className={`text-left p-4 rounded-2xl border-2 transition-all ${
+                                    selectedAddressId === addr.id
+                                      ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20'
+                                      : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 bg-zinc-50 dark:bg-zinc-800'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="font-bold text-sm text-zinc-800 dark:text-zinc-100">{addr.label}</span>
+                                    {addr.isDefault && <span className="text-[10px] font-bold bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full">Utama</span>}
+                                  </div>
+                                  <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2">{addr.fullAddress}</p>
+                                  {addr.notes && <p className="text-xs text-zinc-500 italic mt-1">Catatan: {addr.notes}</p>}
+                                </button>
+                              ))}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setIsManualAddress(true)}
+                              className="text-xs font-bold text-amber-600 hover:text-amber-700 underline"
+                            >
+                              + Tulis Alamat Baru Secara Manual
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <textarea
+                              value={address}
+                              onChange={e => setAddress(e.target.value)}
+                              placeholder="Jl. Contoh No.1, RT/RW, Kelurahan, Kecamatan, Kota..."
+                              rows={3}
+                              className="w-full px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all resize-none"
+                            />
+                            {authStatus === 'authenticated' && addresses.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => setIsManualAddress(false)}
+                                className="text-xs font-bold text-amber-600 hover:text-amber-700 underline"
+                              >
+                                ← Kembali Pilih Alamat Tersimpan
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Voucher */}
                     <div>
@@ -433,8 +539,12 @@ export default function CheckoutPage() {
                         <div className="flex justify-between"><span className="text-zinc-500">WhatsApp</span><span className="font-semibold text-zinc-800 dark:text-zinc-100">{customerPhone}</span></div>
                         <div className="flex justify-between"><span className="text-zinc-500">Pengiriman</span><span className="font-semibold text-zinc-800 dark:text-zinc-100">{delivery === 'DELIVERY' ? '🛵 Delivery' : '🏪 Pickup'}</span></div>
                         <div className="flex justify-between"><span className="text-zinc-500">Pembayaran</span><span className="font-semibold text-zinc-800 dark:text-zinc-100">{paymentMethod === 'WHATSAPP' ? '💬 WhatsApp' : '💳 Online'}</span></div>
-                        {delivery === 'DELIVERY' && address && (
-                          <div className="flex justify-between gap-4"><span className="text-zinc-500 shrink-0">Alamat</span><span className="font-semibold text-zinc-800 dark:text-zinc-100 text-right">{address}</span></div>
+                        {delivery === 'DELIVERY' && (
+                          <div className="flex justify-between gap-4"><span className="text-zinc-500 shrink-0">Alamat</span><span className="font-semibold text-zinc-800 dark:text-zinc-100 text-right">
+                            {isManualAddress 
+                              ? address 
+                              : addresses.find(a => a.id === selectedAddressId)?.fullAddress}
+                          </span></div>
                         )}
                         {delivery === 'PICKUP' && pickupTime && (
                           <div className="flex justify-between gap-4"><span className="text-zinc-500 shrink-0">Waktu Ambil</span><span className="font-semibold text-zinc-800 dark:text-zinc-100 text-right">{pickupTime}</span></div>

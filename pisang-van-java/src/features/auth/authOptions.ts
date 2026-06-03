@@ -123,8 +123,8 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id;
-        session.user.role = token.role;
+        session.user.id = (token.id as string) || (token.sub as string);
+        session.user.role = (token.role as Role) || "CUSTOMER";
       }
       return session;
     },

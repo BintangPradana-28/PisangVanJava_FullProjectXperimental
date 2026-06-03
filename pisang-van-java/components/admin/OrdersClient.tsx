@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { formatPrice } from '@/lib/utils'
+import { supabaseBrowserClient } from '@/src/lib/supabase-client'
 
 type OrderStatus = 'pending' | 'paid' | 'confirmed' | 'ready' | 'done' | 'cancelled'
 
@@ -93,9 +94,27 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
   const [bulkStatus, setBulkStatus]   = useState<OrderStatus>('confirmed')
   const [isBulkUpdating, setIsBulkUpdating] = useState(false)
   const [lastRefresh, setLastRefresh] = useState(new Date())
-  const [isPolling, setIsPolling]     = useState(true)
   const [hasNewOrder, setHasNewOrder] = useState(false)
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected')
   const prevCountRef = useRef(initialOrders.length)
+
+  const playNotificationSound = () => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(880, ctx.currentTime) // A5 note
+      gain.gain.setValueAtTime(0.1, ctx.currentTime)
+      osc.start()
+      gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.5)
+      osc.stop(ctx.currentTime + 0.5)
+    } catch (e) {
+      console.warn('Audio playback not supported or blocked by browser')
+    }
+  }
 
   // ── Real-time polling ────────────────────────────────────────────────────
   const fetchOrders = useCallback(async (silent = false) => {
@@ -106,22 +125,63 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
         const fresh: Order[] = data.data.orders
         if (fresh.length > prevCountRef.current) {
           setHasNewOrder(true)
-          if (!silent) toast.success(`🔔 ${fresh.length - prevCountRef.current} pesanan baru masuk!`, { duration: 4000 })
         }
         prevCountRef.current = fresh.length
         setOrders(fresh)
         setLastRefresh(new Date())
       }
     } catch {
-      if (!silent) console.warn('[OrdersClient] Polling failed silently')
+      if (!silent) console.warn('[OrdersClient] Fetch failed silently')
     }
   }, [])
 
+  // ── Supabase Realtime ────────────────────────────────────────────────────
   useEffect(() => {
-    if (!isPolling) return
+    if (!supabaseBrowserClient) return
+
+    setConnectionStatus('connecting')
+    
+    const channel = supabaseBrowserClient
+      .channel('public:Order')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'Order' },
+        (payload) => {
+          playNotificationSound()
+          fetchOrders(true)
+          toast.success(`🔔 Pesanan baru masuk!`, { duration: 5000, icon: '🎉' })
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'Order' },
+        (payload) => {
+          const updatedOrder = payload.new as { id: string; status: string }
+          setOrders(prev => prev.map(o => 
+            o.id === updatedOrder.id && isOrderStatus(updatedOrder.status)
+              ? { ...o, status: updatedOrder.status as OrderStatus } 
+              : o
+          ))
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') setConnectionStatus('connected')
+        else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setConnectionStatus('disconnected')
+      })
+
+    return () => {
+      setConnectionStatus('disconnected')
+      supabaseBrowserClient?.removeChannel(channel)
+    }
+  }, [fetchOrders])
+
+  // ── Fallback Polling ─────────────────────────────────────────────────────
+  useEffect(() => {
+    if (connectionStatus === 'connected') return
+    // Jika websocket gagal terhubung atau terputus, fallback ke polling manual 30 detik
     const interval = setInterval(() => fetchOrders(true), 30_000)
     return () => clearInterval(interval)
-  }, [isPolling, fetchOrders])
+  }, [connectionStatus, fetchOrders])
 
   // ── Derived: filtered orders ─────────────────────────────────────────────
   const filtered = orders.filter(o => {
@@ -219,7 +279,7 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
           <h1 className="font-serif text-2xl font-bold text-brown-700">Pusat Komando Pesanan</h1>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-xs text-brown-400">{stats.total} total • Diperbarui {lastRefresh.toLocaleTimeString('id-ID')}</span>
-            {hasNewOrder && (
+          {hasNewOrder && (
               <motion.span
                 initial={{ scale: 0 }} animate={{ scale: 1 }}
                 className="text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full cursor-pointer"
@@ -228,15 +288,18 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
                 PESANAN BARU!
               </motion.span>
             )}
+            {connectionStatus === 'connected' ? (
+              <span className="flex items-center gap-1 text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" /> LIVE
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-[10px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full" title="Real-time terputus. Beralih ke fallback polling tiap 30 detik.">
+                <span className="w-2 h-2 bg-amber-500 rounded-full" /> FALLBACK
+              </span>
+            )}
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={() => { setIsPolling(p => !p); toast(isPolling ? '⏸ Auto-refresh dimatikan' : '▶ Auto-refresh aktif') }}
-            className={`text-xs px-3 py-2 rounded-lg font-semibold border transition-all ${isPolling ? 'bg-green-100 text-green-700 border-green-300' : 'bg-zinc-100 text-zinc-500 border-zinc-200'}`}
-          >
-            {isPolling ? '⏸ Auto' : '▶ Manual'}
-          </button>
           <button onClick={() => fetchOrders(false)} className="text-xs px-3 py-2 rounded-lg font-semibold bg-white border border-cream-200 text-brown-600 hover:bg-cream-50">
             🔄 Refresh
           </button>

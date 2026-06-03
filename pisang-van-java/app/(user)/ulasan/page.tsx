@@ -10,11 +10,10 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
-export default async function UlasanPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | undefined }
+export default async function UlasanPage(props: {
+  searchParams: Promise<{ [key: string]: string | undefined }>
 }) {
+  const searchParams = await props.searchParams
   const filter = searchParams.filter || 'Semua'
 
   // Build where clause

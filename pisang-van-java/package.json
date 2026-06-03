@@ -41,7 +41,7 @@
     "framer-motion": "^11.18.2",
     "lucide-react": "^1.16.0",
     "midtrans-client": "^1.4.3",
-    "next": "^16.2.6",
+    "next": "^15.0.0",
     "next-auth": "^4.24.14",
     "next-safe-action": "^8.5.3",
     "next-themes": "^0.4.6",

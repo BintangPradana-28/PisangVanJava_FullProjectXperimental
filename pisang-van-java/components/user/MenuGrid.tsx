@@ -28,6 +28,21 @@ const getFallbackImage = (name: string) => {
   return "https://lh3.googleusercontent.com/aida-public/AB6AXuB9LDm-0dz2bLyJgspWeoXpBM_q2p0viEQ3K2S2MhuSf5S5rdGQSfvR2RvTz_gWhe-LKgSzT0N8benG0sTrXkPwbOo_DqG8NeBu7XIPyms32RLdnWqUQ81MQxvOEsTPkzyTH8n45bhr0MIMG_Rv6S5w3Zo5nF-a590KXFVpcne08grJ0MH5PARTwrDYePvrFd7tzyhEw1Cx6_7K-kjmGj4TsXh9Xop3zMBCABCChMVbJzXOcm4BMRs0kWkzWEiEZ3-aXvEPFGT20x3B";
 };
 
+const getFlavorDescriptionKey = (flavorName: string): string | null => {
+  const lower = flavorName.toLowerCase();
+  if (lower.includes('cokelat') || lower.includes('coklat')) return 'menu_desc_cokelat';
+  if (lower.includes('matcha')) return 'menu_desc_matcha';
+  if (lower.includes('strawberry') || lower.includes('stroberi')) return 'menu_desc_strawberry';
+  if (lower.includes('blueberry') || lower.includes('bluberi')) return 'menu_desc_blueberry';
+  if (lower.includes('taro')) return 'menu_desc_taro';
+  if (lower.includes('tiramisu')) return 'menu_desc_tiramisu';
+  if (lower.includes('keju')) return 'menu_desc_keju';
+  if (lower.includes('susu')) return 'menu_desc_susu';
+  if (lower.includes('original')) return 'menu_desc_original';
+  if (lower.includes('milky')) return 'menu_desc_milky';
+  return null;
+}
+
 export default function MenuGrid({ products }: { products: ProductType[] }) {
   const { t } = useLanguage();
   const router = useRouter();
@@ -181,10 +196,28 @@ export default function MenuGrid({ products }: { products: ProductType[] }) {
 
                       {/* Stock Indicator */}
                       <div className="flex items-center gap-1.5 mb-2 mt-1">
-                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                        <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 tracking-wide">
-                          Sisa Stok: <span className="font-bold text-green-600 dark:text-green-400">{product.stock}</span> porsi
-                        </span>
+                        {product.stock > 50 ? (
+                          <>
+                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                            <span className="text-xs font-semibold text-green-600 dark:text-green-400 tracking-wide">
+                              Tersedia
+                            </span>
+                          </>
+                        ) : product.stock >= 10 ? (
+                          <>
+                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                            <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 tracking-wide">
+                              Stok Terbatas
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                            <span className="text-xs font-semibold text-red-600 dark:text-red-400 tracking-wide">
+                              Sisa <span className="font-bold">{product.stock}</span> porsi
+                            </span>
+                          </>
+                        )}
                       </div>
 
                       {/* Rating UI */}
@@ -207,7 +240,10 @@ export default function MenuGrid({ products }: { products: ProductType[] }) {
                         className="text-sm leading-relaxed mb-6 flex-grow"
                         style={{ color: "var(--text-custom)" }}
                       >
-                        {t("menu_default_desc")}
+                        {product.deskripsi_topping || (() => {
+                          const key = getFlavorDescriptionKey(product.flavorName);
+                          return key ? t(key) : t('menu_default_desc');
+                        })()}
                       </p>
                       <div
                         className="w-full border-t pt-4 flex flex-col items-center gap-3"

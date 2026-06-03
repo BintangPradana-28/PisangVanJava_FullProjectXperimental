@@ -103,7 +103,7 @@ async function main() {
   const defaultSettings = {
     nomor_wa: '6281312167554',
     alamat: 'Jl. Raya Cilangkap l Rt.2/Rw.5, Cilangkap, Kec. Cipayung, Kota Jakarta Timur',
-    jam_operasional: 'Senin–Minggu: 09.00–21.00 WIB'
+    jam_operasional: 'Setiap Hari: 10.00–21.00 WIB'
   }
 
   await prisma.settings.upsert({
@@ -123,7 +123,7 @@ async function main() {
     { key: 'nomor_wa', value: '6281312167554', label: 'Nomor WhatsApp (Format: 628...)', group: 'contact' },
     { key: 'kontak_whatsapp', value: '6281312167554', label: 'Nomor WhatsApp Checkout', group: 'contact' },
     { key: 'alamat', value: 'Jl. Raya Cilangkap l Rt.2/Rw.5, Cilangkap, Kec. Cipayung, Kota Jakarta Timur', label: 'Alamat Toko', group: 'contact' },
-    { key: 'jam_operasional', value: 'Senin–Minggu: 09.00–21.00 WIB', label: 'Jam Operasional', group: 'contact' },
+    { key: 'jam_operasional', value: 'Setiap Hari: 10.00–21.00 WIB', label: 'Jam Operasional', group: 'contact' },
     { key: 'instagram', value: 'https://instagram.com/pisanggorengvanjava', label: 'Link Instagram', group: 'social' },
     { key: 'tiktok', value: 'https://tiktok.com/@pisanggorengvanjava', label: 'Link TikTok', group: 'social' },
     { key: 'store_open', value: 'true', label: 'Status Toko (true = Buka, false = Tutup)', group: 'general' },

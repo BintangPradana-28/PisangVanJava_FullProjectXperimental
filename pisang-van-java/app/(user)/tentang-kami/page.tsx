@@ -27,11 +27,12 @@ export default function TentangKamiPage() {
     { year: '2026', event: getSetting('about_mile6_event', 'Ekspansi B2B & Modernisasi Dapur Pusat dengan standar Enterprise F&B.') },
   ]
 
+  const teamColors = ['#D4802A', '#8B6914', '#5a3e1b']
+
   const team = [
-    // Replaced Emojis with high-quality AI images representation (Using placeholders for demo but properly styled)
-    { name: getSetting('about_team1_name', t('about_team1_name')), role: getSetting('about_team1_role', t('about_team1_role')), image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCR1fdcxKbWFydWHbeLUdTplGwYff0W_EkWxDeDQO9gO9NgZeCKJiSH3oKGWd9Kd0S3MlYErY2lazlzkcNMM1eRSBHewjL8fot_lG2NgcnR64PJmbF8WH6yfyzcKg4AMkZhri91WuXNC2Kkw6ZKvxoYnnN__1ZRRLxsRVT_JYxNLkoWKt85Ui2pUOxKx7SDx1rGtj1PelXxJPprXrtgdzG-TXF1xpytXqHYKhqaVxj7QK7JtWJHTSkGQvqw5kHQG1K5Jbmi42-a_BXl', desc: getSetting('about_team1_desc', t('about_team1_desc')) },
-    { name: getSetting('about_team2_name', t('about_team2_name')), role: getSetting('about_team2_role', t('about_team2_role')), image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBj4eUVL4GCnyXWfJPOOd9fAAG9IxfaNxn7XlL0ezKjhPebxL4ZQuTq75Cyv8_DEpTEXWQ-wVbufB-cMwyGHieei2jGWIlLG2w8WLrne_pM3P3cZuTxOL5UfH0LeZuAK3jhuZU0DA4A6yJbLm4rGFnfHBlQRU81JrRhBI1Td1w-q4U0n5lau31RqJU7sH8hqx_96O56Q_ZdQNYi59sOZ3GahcZk33rHTp-CwMKrjQXohknO-GwV4axvtwl-4-Y9IdSElxWbmHxafFKU', desc: getSetting('about_team2_desc', t('about_team2_desc')) },
-    { name: getSetting('about_team3_name', t('about_team3_name')), role: getSetting('about_team3_role', t('about_team3_role')), image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCuoAcWHG4QUqFwzpuBNIiaBkLcJz1LV9m6p9PxV2_qn2WSGWrEBvMDt8FRrqMy_OoFbvbxPhWt-rkUfOJb6etQcez1ASToorW3mXf5JS_xl10v3v70igMCcIrAMpBGGaEu04I3Of3ciTtE2-7xONBem-5vFcik2fJR33PPVUjV0FJFGjlkjfzgQPrhIoCaiuE8cwWt7W1RSkuSY1Z9FKR9sgdyodxJg59Nruc3CsWtal9atky3HkE_WCrMJk7WkLsMqPddUVASBgtH', desc: getSetting('about_team3_desc', t('about_team3_desc')) },
+    { name: getSetting('about_team1_name', t('about_team1_name')), role: getSetting('about_team1_role', t('about_team1_role')), color: teamColors[0], desc: getSetting('about_team1_desc', t('about_team1_desc')) },
+    { name: getSetting('about_team2_name', t('about_team2_name')), role: getSetting('about_team2_role', t('about_team2_role')), color: teamColors[1], desc: getSetting('about_team2_desc', t('about_team2_desc')) },
+    { name: getSetting('about_team3_name', t('about_team3_name')), role: getSetting('about_team3_role', t('about_team3_role')), color: teamColors[2], desc: getSetting('about_team3_desc', t('about_team3_desc')) },
   ]
 
   const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.09 } } }
@@ -188,13 +189,15 @@ export default function TentangKamiPage() {
             </h2>
           </motion.div>
           <div className="grid sm:grid-cols-3 gap-8">
-            {team.map(({ name, role, image, desc }, i) => (
+            {team.map(({ name, role, color, desc }, i) => (
               <motion.div key={name}
                 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }} transition={{ delay: i * 0.1 }}
                 className="rounded-3xl p-6 text-center transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-zinc-900 border border-cream-200 dark:border-zinc-800 group">
-                <div className="relative w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden border-4 border-cream-100 dark:border-zinc-800 group-hover:border-amber-500 transition-colors">
-                   <Image src={image} alt={name} fill className="object-cover" />
+                <div className="relative w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden border-4 border-cream-100 dark:border-zinc-800 group-hover:border-amber-500 transition-colors flex items-center justify-center" style={{ backgroundColor: color }}>
+                  <span className="font-serif text-4xl font-bold text-white select-none">
+                    {name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                  </span>
                 </div>
                 <h3 className="font-serif text-xl font-bold mb-1 text-brown-900 dark:text-zinc-100">{name}</h3>
                 <div className="text-xs font-bold tracking-wider uppercase mb-3 text-amber-700 dark:text-amber-500">{role}</div>

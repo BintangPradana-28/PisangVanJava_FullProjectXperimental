@@ -23,7 +23,7 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   nomor_wa: '6281312167554',
   kontak_whatsapp: '6281312167554',
   alamat: 'Jl. Raya Cilangkap l Rt.2/Rw.5, Cilangkap, Kec. Cipayung, Kota Jakarta Timur',
-  jam_operasional: 'Senin–Minggu: 09.00–21.00 WIB',
+  jam_operasional: 'Setiap Hari: 10.00–21.00 WIB',
   instagram: 'https://instagram.com/pisanggorengvanjava',
   tiktok: 'https://tiktok.com/@pisanggorengvanjava',
   store_open: 'true',

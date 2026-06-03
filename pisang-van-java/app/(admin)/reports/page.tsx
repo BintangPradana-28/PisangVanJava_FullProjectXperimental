@@ -6,7 +6,8 @@ import { authOptions } from '@/src/features/auth/authOptions'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import ReportsClient from '@/components/admin/ReportsClient'
 
-export default async function ReportsPage({ searchParams }: { searchParams: { range?: string } }) {
+export default async function ReportsPage(props: { searchParams: Promise<{ range?: string }> }) {
+  const searchParams = await props.searchParams
   const session = await getServerSession(authOptions)
   if (!session) redirect('/login')
 

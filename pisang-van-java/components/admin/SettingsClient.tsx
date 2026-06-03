@@ -228,7 +228,7 @@ export default function SettingsClient({ settings, adminName }: Props) {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-brown-700 mb-1">Jam Operasional</label>
-                  <input type="text" value={values['jam_operasional'] || ''} onChange={e => setValues({ ...values, ['jam_operasional']: e.target.value })} className="w-full bg-cream-50 border border-cream-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-brand/50 transition-all" placeholder="Senin-Minggu: 09.00-21.00 WIB" />
+                  <input type="text" value={values['jam_operasional'] || ''} onChange={e => setValues({ ...values, ['jam_operasional']: e.target.value })} className="w-full bg-cream-50 border border-cream-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-brand/50 transition-all" placeholder="Setiap Hari: 10.00-21.00 WIB" />
                 </div>
               </div>
             </div>

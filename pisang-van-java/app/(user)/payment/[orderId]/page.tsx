@@ -129,7 +129,7 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
               )}
               <div className="flex justify-between border-t border-zinc-200 pt-3 dark:border-zinc-800">
                 <span className="font-bold text-zinc-900 dark:text-zinc-100">Total</span>
-                <span className="font-serif text-2xl font-bold text-blue-700 dark:text-blue-300">{formatPrice(order.totalPrice)}</span>
+                <span className="font-serif text-2xl font-bold text-[#D4802A] dark:text-amber-400">{formatPrice(order.totalPrice)}</span>
               </div>
             </div>
           </div>
@@ -152,7 +152,22 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-zinc-500 dark:text-zinc-400">Status</span>
-                <span className="text-right font-semibold text-zinc-900 dark:text-zinc-100">{order.status}</span>
+                <span className={`text-right text-xs font-bold px-2.5 py-1 rounded-full ${
+                  order.status === 'paid' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                  order.status === 'processing' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                  order.status === 'pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                  order.status === 'cancelled' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                  'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'
+                }`}>
+                  {order.status === 'pending' ? 'Menunggu Pembayaran' :
+                   order.status === 'paid' ? 'Sudah Dibayar' :
+                   order.status === 'processing' ? 'Sedang Diproses' :
+                   order.status === 'confirmed' ? 'Dikonfirmasi' :
+                   order.status === 'ready' ? 'Siap Diambil' :
+                   order.status === 'done' ? 'Selesai' :
+                   order.status === 'cancelled' ? 'Dibatalkan' :
+                   order.status}
+                </span>
               </div>
             </div>
 

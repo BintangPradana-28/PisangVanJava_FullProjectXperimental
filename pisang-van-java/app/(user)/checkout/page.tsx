@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 import { z } from 'zod'
-import { useCart } from '@/context/CartContext'
+import { useCartStore, useCartTotal } from '@/src/lib/store/useCartStore'
 import { useSettings } from '@/context/SettingsContext'
 import { validateVoucher } from '@/src/features/checkout/actions'
 
@@ -52,7 +52,9 @@ const STEPS = ['Keranjang', 'Detail', 'Konfirmasi']
 export default function CheckoutPage() {
   const router              = useRouter()
   const { data: session, status: authStatus } = useSession()
-  const { cartItems, cartTotal, clearCart }    = useCart()
+  const cartItems = useCartStore((s) => s.items)
+  const clearCart = useCartStore((s) => s.clearCart)
+  const cartTotal = useCartTotal()
   const { getSetting }      = useSettings()
 
   // Form state
@@ -61,6 +63,7 @@ export default function CheckoutPage() {
   const [customerPhone, setCustomerPhone]   = useState('')
   const [delivery, setDelivery]             = useState<DeliveryMethod>('PICKUP')
   const [address, setAddress]               = useState('')
+  const [pickupTime, setPickupTime]         = useState('')
   const [notes, setNotes]                   = useState('')
   const [paymentMethod, setPaymentMethod]   = useState<PaymentMethod>('WHATSAPP')
   const [voucherCode, setVoucherCode]       = useState('')
@@ -137,6 +140,9 @@ export default function CheckoutPage() {
     if (delivery === 'DELIVERY' && !address.trim()) {
       toast.error('Alamat pengiriman wajib diisi'); return
     }
+    if (delivery === 'PICKUP' && !pickupTime.trim()) {
+      toast.error('Waktu pengambilan wajib diisi'); return
+    }
     // All valid → advance
     setStep(2)
   }
@@ -173,7 +179,7 @@ export default function CheckoutPage() {
           customerPhone: customerPhone.trim(),
           deliveryMethod: delivery,
           paymentMethod,
-          notes: delivery === 'DELIVERY' ? address.trim() : (notes.trim() || null),
+          notes: delivery === 'DELIVERY' ? address.trim() : [pickupTime ? `Waktu Ambil: ${pickupTime}` : null, notes.trim()].filter(Boolean).join(' | ') || null,
           voucherCode: appliedVoucher?.code ?? null,
           items,
         }),
@@ -329,7 +335,18 @@ export default function CheckoutPage() {
                       </div>
                     </div>
 
-                    {/* Address / Notes */}
+                    {/* Address / Notes / Pickup Time */}
+                    {delivery === 'PICKUP' && (
+                      <div>
+                        <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5">Waktu Pengambilan *</label>
+                        <input
+                          type="time" value={pickupTime}
+                          onChange={e => setPickupTime(e.target.value)}
+                          className="w-full px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
+                        />
+                      </div>
+                    )}
+
                     <div>
                       <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5">
                         {delivery === 'DELIVERY' ? 'Alamat Pengiriman Lengkap *' : 'Catatan (Opsional)'}
@@ -418,6 +435,9 @@ export default function CheckoutPage() {
                         <div className="flex justify-between"><span className="text-zinc-500">Pembayaran</span><span className="font-semibold text-zinc-800 dark:text-zinc-100">{paymentMethod === 'WHATSAPP' ? '💬 WhatsApp' : '💳 Online'}</span></div>
                         {delivery === 'DELIVERY' && address && (
                           <div className="flex justify-between gap-4"><span className="text-zinc-500 shrink-0">Alamat</span><span className="font-semibold text-zinc-800 dark:text-zinc-100 text-right">{address}</span></div>
+                        )}
+                        {delivery === 'PICKUP' && pickupTime && (
+                          <div className="flex justify-between gap-4"><span className="text-zinc-500 shrink-0">Waktu Ambil</span><span className="font-semibold text-zinc-800 dark:text-zinc-100 text-right">{pickupTime}</span></div>
                         )}
                       </div>
 

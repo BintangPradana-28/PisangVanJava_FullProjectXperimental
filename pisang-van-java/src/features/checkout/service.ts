@@ -11,7 +11,7 @@ import type { Prisma } from "@prisma/client";
 
 const ROLE_VALUES = ["ADMIN", "CUSTOMER", "RESELLER"] as const;
 const BASE_TYPE_VALUES = ["kembung", "lumpia", "krispy"] as const;
-const ORDER_STATUS_VALUES = ["pending", "paid", "confirmed", "ready", "done", "cancelled"] as const;
+const ORDER_STATUS_VALUES = ["pending", "paid", "processing", "ready", "done", "cancelled"] as const;
 const PAYMENT_METHOD_VALUES = ["WHATSAPP", "ONLINE"] as const;
 
 const resourceIdSchema = z

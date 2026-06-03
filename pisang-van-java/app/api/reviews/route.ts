@@ -6,7 +6,8 @@ import { z } from 'zod'
 import type { Prisma } from '@prisma/client'
 
 const reviewSchema = z.object({
-  variantId: z.string().min(1),
+  orderId:   z.string().min(1),
+  variantId: z.string().min(1).optional(),
   rating:    z.number().int().min(1).max(5),
   comment:   z.string().max(1000).optional(),
   imageUrl:  z.string().url().optional().or(z.literal('')),
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest) {
         id:        r.id,
         userId:    r.userId,
         userName:  maskName(r.user?.name),
-        variantName: r.variant.flavorName,
+        variantName: r.variant?.flavorName || 'Pesanan Umum',
         rating:    r.rating,
         comment:   r.comment,
         imageUrl:  r.imageUrl,
@@ -106,28 +107,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: parsed.error.issues[0].message }, { status: 400 })
   }
 
-  const { variantId, rating, comment, imageUrl } = parsed.data
+  const { orderId, variantId, rating, comment, imageUrl } = parsed.data
 
   try {
     // Verified Buyer Check
-    let isVerifiedBuyer = false
-    const user = await prisma.user.findUnique({ where: { id: session.user.id } })
-    if (user && user.phone) {
-      const order = await prisma.order.findFirst({
-        where: {
-          customerPhone: user.phone,
-          status: { notIn: ['pending', 'cancelled'] },
-          items: { some: { variantId } }
-        }
-      })
-      if (order) isVerifiedBuyer = true
-    }
+    const order = await prisma.order.findUnique({ where: { id: orderId } })
+    const isVerifiedBuyer = order !== null
 
     const review = await prisma.review.upsert({
-      where:  { userId_variantId: { userId: session.user.id, variantId } },
+      where:  { userId_orderId: { userId: session.user.id, orderId } },
       create: { 
         userId: session.user.id, 
-        variantId, 
+        orderId,
+        variantId: variantId ?? null, 
         rating, 
         comment: comment ?? null,
         imageUrl: imageUrl ?? null,
@@ -137,7 +129,6 @@ export async function POST(req: NextRequest) {
         rating, 
         comment: comment ?? null,
         imageUrl: imageUrl ?? null,
-        isVerifiedBuyer // Re-check verification in case they bought it later
       },
     })
     return NextResponse.json({ success: true, data: review }, { status: 201 })

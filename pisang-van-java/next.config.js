@@ -53,20 +53,7 @@ const nextConfig = {
   }
 }
 
-module.exports = withSentryConfig(
-  nextConfig,
-  {
-    silent: true,
-    org: "pisang-van-java",
-    project: "pisang-van-java",
-  },
-  {
-    widenClientFileUpload: true,
-    transpileClientSDK: true,
-    hideSourceMaps: true,
-    disableLogger: true,
-  }
-);
+module.exports = nextConfig;
 
 
 

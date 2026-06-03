@@ -3,19 +3,21 @@
 // app/(user)/track-order/page.tsx
 // Upgraded: Added "Pesan Lagi" (Reorder) button that pushes all items to cart.
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatPrice } from '@/lib/utils'
 import { useLanguage } from '@/context/LanguageContext'
-import { useCart } from '@/context/CartContext'
+import { useCartStore } from '@/src/lib/store/useCartStore'
 import toast from 'react-hot-toast'
 import { z } from 'zod'
+import { supabaseBrowserClient } from '@/src/lib/supabase-client'
 
-const STATUS_STEPS = ['pending', 'paid', 'confirmed', 'ready', 'done']
+const STATUS_STEPS = ['pending', 'paid', 'processing', 'ready', 'done']
 const STATUS_ICONS: Record<string, string> = {
   pending:   '⏳',
   paid:      '💳',
-  confirmed: '✅',
+  processing:'🧑‍🍳',
   ready:     '🍌',
   done:      '🎉',
   cancelled: '❌',
@@ -86,7 +88,7 @@ function resolveBasePrice(baseType: string, product: LiveProduct) {
 
 // ── Reorder Button ─────────────────────────────────────────────────────────────
 function ReorderButton({ order }: { order: Order }) {
-  const { addToCart } = useCart()
+  const addToCart = useCartStore((s) => s.addItem)
   const [loading, setLoading] = useState(false)
 
   const handleReorder = async () => {
@@ -179,7 +181,7 @@ export default function TrackOrderPage() {
   const STATUS_LABELS: Record<string, string> = {
     pending:   t('status_pending'),
     paid:      t('status_paid'),
-    confirmed: t('status_confirmed'),
+    processing:'Sedang Diproses',
     ready:     t('status_ready'),
     done:      t('status_done'),
     cancelled: t('status_cancelled'),
@@ -204,6 +206,38 @@ export default function TrackOrderPage() {
       setLoading(false)
     }
   }
+
+  // ── Supabase Realtime Subscription ───────────────────────────────────────────
+  useEffect(() => {
+    if (!orders || orders.length === 0 || !supabaseBrowserClient) return
+
+    const orderIds = orders.map(o => o.id)
+    
+    // Subscribe to changes on the "Order" table for these specific order IDs
+    const channel = supabaseBrowserClient
+      .channel('public:Order')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'Order' },
+        (payload) => {
+          const updatedOrder = payload.new as { id: string; status: string }
+          if (orderIds.includes(updatedOrder.id)) {
+            setOrders(prev => {
+              if (!prev) return prev
+              return prev.map(o => 
+                o.id === updatedOrder.id ? { ...o, status: updatedOrder.status } : o
+              )
+            })
+            toast.success(`Status pesanan diperbarui menjadi: ${STATUS_LABELS[updatedOrder.status] || updatedOrder.status}`, { icon: '🔄' })
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabaseBrowserClient?.removeChannel(channel)
+    }
+  }, [orders?.map(o => o.id).join(',')])
 
   return (
     <section className="min-h-screen py-16 px-4" style={{ background: 'var(--background-custom)' }}>
@@ -322,8 +356,16 @@ export default function TrackOrderPage() {
                         </div>
                       </div>
 
-                      {/* ── Reorder CTA ─────────────────────────────────── */}
-                      <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex justify-end">
+                      {/* ── Reorder & Review CTA ─────────────────────────────────── */}
+                      <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex justify-end gap-2">
+                        {order.status === 'done' && (
+                          <Link
+                            href={`/ulasan?orderId=${order.id}`}
+                            className="flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-full transition-all duration-200 active:scale-95 border border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                          >
+                            ⭐ Beri Ulasan
+                          </Link>
+                        )}
                         <ReorderButton order={order} />
                       </div>
                     </div>

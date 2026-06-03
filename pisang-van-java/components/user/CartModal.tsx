@@ -7,7 +7,7 @@ import { CreditCard, MessageCircle, TicketPercent, ShoppingCart, X, Minus, Plus,
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useCart, type CartItem } from '@/context/CartContext'
+import { useCartStore, useCartTotal, type CartItem } from '@/src/lib/store/useCartStore'
 import { useLanguage } from '@/context/LanguageContext'
 import { useSettings } from '@/context/SettingsContext'
 import { validateVoucher } from '@/src/features/checkout/actions'
@@ -95,7 +95,11 @@ const formatPrice = (amount: number) =>
 // ============================================================
 export default function CartModal({ isOpen, onClose }: CartModalProps) {
   const router = useRouter()
-  const { cartItems, updateQuantity, removeFromCart, cartTotal, clearCart } = useCart()
+  const cartItems = useCartStore((s) => s.items)
+  const updateQuantity = useCartStore((s) => s.updateQuantity)
+  const removeFromCart = useCartStore((s) => s.removeItem)
+  const clearCart = useCartStore((s) => s.clearCart)
+  const cartTotal = useCartTotal()
   const { t } = useLanguage()
   const { getSetting } = useSettings()
 

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { CreditCard, MessageCircle, TicketPercent } from 'lucide-react'
 import { z } from 'zod'
-import { useCart, type CartItem } from '@/context/CartContext'
+import { useCartStore, useCartTotal, type CartItem } from '@/src/lib/store/useCartStore'
 import { useLanguage } from '@/context/LanguageContext'
 import { useSettings } from '@/context/SettingsContext'
 import { validateVoucher } from '@/src/features/checkout/actions'
@@ -73,7 +73,11 @@ function normalizeBaseType(value: string): BaseType | null {
 
 export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const router = useRouter()
-  const { cartItems, updateQuantity, removeFromCart, cartTotal, clearCart } = useCart()
+  const cartItems = useCartStore((s) => s.items)
+  const updateQuantity = useCartStore((s) => s.updateQuantity)
+  const removeFromCart = useCartStore((s) => s.removeItem)
+  const clearCart = useCartStore((s) => s.clearCart)
+  const cartTotal = useCartTotal()
   const { t } = useLanguage()
   const { getSetting } = useSettings()
   const [address, setAddress] = useState('')

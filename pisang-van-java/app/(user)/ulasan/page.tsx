@@ -44,7 +44,7 @@ export default async function UlasanPage({
     id:        r.id,
     userId:    r.userId,
     userName:  maskName(r.user?.name),
-    variantName: r.variant.flavorName,
+    variantName: r.variant?.flavorName || 'Pesanan Umum',
     rating:    r.rating,
     comment:   r.comment,
     imageUrl:  r.imageUrl,

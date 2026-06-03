@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyMidtransSignature } from "@/src/features/payment/service";
 import * as Sentry from "@sentry/nextjs";
+import { sendOrderConfirmationEmail } from "@/src/features/payment/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -51,13 +52,13 @@ export async function POST(req: NextRequest) {
     let paymentPaidAt = order.paymentPaidAt;
 
     if (transaction_status === 'settlement' || transaction_status === 'capture') {
-      newStatus = 'paid';
+      newStatus = 'processing';
       paymentPaidAt = new Date();
     } else if (transaction_status === 'cancel' || transaction_status === 'expire' || transaction_status === 'deny') {
       newStatus = 'cancelled';
     }
 
-    if (newStatus === 'paid' && order.status !== 'paid') {
+    if (newStatus === 'processing' && order.status !== 'processing' && order.status !== 'paid') {
       const orderWithItems = await prisma.order.findUnique({
         where: { id: order_id },
         include: { items: true }
@@ -80,6 +81,9 @@ export async function POST(req: NextRequest) {
           })
         )
       ]);
+
+      // Trigger order confirmation email in the background
+      sendOrderConfirmationEmail(order_id).catch(console.error);
     } else {
       await prisma.order.update({
         where: { id: order_id },

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { ProductType } from '@/src/features/menu/components/MenuCards'
-import { useCart } from '@/context/CartContext'
+import { useCartStore } from '@/src/lib/store/useCartStore'
 import { useLanguage } from '@/context/LanguageContext'
 import { useSettings } from '@/context/SettingsContext'
 import toast from 'react-hot-toast'
@@ -27,7 +27,7 @@ interface Topping {
 const AVAILABLE_TYPES = ['Kembung', 'Lumpia', 'Krispy']
 
 export default function QuickViewModal({ product, allProducts = [], onClose }: QuickViewModalProps) {
-  const { addToCart } = useCart()
+  const addToCart = useCartStore((s) => s.addItem)
   const { t } = useLanguage()
   const { getSetting } = useSettings()
   const isStoreOpen = getSetting('store_open', 'true') === 'true'

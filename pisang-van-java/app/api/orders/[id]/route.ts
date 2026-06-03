@@ -96,7 +96,7 @@ export async function PATCH(req: NextRequest, { params }: OrderRouteContext) {
 
     await logAudit("UPDATE_ORDER_STATUS", "Order", order.id, { newStatus: parsedStatus.data });
 
-    if (parsedStatus.data === "confirmed" || parsedStatus.data === "ready" || parsedStatus.data === "cancelled") {
+    if (parsedStatus.data === "processing" || parsedStatus.data === "ready" || parsedStatus.data === "cancelled") {
       await sendWhatsAppNotification(order.customerPhone, order.customerName, parsedStatus.data, order.id);
     }
 

@@ -143,7 +143,7 @@ model Order {
   customerName  String
   customerPhone String
   totalPrice    Float
-  status        String      @default("pending") // pending, paid, confirmed, ready, done, cancelled
+  status        String      @default("pending") // pending, paid, processing, ready, done, cancelled
   notes         String?
   source        String      @default("whatsapp") // whatsapp, online, walk-in
   voucherCode   String?     // Nullable, if they used a voucher
@@ -161,6 +161,7 @@ model Order {
 
   user          User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
   items         OrderItem[]
+  reviews       Review[]
 
   @@index([userId])
   @@index([status])
@@ -254,7 +255,8 @@ model Banner {
 model Review {
   id        String   @id @default(cuid())
   userId    String
-  variantId String
+  orderId   String
+  variantId String?
   rating          Int      // 1-5
   comment         String?
   imageUrl        String?
@@ -263,9 +265,11 @@ model Review {
   updatedAt       DateTime @updatedAt
 
   user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  variant MenuVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  order   Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant MenuVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
 
-  @@unique([userId, variantId]) // Satu user hanya bisa review 1x per varian
+  @@unique([userId, orderId]) // Satu user hanya bisa review 1x per order
+  @@index([orderId])
   @@index([variantId])
   @@index([userId])
   @@index([createdAt])

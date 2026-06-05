@@ -7,7 +7,7 @@ async function updateJamOperasional() {
 
   // Update in Settings table
   try {
-    await prisma.settings.updateMany({
+    await prisma.storeBranch.updateMany({
       data: {
         jam_operasional: newValue,
       }

@@ -106,7 +106,7 @@ async function main() {
     jam_operasional: 'Setiap Hari: 10.00–21.00 WIB'
   }
 
-  await prisma.settings.upsert({
+  await prisma.storeBranch.upsert({
     where: { id: 'default-settings' },
     update: defaultSettings,
     create: {

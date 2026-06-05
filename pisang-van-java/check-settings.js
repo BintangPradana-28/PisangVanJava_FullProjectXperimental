@@ -4,7 +4,7 @@ async function main() {
   const prisma = new PrismaClient()
   
   // Update Settings table
-  await prisma.settings.updateMany({
+  await prisma.storeBranch.updateMany({
     where: { nomor_wa: '6281234567890' },
     data: { nomor_wa: '6281312167554' }
   })

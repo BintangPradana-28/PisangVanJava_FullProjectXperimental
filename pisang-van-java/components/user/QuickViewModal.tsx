@@ -180,7 +180,8 @@ export default function QuickViewModal({ product, allProducts = [], onClose }: Q
           {/* Header Modal (Text Only - 60% viewport design) */}
           <div className="px-6 pb-4 pt-1 flex justify-between items-start border-b border-zinc-100 dark:border-zinc-800 shrink-0">
             <div>
-              <h3 className="font-serif font-bold text-xl text-zinc-900 dark:text-zinc-100 leading-tight mb-1">{dynamicTitle}</h3>
+              <Drawer.Title className="font-serif font-bold text-xl text-zinc-900 dark:text-zinc-100 leading-tight mb-1">{dynamicTitle}</Drawer.Title>
+              <Drawer.Description className="sr-only">Sesuaikan opsi untuk {dynamicTitle}</Drawer.Description>
               <p className="text-[#D4802A] font-bold text-lg">{formatPrice(basePrice)}</p>
             </div>
             <button

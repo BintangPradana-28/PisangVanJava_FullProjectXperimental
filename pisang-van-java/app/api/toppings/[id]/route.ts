@@ -1,11 +1,10 @@
 // app/api/toppings/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/src/features/auth/authOptions'
+import { auth } from "@/src/auth";
 
 async function isAdmin() {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   return !!session
 }
 

@@ -1,6 +1,5 @@
 import { prisma } from './prisma'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/src/features/auth/authOptions'
+import { auth } from "@/src/auth";
 
 export async function logAudit(
   action: string,
@@ -10,7 +9,7 @@ export async function logAudit(
   ipAddress?: string
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     const identifier = session?.user?.id ?? session?.user?.email ?? 'SYSTEM'
 
     await prisma.auditLog.create({

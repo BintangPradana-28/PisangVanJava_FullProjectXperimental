@@ -1,8 +1,7 @@
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth/next'
+import { auth } from "@/src/auth";
 import ProfileSidebar from '@/components/user/profile/ProfileSidebar'
-import { authOptions } from '@/src/features/auth/authOptions'
 
 export const metadata: Metadata = {
   title: 'Dashboard Profil | Pisang Goreng Van Java',
@@ -14,7 +13,7 @@ export default async function ProfileLayout({
 }: {
   children: React.ReactNode
 }) {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
 
   if (!session?.user) {
     redirect('/login?callbackUrl=/profile')

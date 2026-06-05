@@ -1,6 +1,5 @@
 import { createSafeActionClient, DEFAULT_SERVER_ERROR_MESSAGE } from 'next-safe-action'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/src/features/auth/authOptions'
+import { auth } from "@/src/auth";
 import * as Sentry from '@sentry/nextjs'
 
 class ActionError extends Error {}
@@ -18,7 +17,7 @@ export const actionClient = createSafeActionClient({
 
 // Client requiring authentication
 export const authActionClient = actionClient.use(async ({ next }) => {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
 
   if (!session?.user) {
     throw new ActionError('Sesi tidak valid atau telah berakhir. Silakan login kembali.')

@@ -1,8 +1,7 @@
 // app/(admin)/dashboard/page.tsx
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/src/features/auth/authOptions'
+import { auth } from "@/src/auth";
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import AdminHeader  from '@/components/admin/AdminHeader'
 import { formatPriceShort, formatPrice } from '@/lib/utils'
@@ -73,7 +72,7 @@ async function getDashboardData() {
 }
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   if (!session || session.user.role !== 'ADMIN') redirect('/member-login')
 
   const data = await getDashboardData()

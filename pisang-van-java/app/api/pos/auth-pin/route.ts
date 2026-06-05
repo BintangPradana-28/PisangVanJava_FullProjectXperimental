@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/src/features/auth/authOptions";
+import { auth } from "@/src/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
@@ -29,7 +28,7 @@ function generateApprovalToken() {
 
 // Helper to check Authorization
 async function getAdminUser() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session || session.user.role !== "ADMIN") return null;
   return session.user;
 }

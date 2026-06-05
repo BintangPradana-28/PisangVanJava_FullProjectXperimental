@@ -12,8 +12,7 @@
  */
 "use server";
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/src/features/auth/authOptions";
+import { auth } from "@/src/auth";
 import { prisma } from "@/lib/prisma";
 import { checkoutSchema } from "@/src/lib/validations/checkout";
 import { randomUUID } from "crypto";
@@ -23,7 +22,7 @@ export async function submitCheckoutAction(rawPayload: unknown) {
     // 1. THE IRON GATE (Auth & Ownership)
     // CISO Rule: Verify session FIRST. Guest checkouts should be explicitly handled if allowed, 
     // but here we enforce authorization to protect the system.
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session || !session.user || !session.user.id) {
       return { success: false, error: "Unauthorized: Invalid session state." };
     }

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/src/features/auth/authOptions";
+import { auth } from "@/src/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
@@ -26,7 +25,7 @@ const posOrderSchema = z.object({
 });
 
 async function checkCashierOrAdmin() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   // Assuming 'ADMIN' handles POS for now. Can be expanded to 'CASHIER' if role exists.
   if (!session || session.user.role !== "ADMIN") return null;
   return session.user;

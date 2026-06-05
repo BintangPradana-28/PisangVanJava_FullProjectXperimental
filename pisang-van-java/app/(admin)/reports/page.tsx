@@ -1,14 +1,13 @@
 // app/(admin)/reports/page.tsx
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/src/features/auth/authOptions'
+import { auth } from "@/src/auth";
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import ReportsClient from '@/components/admin/ReportsClient'
 
 export default async function ReportsPage(props: { searchParams: Promise<{ range?: string }> }) {
   const searchParams = await props.searchParams
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   if (!session) redirect('/login')
 
   const range = searchParams.range || '30'

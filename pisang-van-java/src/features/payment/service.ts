@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import midtransClient from 'midtrans-client';
 
 interface MidtransItem {
   id: string;
@@ -17,11 +18,7 @@ interface GenerateSnapTokenParams {
 
 export async function generateSnapToken(params: GenerateSnapTokenParams): Promise<string | null> {
   try {
-    const serverKey = process.env.MIDTRANS_SERVER_KEY || '';
     const isProduction = process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true';
-    const baseUrl = isProduction
-      ? 'https://app.midtrans.com/snap/v1/transactions'
-      : 'https://app.sandbox.midtrans.com/snap/v1/transactions';
 
     // Zero-Trust: Validate gross amount against items
     const calculatedGross = params.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -30,7 +27,13 @@ export async function generateSnapToken(params: GenerateSnapTokenParams): Promis
       return null;
     }
 
-    const payload = {
+    let snap = new midtransClient.Snap({
+      isProduction: isProduction,
+      serverKey: process.env.MIDTRANS_SERVER_KEY || '',
+      clientKey: process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || ''
+    });
+
+    const requestData = {
       transaction_details: {
         order_id: params.orderId,
         gross_amount: Math.round(params.grossAmount), // Midtrans expects integer
@@ -46,30 +49,14 @@ export async function generateSnapToken(params: GenerateSnapTokenParams): Promis
         name: item.name.slice(0, 50),
       })),
       callbacks: {
-        finish: `${process.env.NEXT_PUBLIC_SITE_URL}/profile`,
+        finish: `${process.env.NEXT_PUBLIC_SITE_URL}/thanks`,
       }
     };
 
-    const authString = Buffer.from(`${serverKey}:`).toString('base64');
+    console.log("[MIDTRANS] requestData payload:", requestData);
 
-    const res = await fetch(baseUrl, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': `Basic ${authString}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const errorData = await res.text();
-      console.error('[SECURITY] Midtrans API Error', errorData);
-      return null;
-    }
-
-    const data = await res.json();
-    return data.token;
+    const transaction = await snap.createTransaction(requestData);
+    return transaction.token;
   } catch (error) {
     console.error('[SECURITY] Failed to generate Snap Token', error);
     return null;

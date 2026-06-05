@@ -1,8 +1,7 @@
 // app/(admin)/manage-menu/page.tsx
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/src/features/auth/authOptions";
+import { auth } from "@/src/auth";
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import AdminMenuDashboard from '@/src/features/menu/components/AdminMenuDashboard'
 import type { Metadata } from 'next'
@@ -11,7 +10,7 @@ export const metadata: Metadata = { title: 'Kelola Menu | Admin' }
 
 export default async function ManageMenuPage() {
   // Zero Trust: Pastikan pengguna benar-benar memiliki sesi dari NextAuth
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session) {
     redirect('/login')
   }

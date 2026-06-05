@@ -1,5 +1,4 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/src/features/auth/authOptions"
+import { auth } from "@/src/auth";
 import { redirect } from "next/navigation"
 import { getB2BDeals } from "@/src/features/crm/actions"
 import B2BBoard from "./B2BBoard"
@@ -7,7 +6,7 @@ import B2BBoard from "./B2BBoard"
 export const dynamic = "force-dynamic"
 
 export default async function B2BPipelinePage() {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   if (!session || session.user.role !== "ADMIN") {
     redirect("/dashboard/login")
   }

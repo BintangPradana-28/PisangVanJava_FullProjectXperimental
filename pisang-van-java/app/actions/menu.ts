@@ -1,7 +1,6 @@
 'use server'
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/src/features/auth/authOptions";
+import { auth } from "@/src/auth";
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
@@ -13,7 +12,7 @@ import { logAudit } from "@/lib/audit";
 
 export async function toggleAvailability(id: string, isAvailable: boolean) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session || !session.user) {
       return { success: false, error: "Akses ditolak. Sesi tidak valid." };
     }

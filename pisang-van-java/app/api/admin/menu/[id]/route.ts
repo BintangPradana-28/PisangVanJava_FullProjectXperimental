@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
+import { auth } from "@/src/auth";
 import { prisma } from "@/lib/prisma";
 import { updateMenuVariantSchema } from "@/src/features/menu/schemas";
-import { authOptions } from "@/src/features/auth/authOptions";
 import { sseEmitter } from "@/lib/eventEmitter";
 import { revalidatePath, revalidateTag } from "next/cache";
 import xss from "xss";
@@ -34,7 +33,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 // PUT /api/admin/menu/[id]
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session || session.user?.role !== "ADMIN") {
       return NextResponse.json({ success: false, message: "Unauthorized: Admin access required" }, { status: 403 });
     }
@@ -109,7 +108,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 // DELETE /api/admin/menu/[id]
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session || session.user?.role !== "ADMIN") {
       return NextResponse.json({ success: false, message: "Unauthorized: Admin access required" }, { status: 403 });
     }

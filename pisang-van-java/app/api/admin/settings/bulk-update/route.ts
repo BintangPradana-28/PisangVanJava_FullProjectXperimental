@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/src/features/auth/authOptions'
+import { auth } from "@/src/auth";
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
@@ -14,7 +13,7 @@ const GenericSettingsSchema = z.record(z.string(), z.string().transform(sanitize
 export async function POST(req: NextRequest) {
   try {
     // THE IRON GATE: Verify Authentication & Authorization
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized Access' }, { status: 401 })
     }

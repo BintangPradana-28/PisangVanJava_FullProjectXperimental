@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/src/features/auth/authOptions'
+import { auth } from "@/src/auth";
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import type { Prisma } from '@prisma/client'
@@ -96,7 +95,7 @@ export async function GET(req: NextRequest) {
 
 // POST /api/reviews
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ success: false, error: 'Login terlebih dahulu untuk memberikan ulasan.' }, { status: 401 })
   }

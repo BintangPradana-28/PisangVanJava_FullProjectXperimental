@@ -2,11 +2,10 @@
 
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/src/features/auth/authOptions'
+import { auth } from "@/src/auth";
 
 export async function requireAdminActor() {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   if (!session?.user?.id) {
     return null
   }

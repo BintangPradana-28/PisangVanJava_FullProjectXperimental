@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/src/features/auth/authOptions";
+import { auth } from "@/src/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
@@ -21,7 +20,7 @@ export async function PUT(
 ) {
   try {
     const { id: addressId } = await params;
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     const userId = session?.user?.id;
     if (!session || !userId) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
@@ -87,7 +86,7 @@ export async function DELETE(
 ) {
   try {
     const { id: addressId } = await params;
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     const userId = session?.user?.id;
     if (!session || !userId) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });

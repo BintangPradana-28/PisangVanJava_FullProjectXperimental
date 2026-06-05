@@ -1,8 +1,7 @@
 // app/api/settings/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/src/features/auth/authOptions'
+import { auth } from "@/src/auth";
 import { logAudit } from '@/lib/audit'
 import { revalidatePath } from 'next/cache'
 
@@ -14,7 +13,7 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
   const body = await req.json()
   const updates: { key: string; value: string }[] = body.settings || []

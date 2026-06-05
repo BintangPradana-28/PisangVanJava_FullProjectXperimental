@@ -1,5 +1,4 @@
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/src/features/auth/authOptions";
+import { auth } from "@/src/auth";
 import { prisma } from "@/lib/prisma";
 import PosClient from "./PosClient";
 import { redirect } from "next/navigation";
@@ -8,7 +7,7 @@ import { redirect } from "next/navigation";
 export const revalidate = 0;
 
 export default async function KasirPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session || session.user.role !== "ADMIN") {
     redirect("/login");

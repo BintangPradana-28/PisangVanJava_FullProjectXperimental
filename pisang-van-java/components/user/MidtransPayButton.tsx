@@ -63,11 +63,11 @@ export default function MidtransPayButton({ snapToken }: Props) {
     window.snap.pay(snapToken, {
       onSuccess: function(result: MidtransResult) {
         setIsPaying(false)
-        router.push('/profile')
+        router.push('/thanks')
       },
       onPending: function(result: MidtransResult) {
         setIsPaying(false)
-        router.push('/profile')
+        router.push('/thanks')
       },
       onError: function(result: MidtransResult) {
         setIsPaying(false)

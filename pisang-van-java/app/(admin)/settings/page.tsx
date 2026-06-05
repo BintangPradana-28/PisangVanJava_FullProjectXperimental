@@ -1,14 +1,13 @@
 // app/(admin)/settings/page.tsx
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/src/features/auth/authOptions'
+import { auth } from "@/src/auth";
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import SettingsClient from '@/components/admin/SettingsClient'
 import { Toaster } from 'react-hot-toast'
 
 export default async function SettingsPage() {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   if (!session) redirect('/login')
   const settings = await prisma.siteSetting.findMany({ orderBy: [{ group: 'asc' }, { key: 'asc' }] })
   return (

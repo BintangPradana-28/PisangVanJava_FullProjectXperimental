@@ -1,8 +1,7 @@
 // app/(admin)/kontak-leads/page.tsx
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/src/features/auth/authOptions"
+import { auth } from "@/src/auth";
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import type { Metadata } from 'next'
 
@@ -10,7 +9,7 @@ export const metadata: Metadata = { title: 'Prospek Kontak | Admin' }
 
 export default async function KontakLeadsPage() {
   // 1. THE IRON GATE (Auth Verification)
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   if (!session || session.user?.role !== 'ADMIN') {
     redirect('/login')
   }

@@ -1,7 +1,6 @@
 // app/api/upload/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/src/features/auth/authOptions'
+import { auth } from "@/src/auth";
 import { supabase } from '@/lib/supabase'
 import crypto from 'crypto'
 
@@ -9,7 +8,7 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_MB = 5
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   if (!session)
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
 

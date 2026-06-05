@@ -1,11 +1,10 @@
 import { Ratelimit } from "@upstash/ratelimit";
-import { getServerSession } from "next-auth";
+import { auth } from "@/src/auth";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { redis } from "@/lib/redis";
 import xss from "xss";
-import { authOptions } from "@/src/features/auth/authOptions";
 import { generateSnapToken } from "@/src/features/payment/service";
 import type { Prisma } from "@prisma/client";
 
@@ -258,7 +257,7 @@ const paymentRateLimit = new Ratelimit({
 });
 
 export async function requireCheckoutActor(): Promise<CheckoutActor | null> {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user) {
     console.error("[SECURITY] requireCheckoutActor: session or session.user is null/undefined", session);
     return null;

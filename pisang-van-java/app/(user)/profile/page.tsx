@@ -8,7 +8,8 @@ import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { User, KeyRound, Loader2 } from 'lucide-react'
+import { User, KeyRound, Loader2, Camera } from 'lucide-react'
+import Image from 'next/image'
 
 const profileSchema = z.object({
   name: z.string().min(1, "Nama tidak boleh kosong"),
@@ -34,6 +35,8 @@ export default function ProfileDataDiriPage() {
   const { data: session, status, update } = useSession()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
 
   const {
     register: registerProfile,
@@ -75,6 +78,7 @@ export default function ProfileDataDiriPage() {
           if (data.success && data.data) {
             if (data.data.name) setProfileValue('name', data.data.name)
             if (data.data.phone) setProfileValue('phone', data.data.phone)
+            if (data.data.image) setAvatarUrl(data.data.image)
           }
         })
         .catch(() => {
@@ -106,6 +110,40 @@ export default function ProfileDataDiriPage() {
       }
     } catch (error) {
       toast.error('Terjadi kesalahan jaringan')
+    }
+  }
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Ukuran maksimal 2MB')
+      return
+    }
+
+    setIsUploading(true)
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const res = await fetch('/api/user/profile/avatar', {
+        method: 'POST',
+        body: formData,
+      })
+      const resData = await res.json()
+
+      if (res.ok && resData.success) {
+        toast.success('Foto profil berhasil diubah!')
+        setAvatarUrl(resData.data.url)
+        await update({ image: resData.data.url }) // trigger session update
+      } else {
+        toast.error(resData.message || 'Gagal mengubah foto profil')
+      }
+    } catch (error) {
+      toast.error('Terjadi kesalahan jaringan')
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -156,6 +194,32 @@ export default function ProfileDataDiriPage() {
         </div>
 
         <form onSubmit={handleProfileSubmit(onProfileSubmit)} className="space-y-5">
+          {/* Avatar Upload */}
+          <div className="flex flex-col md:flex-row items-center gap-6 mb-8 bg-zinc-50 dark:bg-zinc-800/30 p-6 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+            <div className="relative group">
+              <div className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 shadow-md relative">
+                {avatarUrl || session?.user?.image ? (
+                  <Image src={avatarUrl || session?.user?.image || ""} alt="Avatar" fill className="object-cover" />
+                ) : (
+                  <User className="w-12 h-12 text-zinc-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                )}
+                {isUploading && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <Loader2 className="w-6 h-6 text-white animate-spin" />
+                  </div>
+                )}
+              </div>
+              <label className="absolute bottom-0 right-0 p-2.5 bg-[#D4802A] text-white rounded-full cursor-pointer shadow-lg hover:bg-[#b56d24] transition-all hover:scale-105 active:scale-95 group-hover:ring-4 ring-white dark:ring-zinc-900">
+                <Camera className="w-4 h-4" />
+                <input type="file" className="hidden" accept="image/jpeg,image/png,image/webp" onChange={handleAvatarUpload} disabled={isUploading} />
+              </label>
+            </div>
+            <div className="text-center md:text-left">
+              <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">Foto Profil</h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-xs">Format JPG, PNG, atau WEBP. Maksimal 2MB. Gambar akan diubah menjadi persegi (1:1).</p>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">Nama Lengkap</label>

@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { User, MapPin, ShoppingBag, Ticket, Shield, LogOut, ChevronRight } from 'lucide-react'
-import { signOut } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
+import Image from 'next/image'
 
 const menuItems = [
   { name: 'Data Diri', href: '/profile', icon: User },
@@ -15,12 +16,26 @@ const menuItems = [
 
 export default function ProfileSidebar() {
   const pathname = usePathname()
+  const { data: session } = useSession()
 
   return (
     <div className="w-full md:w-72 flex-shrink-0">
       <div className="bg-white dark:bg-zinc-900 rounded-3xl p-4 md:p-6 shadow-sm border border-zinc-200/50 dark:border-zinc-800/80 sticky top-24">
         
-        {/* Mobile View: Horizontal Scroll or Dropdown. We'll use a simple flex wrap for now, but on desktop it's a list */}
+        {/* Profile Info (Desktop) */}
+        <div className="hidden md:flex flex-col items-center pb-6 mb-6 border-b border-zinc-100 dark:border-zinc-800">
+          <div className="w-24 h-24 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-800 mb-4 shadow-sm relative border-4 border-white dark:border-zinc-900">
+            {session?.user?.image ? (
+              <Image src={session.user.image} alt="Avatar" fill className="object-cover" />
+            ) : (
+              <User className="w-10 h-10 text-zinc-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+            )}
+          </div>
+          <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100 text-center">{session?.user?.name || 'Pelanggan'}</h3>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 text-center truncate w-full px-2">{session?.user?.email}</p>
+        </div>
+
+        {/* Navigation */}
         <nav className="flex md:flex-col overflow-x-auto md:overflow-visible gap-2 pb-2 md:pb-0 scrollbar-hide">
           {menuItems.map((item) => {
             const isActive = pathname === item.href || (item.href !== '/profile' && pathname.startsWith(item.href))

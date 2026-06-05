@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/src/features/auth/authOptions";
+import { auth } from "@/src/auth";
 import { prisma } from "@/lib/prisma";
 import { bannerSchema } from "../schema";
 
 async function checkAdmin() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session || session.user.role !== "ADMIN") return false;
   return true;
 }

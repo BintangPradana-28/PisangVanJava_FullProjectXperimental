@@ -9,12 +9,14 @@ declare module "next-auth" {
     user: {
       id: string
       role: "ADMIN" | "CUSTOMER" | "RESELLER"
+      isBanned: boolean
     } & DefaultSession["user"]
   }
 
   interface User extends DefaultUser {
     id: string
     role: "ADMIN" | "CUSTOMER" | "RESELLER"
+    isBanned: boolean
   }
 }
 
@@ -23,5 +25,6 @@ declare module "next-auth/jwt" {
   interface JWT {
     id: string
     role: "ADMIN" | "CUSTOMER" | "RESELLER"
+    isBanned: boolean
   }
 }

@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import type { NextFetchEvent } from "next/server";
-import { getToken } from "next-auth/jwt";
-import { globalRateLimit } from "@/lib/redis";
+import { auth } from "@/src/auth";
+import { globalRateLimit, redis } from "@/lib/redis";
 
 // ─── Route definitions ────────────────────────────────────────────────────────
 
@@ -28,7 +26,6 @@ const EDGE_CONTEXT_PATHS = ["/menu-spesial"];
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getWIBHour(): number {
-  // UTC+7 — reliable on Edge Runtime without Node.js Date quirks
   return new Date(Date.now() + 7 * 60 * 60 * 1000).getUTCHours();
 }
 
@@ -54,33 +51,23 @@ function isEdgeContextPath(pathname: string): boolean {
   return EDGE_CONTEXT_PATHS.some((p) => pathname.startsWith(p));
 }
 
-// ─── Main middleware ──────────────────────────────────────────────────────────
+// ─── Main middleware (wrapped with Auth.js v5) ───────────────────────────────
 
-export default async function middleware(
-  req: NextRequest,
-  event: NextFetchEvent
-) {
+export default auth(async (req) => {
   const { pathname } = req.nextUrl;
 
   // ── 1. Global rate limiting (runs on all matched routes) ──────────────────
   try {
-    const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1";
-
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1";
     const { success } = await globalRateLimit.limit(`global_${ip}`);
 
     if (!success) {
       return new NextResponse(
         JSON.stringify({ error: "Too many requests. Coba lagi sebentar." }),
-        {
-          status: 429,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 429, headers: { "Content-Type": "application/json" } }
       );
     }
   } catch {
-    // Fail open — Redis down should not block legitimate users
-    // In production: send alert to Sentry here
     console.error("[SECURITY] Rate limiter unavailable, failing open.");
   }
 
@@ -93,69 +80,70 @@ export default async function middleware(
 
     const res = NextResponse.next();
 
-    // Only write cookie when context changes — avoids unnecessary Set-Cookie headers
     if (existingCookie !== contextStr) {
       res.cookies.set("x-menu-context", contextStr, {
-        httpOnly: false, // Must be readable by client (Zustand)
-        maxAge: 1800,    // 30 minutes
+        httpOnly: false,
+        maxAge: 1800,
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
       });
     }
-
     return res;
   }
 
-  // ── 3. Auth guard — read JWT token once for all protected routes ──────────
+  // ── 3. Auth guard — read JWT token via req.auth ───────────────────────────
   const needsAuth = isAdminPath(pathname) || isCustomerProtectedPath(pathname);
+
+  const token = req.auth?.user;
+
+  // ── 3.5. Banned User Check ────────────────────────────────────────────────
+  if (token && needsAuth) {
+    let isBanned = token.isBanned;
+    
+    // Check Redis for immediate revocation if not flagged in JWT yet
+    if (!isBanned) {
+      try {
+        const bannedInRedis = await redis.get(`banned:${token.id}`);
+        if (bannedInRedis) isBanned = true;
+      } catch (err) {
+        console.error("[SECURITY] Redis ban check failed", err);
+      }
+    }
+
+    if (isBanned) {
+      const response = NextResponse.redirect(new URL("/banned", req.url));
+      response.cookies.delete("authjs.session-token");
+      response.cookies.delete("__Secure-authjs.session-token");
+      return response;
+    }
+  }
 
   if (!needsAuth) {
     return NextResponse.next();
   }
 
-  // getToken() uses the NEXTAUTH_SECRET env var automatically
-  // NextAuth sometimes fails to infer secureCookie correctly on Vercel edge
-  let token = await getToken({
-    req,
-    secret: process.env.NEXTAUTH_SECRET,
-    secureCookie: true,
-  });
-
-  if (!token) {
-    token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-      secureCookie: false,
-    });
-  }
-
   // ── 4. Unauthenticated — redirect to correct login page ──────────────────
   if (!token) {
     const loginUrl = isAdminPath(pathname)
-      ? new URL("/login", req.url)         // Admin login
-      : new URL("/member-login", req.url); // Customer login
+      ? new URL("/login", req.url)
+      : new URL("/member-login", req.url);
 
-    // Preserve the original destination for post-login redirect
     loginUrl.searchParams.set("callbackUrl", req.url);
-
     return NextResponse.redirect(loginUrl);
   }
 
   // ── 5. Authenticated but wrong role for admin routes ─────────────────────
   if (isAdminPath(pathname) && token.role !== "ADMIN") {
-    // Logged-in customer trying to access admin — redirect to their home
     return NextResponse.redirect(new URL("/", req.url));
   }
 
-  // ── 6. All checks passed ──────────────────────────────────────────────────
   return NextResponse.next();
-}
+});
 
 // ─── Route matcher ────────────────────────────────────────────────────────────
 
 export const config = {
   matcher: [
-    // Admin routes
     "/dashboard/:path*",
     "/manage-menu/:path*",
     "/orders/:path*",
@@ -163,14 +151,10 @@ export const config = {
     "/settings/:path*",
     "/toppings/:path*",
     "/api/admin/:path*",
-
-    // Customer protected routes
     "/checkout/:path*",
     "/profile/:path*",
     "/track-order/:path*",
     "/api/cart/:path*",
-
-    // Public routes with edge context injection
     "/menu-spesial/:path*"
   ],
 };

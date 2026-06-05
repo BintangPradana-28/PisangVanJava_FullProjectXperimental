@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
+import { auth } from "@/src/auth";
 import { prisma } from "@/lib/prisma";
 import { createMenuVariantSchema } from "@/src/features/menu/schemas";
-import { authOptions } from "@/src/features/auth/authOptions";
 import { sseEmitter } from "@/lib/eventEmitter";
 import { revalidatePath, revalidateTag } from "next/cache";
 import xss from "xss";
@@ -29,7 +28,7 @@ export async function GET(req: NextRequest) {
 // POST /api/admin/menu
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session || session.user?.role !== "ADMIN") {
       return NextResponse.json({ success: false, message: "Unauthorized: Admin access required" }, { status: 403 });
     }

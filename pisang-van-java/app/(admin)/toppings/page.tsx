@@ -1,14 +1,13 @@
 // app/(admin)/toppings/page.tsx
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/src/features/auth/authOptions'
+import { auth } from "@/src/auth";
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import ToppingsClient from '@/components/admin/ToppingsClient'
 import { Toaster } from 'react-hot-toast'
 
 export default async function ToppingsPage() {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   if (!session) redirect('/login')
   const toppings = await prisma.topping.findMany({ orderBy: { name: 'asc' } })
   return (

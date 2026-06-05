@@ -1,11 +1,10 @@
 import { redirect } from 'next/navigation'
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/src/features/auth/authOptions";
+import { auth } from "@/src/auth";
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import ManageUsersClient from './ManageUsersClient';
 
 export default async function ManageUsersPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session || session.user.role !== 'ADMIN') {
     redirect('/login');
   }

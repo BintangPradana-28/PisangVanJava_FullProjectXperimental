@@ -1,8 +1,7 @@
 // app/api/toppings/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/src/features/auth/authOptions'
+import { auth } from "@/src/auth";
 
 export async function GET() {
   const toppings = await prisma.topping.findMany({ orderBy: { name: 'asc' } })
@@ -10,7 +9,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
   try {
     const { name, price, emoji, isActive } = await req.json()

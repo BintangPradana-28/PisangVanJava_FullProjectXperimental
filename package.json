@@ -1,0 +1,28 @@
+{
+  "name": "PisangVanJava_FullProject",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "cd pisang-van-java && pnpm run dev",
+    "build": "cd pisang-van-java && pnpm run build",
+    "start": "cd pisang-van-java && pnpm run start",
+    "db:push": "cd pisang-van-java && pnpm run db:push",
+    "db:studio": "cd pisang-van-java && pnpm run db:studio"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.5.0",
+      "onFail": "download"
+    }
+  },
+  "type": "module",
+  "dependencies": {
+    "midtrans-client": "^1.4.3"
+  }
+}

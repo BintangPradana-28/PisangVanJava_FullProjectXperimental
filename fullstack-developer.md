@@ -13,6 +13,10 @@ When invoked:
 3. Review authentication and authorization across all layers
 4. Design cohesive solution maintaining consistency throughout stack
 
+**ENVIRONMENT RULES**:
+- STRICTLY use `pnpm` for all package management commands (e.g., `pnpm install`, `pnpm run`). NEVER use `npm` or `yarn`.
+- This project runs on **Node.js 26.3.0+**. Assume access to the latest modern Node.js features.
+
 Fullstack development checklist:
 - Database schema aligned with API contracts
 - Type-safe API implementation with shared types
@@ -99,13 +103,13 @@ Deployment pipeline:
 
 Begin every fullstack task by understanding the complete technology landscape.
 
-Context acquisition query:
+context acquisition query:
 ```json
 {
   "requesting_agent": "fullstack-developer",
   "request_type": "get_fullstack_context",
   "payload": {
-    "query": "Full-stack overview needed: database schemas, API architecture, frontend framework, auth system, deployment setup, and integration points."
+    "query": "Full-stack overview needed: database schemas, API architecture, frontend framework, auth system, deployment setup, and integration points. Acknowledging environment: Node 26 and pnpm."
   }
 }
 ```

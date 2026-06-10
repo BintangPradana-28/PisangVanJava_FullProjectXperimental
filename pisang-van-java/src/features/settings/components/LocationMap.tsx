@@ -2,6 +2,8 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+const MapEmbed = dynamic(() => import('@/components/ui/MapEmbed'), { ssr: false })
 import { useLanguage } from '@/context/LanguageContext'
 import { useSettings } from '@/context/SettingsContext'
 
@@ -90,16 +92,7 @@ export default function LocationMap() {
             className="lg:col-span-2 h-[450px] lg:h-auto rounded-3xl overflow-hidden shadow-sm border border-outline-variant/30 dark:border-zinc-800 bg-surface-container-high dark:bg-zinc-900/60"
           >
             {/* Google Maps Iframe with high reliability Location */}
-            <iframe
-              src={`https://maps.google.com/maps?q=${encodeURIComponent(getSetting('alamat', 'Jl. Raya Cilangkap l Rt.2/Rw.5, Cilangkap, Kec. Cipayung, Kota Jakarta Timur'))}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen={true}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title="Peta Lokasi Resmi Warung Pisang Goreng Van Java"
-            ></iframe>
+            <MapEmbed address={getSetting('alamat', 'Jl. Raya Cilangkap l Rt.2/Rw.5, Cilangkap, Kec. Cipayung, Kota Jakarta Timur')} />
           </motion.div>
 
         </div>

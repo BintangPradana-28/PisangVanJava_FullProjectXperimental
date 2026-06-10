@@ -7,6 +7,8 @@ import Footer from '@/components/user/Footer'
 import { useLanguage } from '@/context/LanguageContext'
 import { useSettings } from '@/context/SettingsContext'
 import toast, { Toaster } from 'react-hot-toast'
+import dynamic from 'next/dynamic'
+const MapEmbed = dynamic(() => import('@/components/ui/MapEmbed'), { ssr: false })
 
 // ── SVG Brand Icons ──────────────────────────────────────────────────────────
 const InstagramIcon = ({ className, style }: { className?: string; style?: React.CSSProperties }) => (
@@ -322,12 +324,7 @@ export default function LokasiKontakPage() {
             {/* Map */}
             <div className="rounded-3xl overflow-hidden shadow-xl h-[300px]"
               style={{ border: '1px solid var(--border-custom)' }}>
-              <iframe
-                src={`https://maps.google.com/maps?q=${encodeURIComponent(getSetting('alamat', 'Jl. Raya Cilangkap l Rt.2/Rw.5, Cilangkap, Kec. Cipayung, Kota Jakarta Timur'))}&t=&z=17&ie=UTF8&iwloc=&output=embed`}
-                width="100%" height="100%" style={{ border: 0 }}
-                allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"
-                title="Peta Lokasi Van Java"
-              />
+              <MapEmbed address={getSetting('alamat', 'Jl. Raya Cilangkap l Rt.2/Rw.5, Cilangkap, Kec. Cipayung, Kota Jakarta Timur')} />
             </div>
 
             {/* Info Cards */}

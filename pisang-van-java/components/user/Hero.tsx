@@ -148,7 +148,7 @@ export default function Hero({
           <div className="flex flex-wrap gap-4 items-center">
             <Link
               href={ctaLink}
-              className="inline-flex items-center gap-3 bg-amber-brand hover:bg-amber-brand/90 text-white font-bold text-base px-10 py-4 rounded-full shadow-sbx-card hover:shadow-lg transition-all duration-200 active:scale-95 group focus:outline-none focus:ring-4 focus:ring-amber-brand/40"
+              className="inline-flex items-center gap-3 bg-amber-brand hover:bg-amber-brand/90 text-[#1a0f0a] font-bold text-base px-10 py-4 rounded-full shadow-sbx-card hover:shadow-lg transition-all duration-200 active:scale-95 group focus:outline-none focus:ring-4 focus:ring-amber-brand/40"
             >
               <ShoppingBagIcon />
               <span>{t("hero_order_btn")}</span>
@@ -179,7 +179,7 @@ export default function Hero({
             <Image
               src={
                 banner?.imageUrl ||
-                "https://lh3.googleusercontent.com/aida-public/AB6AXuBj4eUVL4GCnyXWfJPOOd9fAAG9IxfaNxn7XlL0ezKjhPebxL4ZQuTq75Cyv8_DEpTEXWQ-wVbufB-cMwyGHieei2jGWIlLG2w8WLrne_pM3P3cZuTxOL5UfH0LeZuAK3jhuZU0DA4A6yJbLm4rGFnfHBlQRU81JrRhBI1Td1w-q4U0n5lau31RqJU7sH8hqx_96O56Q_ZdQNYi59sOZ3GahcZk33rHTp-CwMKrjQXohknO-GwV4axvtwl-4-Y9IdSElxWbmHxafFKU"
+                "https://lh3.googleusercontent.com/aida-public/AB6AXuBj4eUVL4GCnyXWfJPOOd9fAAG9IxfaNxn7XlL0ezKjhPebxL4ZQuTq75Cyv8_DEpTEXWQ-wVbufB-cMwyGHieei2jGWIlLG2w8WLrne_pM3P3cZuTxOL5UfH0LeZuAK3jhuTxOL5UfH0LeZuAK3jhuZU0DA4A6yJbLm4rGFnfHBlQRU81JrRhBI1Td1w-q4U0n5lau31RqJU7sH8hqx_96O56Q_ZdQNYi59sOZ3GahcZk33rHTp-CwMKrjQXohknO-GwV4axvtwl-4-Y9IdSElxWbmHxafFKU"
               }
               alt="Visual Promosi"
               fill
@@ -188,7 +188,7 @@ export default function Hero({
               className="object-cover"
             />
             {badge && (
-              <div className="absolute top-5 right-5 bg-amber-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-md">
+              <div className="absolute top-5 right-5 bg-amber-800 text-amber-50 text-xs font-bold px-4 py-2 rounded-full shadow-md">
                 {badge}
               </div>
             )}

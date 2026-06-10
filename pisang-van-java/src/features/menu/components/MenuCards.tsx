@@ -60,7 +60,7 @@ const ProductImage = ({ src, alt, available }: { src: string; alt: string; avail
         src={imgSrc}
         alt={alt}
         fill
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 360px"
+        sizes="(max-width: 640px) 360px, 360px"
         loading="lazy"
         className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
         onError={() => setImgSrc("/kitchen.png")}

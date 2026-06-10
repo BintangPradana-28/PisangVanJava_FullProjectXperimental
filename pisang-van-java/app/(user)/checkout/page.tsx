@@ -15,6 +15,7 @@ import { validateVoucher } from '@/src/features/checkout/actions'
 import { isStoreOpen } from '@/src/lib/time'
 import { api } from '@/src/lib/api'
 import { FetchError } from 'ofetch'
+import { useCartStore, selectCartDisplayTotal } from '@/src/stores/cart.store'
 
 // ── Response Schema ─────────────────────────────────────────────────────────
 const orderResponseSchema = z.discriminatedUnion('success', [
@@ -103,8 +104,6 @@ export default function CheckoutPage() {
   // Address state
   const [addresses, setAddresses]           = useState<UserAddress[]>([])
   const [selectedAddressId, setSelectedAddressId] = useState<string>('')
-  const [isManualAddress, setIsManualAddress] = useState(false)
-
   const [isManualAddress, setIsManualAddress] = useState(false)
 
   const { data: profileResponse } = useQuery({

@@ -41,8 +41,7 @@ export default function Hero({
     "https://lh3.googleusercontent.com/aida-public/AB6AXuCuoAcWHG4QUqFwzpuBNIiaBkLcJz1LV9m6p9PxV2_qn2WSGWrEBvMDt8FRrqMy_OoFbvbxPhWt-rkUfOJb6etQcez1ASToorW3mXf5JS_xl10v3v70igMCcIrAMpBGGaEu04I3Of3ciTtE2-7xONBem-5vFcik2fJR33PPVUjV0FJFGjlkjfzgQPrhIoCaiuE8cwWt7W1RSkuSY1Z9FKR9sgdyodxJg59Nruc3CsWtal9atky3HkE_WCrMJk7WkLsMqPddUVASBgtH";
   const ctaLink = banner?.linkUrl || "/menu-spesial";
 
-  // LEAK 2: Explicitly preload the hero image to prevent any Suspense boundary delays
-  preload(bgImage, { as: "image", fetchPriority: "high" });
+  // REMOVED LEAK 2: Manual preload(bgImage) removed because it forces a direct download of unoptimized external assets (bypassing /_next/image). Next.js <Image priority /> handles this automatically.
 
   const renderTitle = () => {
     if (title.includes("Van Java")) {

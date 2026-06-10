@@ -15,7 +15,7 @@ describe('Compliance: AES-256-GCM Backup Encryption Integrity', () => {
     const authTag = cipher.getAuthTag()
 
     // 2. Decrypt
-    const decipher = createDecipheriv('aes-256-gcm', secretKey, iv)
+    const decipher = createDecipheriv('aes-256-gcm', secretKey, iv, { authTagLength: 16 })
     decipher.setAuthTag(authTag)
     const decrypted = Buffer.concat([
       decipher.update(encrypted),
@@ -38,7 +38,7 @@ describe('Compliance: AES-256-GCM Backup Encryption Integrity', () => {
     // Tamper with the encrypted data
     encrypted[0] = encrypted[0] ^ 1
 
-    const decipher = createDecipheriv('aes-256-gcm', secretKey, iv)
+    const decipher = createDecipheriv('aes-256-gcm', secretKey, iv, { authTagLength: 16 })
     decipher.setAuthTag(authTag)
 
     expect(() => {

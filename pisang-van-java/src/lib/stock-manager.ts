@@ -57,7 +57,7 @@ export class StockManager {
 
     } catch (error) {
       Sentry.captureException(error, { tags: { module: "stock-manager", action: "reserve" } });
-      console.error(`[StockManager] Failed to reserve stock for ${variantId}:`, error);
+      console.error("[StockManager] Failed to reserve stock for %s:", variantId, error);
       // Fail closed: Do not allow checkout if Redis throws an exception
       throw new Error("Internal Service Error: Unable to process stock at this time.");
     }
@@ -82,7 +82,7 @@ export class StockManager {
         tags: { module: "stock-manager", action: "rollback" },
         extra: { variantId, quantity }
       });
-      console.error(`[StockManager] CRITICAL: Failed to rollback stock for ${variantId}. Potential ghost stock!`, error);
+      console.error("[StockManager] CRITICAL: Failed to rollback stock for %s. Potential ghost stock!", variantId, error);
     }
   }
 
@@ -100,7 +100,7 @@ export class StockManager {
       await redis.set(key, actualStock, { ex: 60 * 60 * 24 });
     } catch (error) {
       Sentry.captureException(error, { tags: { module: "stock-manager", action: "syncStock" } });
-      console.error(`[StockManager] Failed to sync stock to Redis for ${variantId}:`, error);
+      console.error("[StockManager] Failed to sync stock to Redis for %s:", variantId, error);
     }
   }
 }

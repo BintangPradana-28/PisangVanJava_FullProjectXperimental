@@ -42,7 +42,7 @@ async function executeRestore() {
   await fileHandle.close()
 
   const key = Buffer.from(ENCRYPTION_KEY as string, 'hex')
-  const decipher = createDecipheriv(ALGORITHM, key, iv) // Correct order: algorithm, key, iv
+  const decipher = createDecipheriv(ALGORITHM, key, iv, { authTagLength: 16 }) // Correct order: algorithm, key, iv
   decipher.setAuthTag(authTag)
 
   // Read the ciphertext only (skipping IV at start and AuthTag at end)

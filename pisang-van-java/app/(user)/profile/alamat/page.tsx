@@ -20,6 +20,7 @@ import {
   setDefaultAddress,
   updateAddress
 } from '@/app/actions/address'
+import { useLanguage } from '@/context/LanguageContext'
 
 // Dynamic import Leaflet map (disable SSR to prevent window is not defined error)
 const MapPicker = dynamic(() => import('@/src/components/MapPicker'), {
@@ -44,6 +45,7 @@ type AddressType = {
 }
 
 export default function AlamatPage() {
+  const { t } = useLanguage()
   const [addresses, setAddresses] = useState<AddressType[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -127,7 +129,7 @@ export default function AlamatPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus alamat ini?')) return
+    if (!confirm(t('address_delete_confirm'))) return
     const res = await deleteAddress(id)
     if (res.success) {
       toast.success(res.message ? String(res.message) : 'Berhasil')
@@ -153,10 +155,10 @@ export default function AlamatPage() {
         <div>
           <h1 className="text-2xl font-bold font-serif text-zinc-900 dark:text-zinc-100 flex items-center gap-3">
             <MapPin className="w-7 h-7 text-[#D4802A]" />
-            Daftar Alamat Pengiriman
+            {t('address_title')}
           </h1>
           <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-            Kelola alamat rumah, kantor, atau tujuan pengiriman lainnya.
+            {t('address_subtitle')}
           </p>
         </div>
         <button
@@ -164,7 +166,7 @@ export default function AlamatPage() {
           className="bg-[#D4802A] hover:bg-[#b56d24] text-white px-5 py-2.5 rounded-full font-bold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg active:scale-95"
         >
           <Plus className="w-5 h-5" />
-          Tambah Alamat Baru
+          {t('address_add_btn')}
         </button>
       </div>
 
@@ -183,17 +185,16 @@ export default function AlamatPage() {
             <Navigation className="w-10 h-10 text-zinc-400" />
           </div>
           <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
-            Belum Ada Alamat
+            {t('address_empty_title')}
           </h3>
           <p className="text-zinc-500 dark:text-zinc-400 max-w-md mx-auto mb-6">
-            Anda belum menambahkan alamat pengiriman. Tambahkan alamat sekarang untuk mempercepat
-            proses checkout.
+            {t('address_empty_desc')}
           </p>
           <button
             onClick={() => handleOpenModal()}
             className="text-[#D4802A] font-bold hover:underline flex items-center gap-2"
           >
-            <Plus className="w-4 h-4" /> Tambah Alamat Sekarang
+            <Plus className="w-4 h-4" /> {t('address_empty_btn')}
           </button>
         </div>
       ) : (
@@ -210,7 +211,7 @@ export default function AlamatPage() {
               {addr.isDefault && (
                 <div className="absolute top-0 right-6 -translate-y-1/2 bg-[#D4802A] text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  Alamat Utama
+                  {t('address_default_badge')}
                 </div>
               )}
 
@@ -225,7 +226,7 @@ export default function AlamatPage() {
                     </h3>
                     {addr.latitude && addr.longitude && (
                       <span className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1 mt-0.5">
-                        <Navigation className="w-3 h-3" /> Pin Peta Tersimpan
+                        <Navigation className="w-3 h-3" /> {t('address_pin_saved') ?? 'Pin Peta Tersimpan'}
                       </span>
                     )}
                   </div>
@@ -240,7 +241,7 @@ export default function AlamatPage() {
                   <div className="bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-xl text-xs text-zinc-500 dark:text-zinc-400 flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-zinc-400" />
                     <span>
-                      <strong className="text-zinc-700 dark:text-zinc-300">Catatan:</strong>{' '}
+                      <strong className="text-zinc-700 dark:text-zinc-300">{t('address_note_label') ?? 'Catatan:'}</strong>{' '}
                       {addr.notes}
                     </span>
                   </div>
@@ -253,7 +254,7 @@ export default function AlamatPage() {
                     onClick={() => handleSetDefault(addr.id)}
                     className="text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-[#D4802A] transition-colors flex-1 text-left"
                   >
-                    Jadikan Utama
+                    {t('address_set_default')}
                   </button>
                 )}
                 <div
@@ -262,14 +263,14 @@ export default function AlamatPage() {
                   <button
                     onClick={() => handleOpenModal(addr)}
                     className="p-2 text-zinc-400 hover:text-blue-500 bg-zinc-50 hover:bg-blue-50 dark:bg-zinc-800/50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                    title="Edit Alamat"
+                    title={t('address_edit_title')}
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(addr.id)}
                     className="p-2 text-zinc-400 hover:text-red-500 bg-zinc-50 hover:bg-red-50 dark:bg-zinc-800/50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                    title="Hapus Alamat"
+                    title={t('address_delete_title') ?? 'Hapus Alamat'}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -291,7 +292,7 @@ export default function AlamatPage() {
                 ) : (
                   <Plus className="w-5 h-5 text-[#D4802A]" />
                 )}
-                {editingId ? 'Edit Alamat' : 'Tambah Alamat Baru'}
+                {editingId ? t('address_edit_title') : t('address_add_title')}
               </h2>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -306,12 +307,12 @@ export default function AlamatPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2 md:col-span-2">
                     <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
-                      Label Alamat <span className="text-red-500">*</span>
+                      {t('address_label')} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       required
-                      placeholder="Contoh: Rumah, Kantor, Kosan"
+                      placeholder={t('address_label_placeholder')}
                       value={formData.label}
                       onChange={(e) => setFormData({ ...formData, label: e.target.value })}
                       className="w-full p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent focus:ring-2 focus:ring-[#D4802A]/50 outline-none transition-all"
@@ -321,14 +322,14 @@ export default function AlamatPage() {
                   <div className="space-y-2 md:col-span-2">
                     <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300 flex items-center justify-between">
                       <span>
-                        Pin Lokasi Peta{' '}
+                        {t('address_map_title')}{' '}
                         <span className="text-zinc-400 font-normal text-xs">
-                          (Opsional untuk akurasi kurir)
+                          ({t('address_map_desc')})
                         </span>
                       </span>
                       {mapPosition && (
                         <span className="text-xs text-green-600 dark:text-green-400 font-medium bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-md flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3" /> Pin Tersimpan
+                          <CheckCircle2 className="w-3 h-3" /> {t('address_pin_saved') ?? 'Pin Tersimpan'}
                         </span>
                       )}
                     </label>
@@ -337,18 +338,18 @@ export default function AlamatPage() {
                       onPositionChange={(pos) => setMapPosition(pos)}
                     />
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">
-                      * Geser peta atau marker untuk menetapkan titik kordinat yang akurat.
+                      {t('address_map_help')}
                     </p>
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
                     <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
-                      Alamat Lengkap <span className="text-red-500">*</span>
+                      {t('address_full')} <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       required
                       rows={3}
-                      placeholder="Nama Jalan, RT/RW, Kelurahan, Kecamatan, Kota/Kabupaten, Provinsi, Kode Pos"
+                      placeholder={t('address_full_placeholder')}
                       value={formData.fullAddress}
                       onChange={(e) => setFormData({ ...formData, fullAddress: e.target.value })}
                       className="w-full p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent focus:ring-2 focus:ring-[#D4802A]/50 outline-none transition-all resize-none"
@@ -357,12 +358,14 @@ export default function AlamatPage() {
 
                   <div className="space-y-2 md:col-span-2">
                     <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
-                      Catatan untuk Kurir{' '}
-                      <span className="text-zinc-400 font-normal text-xs">(Opsional)</span>
+                      {t('address_notes')}{' '}
+                      <span className="text-zinc-400 font-normal text-xs">
+                        (Opsional)
+                      </span>
                     </label>
                     <input
                       type="text"
-                      placeholder="Contoh: Rumah cat hijau dekat pertigaan, titip di satpam"
+                      placeholder={t('address_notes_placeholder')}
                       value={formData.notes}
                       onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                       className="w-full p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent focus:ring-2 focus:ring-[#D4802A]/50 outline-none transition-all"
@@ -389,7 +392,7 @@ export default function AlamatPage() {
                           ></div>
                         </div>
                         <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-[#D4802A] transition-colors">
-                          Jadikan sebagai Alamat Utama
+                          {t('address_set_default_chk')}
                         </span>
                       </label>
                     </div>
@@ -405,7 +408,7 @@ export default function AlamatPage() {
                 className="px-6 py-2.5 rounded-full font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
                 disabled={isSubmitting}
               >
-                Batal
+                {t('address_cancel_btn')}
               </button>
               <button
                 type="submit"
@@ -413,7 +416,7 @@ export default function AlamatPage() {
                 disabled={isSubmitting}
                 className="bg-[#D4802A] hover:bg-[#b56d24] text-white px-8 py-2.5 rounded-full font-bold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px]"
               >
-                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Simpan'}
+                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : t('address_save_btn')}
               </button>
             </div>
           </div>

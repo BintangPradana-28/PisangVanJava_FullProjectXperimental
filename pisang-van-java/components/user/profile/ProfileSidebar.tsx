@@ -6,25 +6,26 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import { useCartStore } from '@/src/stores/cart.store'
-
-const menuItems = [
-  { name: 'Data Diri', href: '/profile', icon: User },
-  { name: 'Alamat Pengiriman', href: '/profile/alamat', icon: MapPin },
-  { name: 'Riwayat Pesanan', href: '/profile/pesanan', icon: ShoppingBag },
-  { name: 'Voucher & Poin', href: '/profile/voucher', icon: Ticket },
-  { name: 'Keamanan', href: '/profile/keamanan', icon: Shield }
-]
-
+import { useLanguage } from '@/context/LanguageContext'
 import { Gift, HelpCircle } from 'lucide-react'
 
+const menuItems = [
+  { key: 'profile_menu_info', href: '/profile', icon: User },
+  { key: 'profile_menu_address', href: '/profile/alamat', icon: MapPin },
+  { key: 'profile_menu_orders', href: '/profile/pesanan', icon: ShoppingBag },
+  { key: 'profile_menu_vouchers', href: '/profile/voucher', icon: Ticket },
+  { key: 'profile_menu_security', href: '/profile/keamanan', icon: Shield }
+]
+
 const actionItems = [
-  { name: 'Ajak Teman (Koin)', href: '/profile/referral', icon: Gift },
-  { name: 'Pusat Bantuan', href: '/profile/bantuan', icon: HelpCircle }
+  { key: 'profile_menu_referral', href: '/profile/referral', icon: Gift },
+  { key: 'profile_menu_help', href: '/profile/bantuan', icon: HelpCircle }
 ]
 
 export default function ProfileSidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
+  const { t } = useLanguage()
 
   return (
     <div className="w-full md:w-72 flex-shrink-0">
@@ -39,7 +40,7 @@ export default function ProfileSidebar() {
             )}
           </div>
           <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100 text-center">
-            {session?.user?.name || 'Pelanggan'}
+            {session?.user?.name || t('profile_member')}
           </h3>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 text-center truncate w-full px-2">
             {session?.user?.email}
@@ -54,7 +55,7 @@ export default function ProfileSidebar() {
             const Icon = item.icon
             return (
               <Link
-                key={item.name}
+                key={item.key}
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-3.5 md:py-3 rounded-2xl whitespace-nowrap transition-all font-medium text-sm ${
                   isActive
@@ -65,7 +66,7 @@ export default function ProfileSidebar() {
                 <Icon
                   className={`w-5 h-5 ${isActive ? 'text-white' : 'text-zinc-400 dark:text-zinc-500'}`}
                 />
-                <span className="flex-1">{item.name}</span>
+                <span className="flex-1">{t(item.key)}</span>
                 {isActive && <ChevronRight className="w-4 h-4 hidden md:block opacity-70" />}
               </Link>
             )
@@ -76,7 +77,7 @@ export default function ProfileSidebar() {
           {/* Aksi Akun */}
           <div className="hidden md:block px-4 pb-2">
             <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-              Aksi Akun
+              {t('profile_menu_actions')}
             </p>
           </div>
 
@@ -86,7 +87,7 @@ export default function ProfileSidebar() {
             const Icon = item.icon
             return (
               <Link
-                key={item.name}
+                key={item.key}
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-3.5 md:py-3 rounded-2xl whitespace-nowrap transition-all font-medium text-sm ${
                   isActive
@@ -97,7 +98,7 @@ export default function ProfileSidebar() {
                 <Icon
                   className={`w-5 h-5 ${isActive ? 'text-orange-600 dark:text-orange-400' : 'text-zinc-400 dark:text-zinc-500'}`}
                 />
-                <span className="flex-1">{item.name}</span>
+                <span className="flex-1">{t(item.key)}</span>
                 {isActive && <ChevronRight className="w-4 h-4 hidden md:block opacity-70" />}
               </Link>
             )
@@ -112,7 +113,7 @@ export default function ProfileSidebar() {
             className="flex items-center gap-3 px-4 py-3.5 md:py-3 rounded-2xl whitespace-nowrap transition-all font-medium text-sm text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
           >
             <LogOut className="w-5 h-5 text-red-500 dark:text-red-400" />
-            <span>Keluar</span>
+            <span>{t('profile_menu_logout')}</span>
           </button>
         </nav>
       </div>

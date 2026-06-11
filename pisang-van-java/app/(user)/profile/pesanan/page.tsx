@@ -23,6 +23,7 @@ import { getUserOrders } from '@/app/actions/orderHistory'
 import { useCartStore } from '@/src/stores/cart.store'
 import 'dayjs/locale/id'
 import Link from 'next/link'
+import { useLanguage } from '@/context/LanguageContext'
 
 dayjs.locale('id')
 
@@ -57,34 +58,34 @@ type OrderType = {
   } | null
 }
 
-const getStatusConfig = (status: string) => {
+const getStatusConfig = (status: string, t: any) => {
   switch (status) {
     case 'PENDING_PAYMENT':
       return {
         color: 'bg-yellow-100 text-yellow-700 border-yellow-200',
         icon: Clock,
-        label: 'Menunggu Pembayaran'
+        label: t('status_pending') || 'Menunggu Pembayaran'
       }
     case 'PROCESSING':
       return {
         color: 'bg-blue-100 text-blue-700 border-blue-200',
         icon: RefreshCw,
-        label: 'Sedang Diproses'
+        label: t('status_confirmed') || 'Sedang Diproses'
       }
     case 'READY':
       return {
         color: 'bg-purple-100 text-purple-700 border-purple-200',
         icon: Package,
-        label: 'Siap Diambil/Dikirim'
+        label: t('status_ready') || 'Siap Diambil/Dikirim'
       }
     case 'COMPLETED':
       return {
         color: 'bg-green-100 text-green-700 border-green-200',
         icon: CheckCircle2,
-        label: 'Selesai'
+        label: t('status_done') || 'Selesai'
       }
     case 'CANCELED':
-      return { color: 'bg-red-100 text-red-700 border-red-200', icon: XCircle, label: 'Dibatalkan' }
+      return { color: 'bg-red-100 text-red-700 border-red-200', icon: XCircle, label: t('status_cancelled') || 'Dibatalkan' }
     default:
       return {
         color: 'bg-zinc-100 text-zinc-700 border-zinc-200',
@@ -108,7 +109,7 @@ const formatPaymentMethod = (paymentType: string | null) => {
 }
 
 // Order Timeline Component
-const OrderTimeline = ({ currentStatus }: { currentStatus: string }) => {
+const OrderTimeline = ({ currentStatus, t }: { currentStatus: string; t: any }) => {
   if (currentStatus === 'CANCELED') {
     return (
       <div className="flex items-center gap-2 p-4 bg-red-50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-900/30">
@@ -121,10 +122,10 @@ const OrderTimeline = ({ currentStatus }: { currentStatus: string }) => {
   }
 
   const stages = [
-    { id: 'PENDING_PAYMENT', label: 'Menunggu Pembayaran' },
-    { id: 'PROCESSING', label: 'Sedang Diproses' },
-    { id: 'READY', label: 'Siap Diambil/Dikirim' },
-    { id: 'COMPLETED', label: 'Selesai' }
+    { id: 'PENDING_PAYMENT', label: t('status_pending') || 'Menunggu Pembayaran' },
+    { id: 'PROCESSING', label: t('status_confirmed') || 'Sedang Diproses' },
+    { id: 'READY', label: t('status_ready') || 'Siap Diambil/Dikirim' },
+    { id: 'COMPLETED', label: t('status_done') || 'Selesai' }
   ]
 
   const currentIndex = stages.findIndex((s) => s.id === currentStatus)
@@ -132,7 +133,7 @@ const OrderTimeline = ({ currentStatus }: { currentStatus: string }) => {
 
   return (
     <div className="py-6 px-2">
-      <h4 className="text-sm font-bold text-zinc-800 dark:text-zinc-200 mb-6">Status Tiap Tahap</h4>
+      <h4 className="text-sm font-bold text-zinc-800 dark:text-zinc-200 mb-6">{t('orders_detail_status')}</h4>
       <div className="relative flex justify-between items-center w-full">
         {/* Connecting Line Background */}
         <div className="absolute top-4 left-0 w-full h-1 bg-zinc-200 dark:bg-zinc-800 -z-10 rounded-full"></div>
@@ -181,11 +182,17 @@ const OrderTimeline = ({ currentStatus }: { currentStatus: string }) => {
 }
 
 export default function PesananPage() {
+  const { t } = useLanguage()
+  const [mounted, setMounted] = useState(false)
   const [orders, setOrders] = useState<OrderType[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null)
   const router = useRouter()
   const addItemToCart = useCartStore((state) => state.addItem)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -247,9 +254,9 @@ export default function PesananPage() {
         </div>
         <div>
           <h2 className="text-xl font-bold font-serif text-zinc-900 dark:text-zinc-100">
-            Riwayat Pesanan
+            {t('orders_title')}
           </h2>
-          <p className="text-sm text-zinc-500">Pantau status pesanan dan rincian pembelian Anda</p>
+          <p className="text-sm text-zinc-500">{t('orders_subtitle')}</p>
         </div>
       </div>
 
@@ -265,15 +272,15 @@ export default function PesananPage() {
         ) : orders.length === 0 ? (
           <div className="bg-white dark:bg-zinc-900 rounded-3xl p-8 text-center border border-dashed border-zinc-300 dark:border-zinc-700">
             <Package className="w-12 h-12 text-zinc-300 mx-auto mb-3" />
-            <p className="text-zinc-500 font-medium">Belum ada riwayat pesanan.</p>
-            <p className="text-sm text-zinc-400 mt-1 mb-4">Ayo mulai jelajahi menu lezat kami!</p>
+            <p className="text-zinc-500 font-medium">{t('orders_empty')}</p>
+            <p className="text-sm text-zinc-400 mt-1 mb-4">{t('orders_empty_desc')}</p>
             <Link href="/menu-spesial" className="text-[#D4802A] font-bold text-sm hover:underline">
-              Lihat Menu Spesial
+              {t('orders_empty_btn')}
             </Link>
           </div>
         ) : (
           orders.map((order) => {
-            const statusConfig = getStatusConfig(order.status)
+            const statusConfig = getStatusConfig(order.status, t)
             const StatusIcon = statusConfig.icon
             const isExpanded = expandedOrderId === order.id
 
@@ -296,11 +303,11 @@ export default function PesananPage() {
                         {statusConfig.label}
                       </span>
                       <span className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">
-                        {dayjs(order.createdAt).format('DD MMM YYYY, HH:mm')}
+                        {mounted ? dayjs(order.createdAt).format('DD MMM YYYY, HH:mm') : ''}
                       </span>
                     </div>
                     <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-                      Order ID:{' '}
+                      {t('orders_id')}{' '}
                       <span className="font-mono text-xs ml-1 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded text-zinc-500">
                         {order.id}
                       </span>
@@ -309,7 +316,7 @@ export default function PesananPage() {
 
                   <div className="flex items-center justify-between md:justify-end gap-6">
                     <div className="text-left md:text-right">
-                      <p className="text-xs text-zinc-500 font-medium mb-0.5">Total Pembayaran</p>
+                      <p className="text-xs text-zinc-500 font-medium mb-0.5">{t('orders_payment_total')}</p>
                       <p className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
                         Rp {new Intl.NumberFormat('id-ID').format(order.totalPrice)}
                       </p>
@@ -333,13 +340,13 @@ export default function PesananPage() {
                     >
                       <div className="p-5 md:p-7 space-y-8">
                         {/* Status Timeline */}
-                        <OrderTimeline currentStatus={order.status} />
+                        <OrderTimeline currentStatus={order.status} t={t} />
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                           {/* Left Column: Items Breakdown */}
                           <div className="lg:col-span-2 space-y-4">
                             <h4 className="text-sm font-bold text-zinc-800 dark:text-zinc-200 border-b border-zinc-200 dark:border-zinc-800 pb-2">
-                              Rincian Produk
+                              {t('orders_detail_products')}
                             </h4>
                             <div className="space-y-4">
                               {order.items.map((item) => (
@@ -394,7 +401,7 @@ export default function PesananPage() {
                             {/* Payment Method Block */}
                             <div className="bg-white dark:bg-zinc-900 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 shadow-sm">
                               <h4 className="text-sm font-bold text-zinc-800 dark:text-zinc-200 mb-3 flex items-center gap-2">
-                                <CreditCard className="w-4 h-4 text-blue-500" /> Metode Pembayaran
+                                <CreditCard className="w-4 h-4 text-blue-500" /> {t('orders_payment_method')}
                               </h4>
                               <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
                                 {formatPaymentMethod(order.payment?.paymentType || null)}
@@ -411,11 +418,11 @@ export default function PesananPage() {
                             {/* Summary Block */}
                             <div className="bg-white dark:bg-zinc-900 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-3">
                               <h4 className="text-sm font-bold text-zinc-800 dark:text-zinc-200 mb-2">
-                                Ringkasan Biaya
+                                {t('orders_summary')}
                               </h4>
 
                               <div className="flex justify-between text-xs text-zinc-600 dark:text-zinc-400">
-                                <span>Subtotal Produk</span>
+                                <span>{t('orders_subtotal')}</span>
                                 <span>
                                   Rp{' '}
                                   {new Intl.NumberFormat('id-ID').format(
@@ -425,7 +432,7 @@ export default function PesananPage() {
                               </div>
 
                               <div className="flex justify-between text-xs text-zinc-600 dark:text-zinc-400">
-                                <span>Ongkos Kirim ({order.deliveryMethod})</span>
+                                <span>{t('orders_delivery')} ({order.deliveryMethod})</span>
                                 <span>
                                   Rp {new Intl.NumberFormat('id-ID').format(order.deliveryFee)}
                                 </span>
@@ -433,7 +440,7 @@ export default function PesananPage() {
 
                               {order.discountAmount > 0 && (
                                 <div className="flex justify-between text-xs text-green-600 dark:text-green-400 font-medium">
-                                  <span>Diskon Voucher</span>
+                                  <span>{t('orders_discount')}</span>
                                   <span>
                                     -Rp{' '}
                                     {new Intl.NumberFormat('id-ID').format(order.discountAmount)}
@@ -443,7 +450,7 @@ export default function PesananPage() {
 
                               <div className="border-t border-zinc-100 dark:border-zinc-800 pt-3 flex justify-between items-center">
                                 <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                                  Total Belanja
+                                  {t('orders_total')}
                                 </span>
                                 <span className="text-base font-bold text-[#D4802A]">
                                   Rp {new Intl.NumberFormat('id-ID').format(order.totalPrice)}
@@ -457,7 +464,7 @@ export default function PesananPage() {
                                 href={`/payment/${order.id}`}
                                 className="block w-full bg-[#D4802A] hover:bg-[#b56d24] text-white px-6 py-3 rounded-xl font-bold text-sm text-center transition-all shadow-md active:scale-95 mb-3"
                               >
-                                Selesaikan Pembayaran
+                                {t('orders_payment_btn')}
                               </Link>
                             )}
 
@@ -469,14 +476,14 @@ export default function PesananPage() {
                                 rel="noopener noreferrer"
                                 className="w-full flex items-center justify-center gap-2 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 text-center"
                               >
-                                <Download className="w-4 h-4" /> Unduh Invoice (PDF)
+                                <Download className="w-4 h-4" /> {t('orders_invoice_btn')}
                               </a>
 
                               <button
                                 onClick={() => handleReorder(order)}
                                 className="w-full flex items-center justify-center gap-2 bg-[#D4802A] hover:bg-[#b56d24] text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md active:scale-95"
                               >
-                                <Repeat className="w-4 h-4" /> Pesan Lagi
+                                <Repeat className="w-4 h-4" /> {t('orders_reorder_btn')}
                               </button>
                             </div>
                           </div>

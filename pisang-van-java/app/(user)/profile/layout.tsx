@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import ProfileSidebar from '@/components/user/profile/ProfileSidebar'
+import ProfileWelcome from '@/components/user/profile/ProfileWelcome'
 import { auth } from '@/src/auth'
 
 export const metadata: Metadata = {
@@ -17,14 +18,7 @@ export default async function ProfileLayout({ children }: { children: React.Reac
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-8 md:pt-36 md:pb-12">
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold font-serif text-zinc-900 dark:text-zinc-100">
-          Halo, {session.user.name || 'Pelanggan'}! 👋
-        </h1>
-        <p className="text-zinc-500 dark:text-zinc-400 mt-2">
-          Selamat datang di dashboard profil Anda. Kelola pesanan dan preferensi di sini.
-        </p>
-      </div>
+      <ProfileWelcome />
 
       <div className="flex flex-col md:flex-row gap-8">
         {/* Sidebar Navigation */}

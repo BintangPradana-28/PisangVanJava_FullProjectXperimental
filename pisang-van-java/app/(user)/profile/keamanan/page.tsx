@@ -46,13 +46,6 @@ export default async function KeamananPage() {
 
   return (
     <div className="w-full">
-      <h2 className="text-xl md:text-2xl font-bold mb-4 font-serif text-van-java-dark">
-        Notifikasi & Keamanan
-      </h2>
-      <p className="text-gray-600 mb-8 text-sm md:text-base">
-        Kelola preferensi notifikasi, sesi aktif, dan keamanan lapis ganda Anda di sini.
-      </p>
-
       <SecurityClient
         initialPrefs={notificationPrefs}
         twoFactorEnabled={user.twoFactorEnabled}

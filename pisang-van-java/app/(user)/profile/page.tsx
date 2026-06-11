@@ -25,6 +25,7 @@ import { z } from 'zod'
 import { requestEmailOTP, verifyAndChangeEmail } from '@/app/actions/emailChange'
 import { api } from '@/src/lib/api'
 import getCroppedImg from '@/src/lib/cropImage'
+import { useLanguage } from '@/context/LanguageContext'
 
 // --- Schemas ---
 const profileSchema = z.object({
@@ -56,6 +57,7 @@ type EmailFormValues = z.infer<typeof emailSchema>
 
 export default function ProfileDataDiriPage() {
   const { data: session, status, update } = useSession()
+  const { t } = useLanguage()
   const router = useRouter()
   const queryClient = useQueryClient()
 
@@ -389,10 +391,10 @@ export default function ProfileDataDiriPage() {
           </div>
           <div>
             <h2 className="text-xl font-bold font-serif text-zinc-900 dark:text-zinc-100">
-              Data Diri
+              {t('profile_title')}
             </h2>
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Kelola informasi publik dan kontak Anda
+              {t('profile_subtitle')}
             </p>
           </div>
         </div>
@@ -430,10 +432,9 @@ export default function ProfileDataDiriPage() {
               </label>
             </div>
             <div className="text-center md:text-left flex-1">
-              <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">Foto Profil</h3>
+              <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">{t('profile_avatar_title')}</h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-sm">
-                Format JPG, PNG, atau WEBP. Maksimal 2MB. Anda dapat menyesuaikan potongan gambar
-                setelah memilih file.
+                {t('profile_avatar_desc')}
               </p>
 
               {(avatarUrl || session?.user?.image) && (
@@ -443,7 +444,7 @@ export default function ProfileDataDiriPage() {
                   disabled={isUploading}
                   className="mt-3 text-sm text-red-500 hover:text-red-600 font-bold flex items-center gap-1.5 mx-auto md:mx-0 transition-colors"
                 >
-                  <Trash2 className="w-4 h-4" /> Hapus Foto
+                  <Trash2 className="w-4 h-4" /> {t('profile_avatar_delete')}
                 </button>
               )}
             </div>
@@ -452,13 +453,13 @@ export default function ProfileDataDiriPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">
-                Nama Lengkap
+                {t('profile_name_label')}
               </label>
               <input
                 type="text"
                 {...registerProfile('name')}
                 className="w-full p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent focus:ring-2 focus:ring-[#D4802A]/50 outline-none transition-all"
-                placeholder="Masukkan nama lengkap"
+                placeholder={t('profile_name_placeholder')}
               />
               {profileErrors.name && (
                 <p className="text-xs text-red-500 mt-1.5">{profileErrors.name.message}</p>
@@ -467,13 +468,13 @@ export default function ProfileDataDiriPage() {
 
             <div>
               <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">
-                Nomor WhatsApp
+                {t('profile_phone_label')}
               </label>
               <input
                 type="tel"
                 {...registerProfile('phone')}
                 className="w-full p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent focus:ring-2 focus:ring-[#D4802A]/50 outline-none transition-all"
-                placeholder="Contoh: +6281312167554"
+                placeholder={t('profile_phone_placeholder')}
               />
               {profileErrors.phone && (
                 <p className="text-xs text-red-500 mt-1.5">{profileErrors.phone.message}</p>
@@ -490,7 +491,7 @@ export default function ProfileDataDiriPage() {
               {profileMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                'Simpan Profil'
+                t('profile_save_btn')
               )}
             </button>
           </div>
@@ -506,10 +507,10 @@ export default function ProfileDataDiriPage() {
             </div>
             <div>
               <h2 className="text-xl font-bold font-serif text-zinc-900 dark:text-zinc-100">
-                Keamanan Akun Terhubung
+                {t('profile_oauth_title')}
               </h2>
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                Autentikasi dikelola oleh pihak ketiga
+                {t('profile_oauth_subtitle')}
               </p>
             </div>
           </div>
@@ -541,12 +542,7 @@ export default function ProfileDataDiriPage() {
                 Terhubung dengan Google
               </h3>
               <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed max-w-xl">
-                Anda mendaftar dan masuk menggunakan akun Google (
-                <span className="font-semibold text-zinc-800 dark:text-zinc-200">
-                  {session?.user?.email}
-                </span>
-                ). Oleh karena itu, kata sandi dan alamat email Anda sepenuhnya diamankan dan
-                dikelola oleh sistem Google. Anda tidak perlu mengganti kata sandi di platform kami.
+                {t('profile_oauth_desc').replace('{email}', session?.user?.email || '')}
               </p>
             </div>
           </div>
@@ -561,10 +557,10 @@ export default function ProfileDataDiriPage() {
               </div>
               <div>
                 <h2 className="text-xl font-bold font-serif text-zinc-900 dark:text-zinc-100">
-                  Ubah Alamat Email
+                  {t('profile_email_title')}
                 </h2>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                  Perlu verifikasi OTP ke email lama untuk keamanan
+                  {t('profile_email_subtitle')}
                 </p>
               </div>
             </div>
@@ -574,7 +570,7 @@ export default function ProfileDataDiriPage() {
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                   <div>
                     <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">
-                      Email Saat Ini
+                      {t('profile_email_current')}
                     </label>
                     <div className="flex gap-3">
                       <input
@@ -586,12 +582,12 @@ export default function ProfileDataDiriPage() {
                       <button
                         onClick={handleRequestEmailOTP}
                         disabled={isEmailLoading}
-                        className="px-6 py-3 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-bold rounded-xl transition-all disabled:opacity-50"
+                        className="px-6 py-3 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-bold rounded-xl transition-all disabled:opacity-50 whitespace-nowrap"
                       >
                         {isEmailLoading ? (
                           <Loader2 className="w-5 h-5 animate-spin mx-auto" />
                         ) : (
-                          'Ubah Email'
+                          t('profile_email_change_btn')
                         )}
                       </button>
                     </div>
@@ -607,10 +603,7 @@ export default function ProfileDataDiriPage() {
                 >
                   <div className="flex gap-3 text-blue-700 dark:text-blue-400 mb-2">
                     <ShieldCheck className="w-5 h-5 shrink-0" />
-                    <p className="text-sm">
-                      Kami telah mengirim kode 6-digit ke <strong>{session?.user?.email}</strong>.
-                      Masukkan kode di bawah untuk mengotorisasi perubahan email.
-                    </p>
+                    <p className="text-sm" dangerouslySetInnerHTML={{__html: t('profile_email_otp_sent').replace('{email}', `<strong>${session?.user?.email}</strong>`)}} />
                   </div>
                   <div>
                     <input
@@ -627,14 +620,14 @@ export default function ProfileDataDiriPage() {
                       onClick={() => setEmailMode('idle')}
                       className="flex-1 p-3 text-zinc-600 dark:text-zinc-400 font-bold hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors"
                     >
-                      Batal
+                      {t('address_cancel_btn')}
                     </button>
                     <button
                       onClick={() => setEmailMode('newEmail')}
                       disabled={otpValue.length !== 6}
                       className="flex-1 p-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all disabled:opacity-50"
                     >
-                      Verifikasi OTP
+                      {t('profile_email_otp_verify_btn')}
                     </button>
                   </div>
                 </motion.div>
@@ -649,7 +642,7 @@ export default function ProfileDataDiriPage() {
                   <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-2">
                     <CheckCircle2 className="w-5 h-5" />
                     <p className="text-sm font-bold">
-                      Otorisasi Berhasil. Silakan masukkan email baru Anda.
+                      {t('profile_email_otp_verified')}
                     </p>
                   </div>
                   <form
@@ -658,13 +651,13 @@ export default function ProfileDataDiriPage() {
                   >
                     <div>
                       <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">
-                        Email Baru
+                        {t('profile_email_new_label')}
                       </label>
                       <input
                         type="email"
                         {...registerEmail('newEmail')}
                         className="w-full p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                        placeholder="Masukkan email baru yang belum terdaftar"
+                        placeholder={t('profile_email_new_placeholder')}
                       />
                       {emailErrors.newEmail && (
                         <p className="text-xs text-red-500 mt-1.5">
@@ -678,7 +671,7 @@ export default function ProfileDataDiriPage() {
                         onClick={() => setEmailMode('idle')}
                         className="flex-1 p-3 text-zinc-600 dark:text-zinc-400 font-bold hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors"
                       >
-                        Batal
+                        {t('address_cancel_btn')}
                       </button>
                       <button
                         type="submit"
@@ -688,7 +681,7 @@ export default function ProfileDataDiriPage() {
                         {isEmailLoading ? (
                           <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
-                          'Simpan Email Baru'
+                          t('profile_email_save_btn')
                         )}
                       </button>
                     </div>
@@ -706,10 +699,10 @@ export default function ProfileDataDiriPage() {
               </div>
               <div>
                 <h2 className="text-xl font-bold font-serif text-zinc-900 dark:text-zinc-100">
-                  Ganti Password
+                  {t('profile_password_title')}
                 </h2>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                  Pastikan akun Anda tetap aman dengan password yang kuat
+                  {t('profile_password_subtitle')}
                 </p>
               </div>
             </div>
@@ -717,13 +710,13 @@ export default function ProfileDataDiriPage() {
             <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="space-y-5 max-w-lg">
               <div>
                 <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">
-                  Password Saat Ini
+                  {t('profile_password_current')}
                 </label>
                 <input
                   type="password"
                   {...registerPassword('currentPassword')}
                   className="w-full p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent focus:ring-2 focus:ring-[#D4802A]/50 outline-none transition-all"
-                  placeholder="Masukkan password saat ini"
+                  placeholder={t('profile_password_current_placeholder')}
                 />
                 {passwordErrors.currentPassword && (
                   <p className="text-xs text-red-500 mt-1.5">
@@ -734,13 +727,13 @@ export default function ProfileDataDiriPage() {
 
               <div>
                 <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">
-                  Password Baru
+                  {t('profile_password_new')}
                 </label>
                 <input
                   type="password"
                   {...registerPassword('newPassword')}
                   className="w-full p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent focus:ring-2 focus:ring-[#D4802A]/50 outline-none transition-all"
-                  placeholder="Minimal 6 karakter"
+                  placeholder={t('profile_password_new_placeholder')}
                 />
                 {passwordErrors.newPassword && (
                   <p className="text-xs text-red-500 mt-1.5">
@@ -751,13 +744,13 @@ export default function ProfileDataDiriPage() {
 
               <div>
                 <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">
-                  Konfirmasi Password Baru
+                  {t('profile_password_confirm')}
                 </label>
                 <input
                   type="password"
                   {...registerPassword('confirmPassword')}
                   className="w-full p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent focus:ring-2 focus:ring-[#D4802A]/50 outline-none transition-all"
-                  placeholder="Ketik ulang password baru"
+                  placeholder={t('profile_password_confirm_placeholder')}
                 />
                 {passwordErrors.confirmPassword && (
                   <p className="text-xs text-red-500 mt-1.5">
@@ -775,7 +768,7 @@ export default function ProfileDataDiriPage() {
                   {passwordMutation.isPending ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    'Perbarui Password'
+                    t('profile_password_save_btn')
                   )}
                 </button>
               </div>

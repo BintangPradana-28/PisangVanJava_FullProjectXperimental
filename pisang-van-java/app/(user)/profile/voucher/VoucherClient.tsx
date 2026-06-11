@@ -2,6 +2,9 @@
 
 import { motion } from 'framer-motion'
 import { ChevronRight, Clock, Coins, Ticket } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useLanguage } from '@/context/LanguageContext'
+import toast from 'react-hot-toast'
 
 interface VoucherData {
   id: string
@@ -29,6 +32,13 @@ export default function VoucherClient({
   vouchers: VoucherData[]
   koinLogs?: KoinLogData[]
 }) {
+  const { t } = useLanguage()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const formatPrice = (n: number) =>
     new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -37,6 +47,7 @@ export default function VoucherClient({
     }).format(n)
 
   const formatDate = (d: Date) => {
+    if (!mounted) return ''
     return new Intl.DateTimeFormat('id-ID', {
       day: 'numeric',
       month: 'short',
@@ -62,7 +73,7 @@ export default function VoucherClient({
             </div>
             <div>
               <h2 className="text-white/90 text-sm font-bold uppercase tracking-wider mb-1">
-                Koin Pisang Saya
+                {t('voucher_points_title')}
               </h2>
               <p className="text-3xl md:text-4xl font-black drop-shadow-md">
                 {formatPrice(koinPisang)}
@@ -71,8 +82,8 @@ export default function VoucherClient({
           </div>
 
           <div className="bg-black/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 w-full md:w-auto">
-            <p className="text-sm text-white/90 font-medium">✨ Koin bisa ditukar saat checkout.</p>
-            <p className="text-xs text-white/70 mt-1">Dapatkan 1% koin dari setiap pesanan.</p>
+            <p className="text-sm text-white/90 font-medium">✨ {t('voucher_points_desc')}</p>
+            <p className="text-xs text-white/70 mt-1">{t('voucher_points_info')}</p>
           </div>
         </div>
       </section>
@@ -85,15 +96,15 @@ export default function VoucherClient({
           </div>
           <div>
             <h2 className="text-xl font-bold font-serif text-zinc-900 dark:text-zinc-100">
-              Riwayat Koin
+              {t('voucher_history_title')}
             </h2>
-            <p className="text-xs text-zinc-500">Histori perolehan dan penggunaan koin Anda</p>
+            <p className="text-xs text-zinc-500">{t('voucher_history_subtitle')}</p>
           </div>
         </div>
 
         {koinLogs.length === 0 ? (
           <div className="text-center py-8 text-zinc-500 text-sm">
-            Belum ada riwayat transaksi koin.
+            {t('voucher_history_empty')}
           </div>
         ) : (
           <div className="divide-y divide-zinc-100 dark:divide-zinc-800 max-h-80 overflow-y-auto pr-2 space-y-3">
@@ -106,13 +117,13 @@ export default function VoucherClient({
                       {log.description}
                     </span>
                     <span className="text-xs text-zinc-400">
-                      {new Intl.DateTimeFormat('id-ID', {
+                      {mounted ? new Intl.DateTimeFormat('id-ID', {
                         day: 'numeric',
                         month: 'short',
                         year: 'numeric',
                         hour: '2-digit',
                         minute: '2-digit'
-                      }).format(new Date(log.createdAt))}
+                      }).format(new Date(log.createdAt)) : ''}
                     </span>
                   </div>
                   <span
@@ -140,9 +151,9 @@ export default function VoucherClient({
           </div>
           <div>
             <h2 className="text-xl font-bold font-serif text-zinc-900 dark:text-zinc-100">
-              Kupon Tersedia
+              {t('voucher_available_title')}
             </h2>
-            <p className="text-xs text-zinc-500">Gunakan kode ini saat proses pembayaran</p>
+            <p className="text-xs text-zinc-500">{t('voucher_available_subtitle')}</p>
           </div>
         </div>
 
@@ -150,7 +161,7 @@ export default function VoucherClient({
           <div className="flex flex-col items-center justify-center text-center py-12 px-4 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-3xl">
             <Ticket className="w-12 h-12 text-zinc-300 dark:text-zinc-700 mb-3" />
             <p className="text-zinc-500 font-medium">
-              Belum ada kupon yang tersedia untuk Anda saat ini.
+              {t('voucher_available_empty')}
             </p>
           </div>
         ) : (
@@ -186,11 +197,11 @@ export default function VoucherClient({
                   </h3>
                   {v.discountType === 'PERCENTAGE' && v.maxDiscount && (
                     <p className="text-xs text-zinc-500">
-                      Maks. potongan {formatPrice(v.maxDiscount)}
+                      {t('voucher_max_discount')} {formatPrice(v.maxDiscount)}
                     </p>
                   )}
                   <p className="text-xs text-zinc-500 mt-1">
-                    Min. belanja {formatPrice(v.minPurchase)}
+                    {t('voucher_min_purchase')} {formatPrice(v.minPurchase)}
                   </p>
                 </div>
 
@@ -198,11 +209,11 @@ export default function VoucherClient({
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(v.code)
-                      alert(`Kode voucher ${v.code} disalin!`)
+                      toast.success(t('voucher_copied_alert')?.replace('{code}', v.code) || `Voucher ${v.code} copied!`)
                     }}
                     className="text-xs font-bold text-amber-600 dark:text-amber-500 hover:text-amber-700 flex items-center gap-1"
                   >
-                    Salin Kode <ChevronRight className="w-3 h-3" />
+                    {t('voucher_copy_btn')} <ChevronRight className="w-3 h-3" />
                   </button>
                 </div>
               </motion.div>

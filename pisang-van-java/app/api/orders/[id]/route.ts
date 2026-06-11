@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { logAudit } from '@/lib/audit'
 import { sendWhatsAppNotification } from '@/lib/notifications'
 import { prisma } from '@/lib/prisma'
+import { sendOrderStatusEmail } from '@/src/features/payment/email'
 import {
   hasValidSameOriginHeaders,
   orderStatusInputSchema,
@@ -24,7 +25,8 @@ export async function GET(_: NextRequest, { params }: OrderRouteContext) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
   }
 
-  if (actor.role !== 'ADMIN') {
+  const STAFF_ROLES = ['ADMIN', 'SUPER_ADMIN', 'KITCHEN', 'CASHIER'] as const
+  if (!actor || !STAFF_ROLES.includes(actor.role as (typeof STAFF_ROLES)[number])) {
     return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
   }
 
@@ -57,7 +59,8 @@ export async function PATCH(req: NextRequest, { params }: OrderRouteContext) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
   }
 
-  if (actor.role !== 'ADMIN') {
+  const STAFF_ROLES = ['ADMIN', 'SUPER_ADMIN', 'KITCHEN', 'CASHIER'] as const
+  if (!actor || !STAFF_ROLES.includes(actor.role as (typeof STAFF_ROLES)[number])) {
     return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
   }
 
@@ -128,6 +131,13 @@ export async function PATCH(req: NextRequest, { params }: OrderRouteContext) {
                   where: { id: referrer.id },
                   data: { koinPisang: { increment: 5000 } }
                 })
+                await tx.koinPisangLog.create({
+                  data: {
+                    userId: referrer.id,
+                    amount: 5000,
+                    description: `Bonus Referral (Teman Anda #${orderInfo.userId.slice(-6).toUpperCase()} melakukan order pertama)`
+                  }
+                })
               }
             }
           }
@@ -158,6 +168,18 @@ export async function PATCH(req: NextRequest, { params }: OrderRouteContext) {
         order.customerName,
         parsedStatus.data,
         order.id
+      )
+    }
+
+    // Send email notification about status change (asynchronously)
+    if (
+      parsedStatus.data === 'PROCESSING' ||
+      parsedStatus.data === 'READY' ||
+      parsedStatus.data === 'COMPLETED' ||
+      parsedStatus.data === 'CANCELED'
+    ) {
+      sendOrderStatusEmail(order.id, parsedStatus.data).catch((err) =>
+        console.error('[EMAIL] Failed to send order status email', err)
       )
     }
 

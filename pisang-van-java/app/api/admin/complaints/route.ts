@@ -56,6 +56,14 @@ export async function PATCH(req: Request) {
           data: { koinPisang: { increment: compensationKoin } }
         })
 
+        await tx.koinPisangLog.create({
+          data: {
+            userId: complaint.userId,
+            amount: compensationKoin,
+            description: `Kompensasi penyelesaian tiket pengaduan #${complaintId.slice(-6).toUpperCase()}`
+          }
+        })
+
         await tx.auditLog.create({
           data: {
             action: 'COMPLAINT_COMPENSATION',

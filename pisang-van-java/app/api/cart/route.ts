@@ -226,7 +226,7 @@ function selectCartBasePrice(
     wholesaleKrispy: number
   },
   baseType: StoredBaseType,
-  role: 'ADMIN' | 'CUSTOMER' | 'RESELLER'
+  role: string
 ): number {
   if (baseType === 'Lumpia') {
     return role === 'RESELLER' && variant.wholesaleLumpia > 0

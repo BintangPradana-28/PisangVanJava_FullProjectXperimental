@@ -181,45 +181,6 @@ export default function SecurityClient({
           </div>
         )}
 
-        {/* 2FA Setup Modal */}
-        {show2FA && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-            <div className="bg-white p-6 rounded-2xl max-w-sm w-full shadow-2xl relative">
-              <button
-                onClick={() => setShow2FA(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-black"
-              >
-                ✕
-              </button>
-              <h4 className="text-lg font-bold text-brown-900 mb-2">Setup Authenticator</h4>
-              <p className="text-sm text-gray-600 mb-4">
-                Pindai kode QR ini menggunakan aplikasi Google Authenticator atau Authy.
-              </p>
-
-              <div className="bg-gray-100 p-4 rounded-xl flex justify-center mb-4">
-                {qrCodeUrl && <Image src={qrCodeUrl} alt="QR Code 2FA" width={200} height={200} />}
-              </div>
-              <p className="text-xs text-center text-gray-500 font-mono mb-4 break-all">
-                Secret: {secret}
-              </p>
-
-              <input
-                type="text"
-                placeholder="Kode 6 Digit"
-                value={otpInput}
-                onChange={(e) => setOtpInput(e.target.value)}
-                maxLength={6}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 text-center tracking-[0.5em] font-mono text-lg mb-4 focus:ring-amber-brand"
-              />
-              <button
-                onClick={handleEnable2FA}
-                className="w-full bg-amber-brand text-brown-900 font-bold py-3 rounded-lg hover:brightness-110 transition"
-              >
-                Verifikasi & Aktifkan
-              </button>
-            </div>
-          </div>
-        )}
       </section>
 
       {/* 3. Manajemen Sesi Aktif */}
@@ -317,6 +278,46 @@ export default function SecurityClient({
           </form>
         )}
       </section>
+
+      {/* 2FA Setup Modal (Moved outside to escape stacking context) */}
+      {show2FA && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white p-6 rounded-2xl max-w-sm w-full shadow-2xl relative">
+            <button
+              onClick={() => setShow2FA(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-black"
+            >
+              ✕
+            </button>
+            <h4 className="text-lg font-bold text-brown-900 mb-2">Setup Authenticator</h4>
+            <p className="text-sm text-gray-600 mb-4">
+              Pindai kode QR ini menggunakan aplikasi Google Authenticator atau Authy.
+            </p>
+
+            <div className="bg-gray-100 p-4 rounded-xl flex justify-center mb-4">
+              {qrCodeUrl && <Image src={qrCodeUrl} alt="QR Code 2FA" width={200} height={200} />}
+            </div>
+            <p className="text-xs text-center text-gray-500 font-mono mb-4 break-all">
+              Secret: {secret}
+            </p>
+
+            <input
+              type="text"
+              placeholder="Kode 6 Digit"
+              value={otpInput}
+              onChange={(e) => setOtpInput(e.target.value)}
+              maxLength={6}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-center tracking-[0.5em] font-mono text-lg mb-4 focus:ring-amber-brand outline-none"
+            />
+            <button
+              onClick={handleEnable2FA}
+              className="w-full bg-amber-brand text-brown-900 font-bold py-3 rounded-lg hover:brightness-110 transition"
+            >
+              Verifikasi & Aktifkan
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

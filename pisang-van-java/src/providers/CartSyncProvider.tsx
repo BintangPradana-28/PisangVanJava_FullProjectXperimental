@@ -33,103 +33,122 @@ export function CartSyncProvider({ children }: { children: React.ReactNode }) {
   // Hydrate cart dari localStorage — satu kali saat mount
   useEffect(() => {
     useCartStore.persist.rehydrate()
-  }, [])
-
-  // ── 1. Sinkronisasi Awal (Smart Merge Opsi B) saat Login ──
+  }, [])  // ── 1. Sinkronisasi Awal & Lintas Perangkat (Focus Sync) ──
   useEffect(() => {
     if (!_hasHydrated) return
-    if (status === 'authenticated' && !isFirstSyncDone) {
-      const fetchAndMergeCart = async () => {
-        try {
-          const data = await api<any>('/api/user/cart/sync')
 
-          if (data.success && Array.isArray(data.data?.items)) {
-            const dbItems: CartItem[] = data.data.items
-            const localItems = useCartStore.getState().items
-
-            // Threshold Config (Sprint 4)
-            const CONFLICT_THRESHOLD = {
-              itemCount: 3,
-              totalPrice: 75000,
-              diffCount: 2
-            }
-
-            const isSameCartItem = (a: CartItem, b: CartItem) => {
-              if (a.menuVariantId !== b.menuVariantId) return false
-              if (a.notes !== b.notes) return false
-
-              const aToppings = Array.isArray(a.toppings)
-                ? a.toppings
-                : (a as any).topping
-                  ? [(a as any).topping]
-                  : []
-              const bToppings = Array.isArray(b.toppings)
-                ? b.toppings
-                : (b as any).topping
-                  ? [(b as any).topping]
-                  : []
-
-              if (aToppings.length !== bToppings.length) return false
-
-              const aIds = aToppings.map((t: any) => t.toppingId).sort()
-              const bIds = bToppings.map((t: any) => t.toppingId).sort()
-
-              return aIds.every((val, index) => val === bIds[index])
-            }
-
-            // Hitung items yang berbeda (ada di lokal tapi tidak ada di DB)
-            const differentItems = localItems.filter(
-              (localItem) => !dbItems.some((dbItem) => isSameCartItem(dbItem, localItem))
-            )
-
-            // Smart Merge (Opsi A per user request): Keduanya digabung (DB + Lokal ditambahkan quantity-nya)
-            const merged = [...dbItems]
-            localItems.forEach((localItem) => {
-              const existingIndex = merged.findIndex((i) => isSameCartItem(i, localItem))
-              if (existingIndex !== -1) {
-                merged[existingIndex] = {
-                  ...merged[existingIndex],
-                  quantity: merged[existingIndex].quantity + localItem.quantity
-                }
-              } else {
-                merged.push({ ...localItem, cartItemId: crypto.randomUUID() })
-              }
-            })
-
-            const mergedTotal = merged.reduce(
-              (acc, item) =>
-                acc +
-                (item.basePrice +
-                  (item.toppings?.reduce((s: number, t: any) => s + (t.priceAdd || 0), 0) || 0)) *
-                  item.quantity,
-              0
-            )
-
-            const shouldShowModal =
-              merged.length > CONFLICT_THRESHOLD.itemCount ||
-              mergedTotal > CONFLICT_THRESHOLD.totalPrice ||
-              differentItems.length > CONFLICT_THRESHOLD.diffCount
-
-            if (dbItems.length > 0 && localItems.length > 0 && shouldShowModal) {
-              setConflictState({ local: localItems, db: dbItems })
-            } else {
-              setItems(merged)
-              previousItemsRef.current = merged
-            }
-          }
-        } catch (error) {
-          console.error('[CartSyncProvider] Init Sync Error:', error)
-        } finally {
-          setIsFirstSyncDone(true)
-        }
-      }
-
-      fetchAndMergeCart()
-    } else if (status === 'unauthenticated') {
-      // Jika logout, kita mungkin ingin clear isFirstSyncDone agar bisa sync lagi saat login
+    if (status === 'unauthenticated') {
       setIsFirstSyncDone(false)
+      return
     }
-  }, [status, _hasHydrated, isFirstSyncDone, setItems])
+
+    if (status !== 'authenticated') return
+
+    const fetchAndMergeCart = async () => {
+      try {
+        const data = await api<any>('/api/user/cart/sync')
+
+        if (data.success && Array.isArray(data.data?.items)) {
+          const dbItems: CartItem[] = data.data.items
+          const localItems = useCartStore.getState().items
+
+          // Threshold Config (Sprint 4)
+          const CONFLICT_THRESHOLD = {
+            itemCount: 3,
+            totalPrice: 75000,
+            diffCount: 2
+          }
+
+          const isSameCartItem = (a: CartItem, b: CartItem) => {
+            if (a.menuVariantId !== b.menuVariantId) return false
+            if (a.notes !== b.notes) return false
+
+            const aToppings = Array.isArray(a.toppings)
+              ? a.toppings
+              : (a as any).topping
+                ? [(a as any).topping]
+                : []
+            const bToppings = Array.isArray(b.toppings)
+              ? b.toppings
+              : (b as any).topping
+                ? [(b as any).topping]
+                : []
+
+            if (aToppings.length !== bToppings.length) return false
+
+            const aIds = aToppings.map((t: any) => t.toppingId).sort()
+            const bIds = bToppings.map((t: any) => t.toppingId).sort()
+
+            return aIds.every((val, index) => val === bIds[index])
+          }
+
+          // Hitung items yang berbeda (ada di lokal tapi tidak ada di DB)
+          const differentItems = localItems.filter(
+            (localItem) => !dbItems.some((dbItem) => isSameCartItem(dbItem, localItem))
+          )
+
+          // Smart Merge: Keduanya digabung (DB + Lokal ditambahkan quantity-nya)
+          const merged = [...dbItems]
+          localItems.forEach((localItem) => {
+            const existingIndex = merged.findIndex((i) => isSameCartItem(i, localItem))
+            if (existingIndex !== -1) {
+              merged[existingIndex] = {
+                ...merged[existingIndex],
+                quantity: merged[existingIndex].quantity + localItem.quantity
+              }
+            } else {
+              merged.push({ ...localItem, cartItemId: crypto.randomUUID() })
+            }
+          })
+
+          const mergedTotal = merged.reduce(
+            (acc, item) =>
+              acc +
+              (item.basePrice +
+                (item.toppings?.reduce((s: number, t: any) => s + (t.priceAdd || 0), 0) || 0)) *
+                item.quantity,
+            0
+          )
+
+          const shouldShowModal =
+            merged.length > CONFLICT_THRESHOLD.itemCount ||
+            mergedTotal > CONFLICT_THRESHOLD.totalPrice ||
+            differentItems.length > CONFLICT_THRESHOLD.diffCount
+
+          // Only show conflict modal on FIRST load, to avoid annoying user repeatedly across tabs
+          if (dbItems.length > 0 && localItems.length > 0 && shouldShowModal && !isFirstSyncDone) {
+            setConflictState({ local: localItems, db: dbItems })
+          } else {
+            setItems(merged)
+            previousItemsRef.current = merged
+          }
+        }
+      } catch (error) {
+        console.error('[CartSyncProvider] Sync Error:', error)
+      } finally {
+        setIsFirstSyncDone(true)
+      }
+    }
+
+    if (!isFirstSyncDone) {
+      fetchAndMergeCart()
+    }
+
+    // Attach listener to pull latest cart when user returns to tab (Cross-device sync)
+    const handleFocus = () => {
+      if (document.visibilityState === 'visible') {
+        fetchAndMergeCart()
+      }
+    }
+
+    window.addEventListener('focus', handleFocus)
+    window.addEventListener('visibilitychange', handleFocus)
+
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('visibilitychange', handleFocus)
+    }
+  }, [status, _hasHydrated, isFirstSyncDone, setItems, setConflictState])
 
   // ── 2. Persist to DB on Change (Debounced) ──
   const syncToDB = async (items: CartItem[]) => {

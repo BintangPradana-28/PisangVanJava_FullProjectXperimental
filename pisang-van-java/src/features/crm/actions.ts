@@ -79,10 +79,32 @@ export async function updateB2BDealStatus(payload: unknown) {
   }
 
   try {
-    const updated = await prisma.b2BDeal.update({
-      where: { id: parsed.data.dealId },
-      data: { stage: parsed.data.stage }
+    const updated = await prisma.$transaction(async (tx: any) => {
+      const deal = await tx.b2BDeal.findUnique({
+        where: { id: parsed.data.dealId },
+        select: { dealName: true, ownerId: true }
+      })
+
+      const dealUpdate = await tx.b2BDeal.update({
+        where: { id: parsed.data.dealId },
+        data: { stage: parsed.data.stage }
+      })
+
+      if (
+        deal &&
+        deal.dealName === 'Reseller Application' &&
+        parsed.data.stage === 'CLOSED_WON' &&
+        deal.ownerId
+      ) {
+        await tx.user.update({
+          where: { id: deal.ownerId },
+          data: { role: 'RESELLER' }
+        })
+      }
+
+      return dealUpdate
     })
+
     return { success: true as const, data: updated }
   } catch (err) {
     console.error('[CRM_UPDATE_ERROR]', err)
@@ -106,5 +128,71 @@ export async function getB2BDeals() {
   } catch (err) {
     console.error('[CRM_FETCH_ERROR]', err)
     return []
+  }
+}
+
+const resellerApplySchema = z.object({
+  companyName: z.string().min(2, 'Nama bisnis/toko minimal 2 karakter').max(100),
+  address: z.string().min(10, 'Alamat lengkap bisnis minimal 10 karakter').max(500),
+  notes: z.string().max(1000).optional().nullable()
+})
+
+export async function applyForReseller(payload: unknown) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { success: false as const, error: 'Silakan login terlebih dahulu untuk mendaftar.' }
+  }
+
+  const parsed = resellerApplySchema.safeParse(payload)
+  if (!parsed.success) {
+    return { success: false as const, error: parsed.error.issues[0].message }
+  }
+
+  try {
+    // Check if user is already a reseller
+    if (session.user.role === 'RESELLER') {
+      return { success: false as const, error: 'Anda sudah terdaftar sebagai Reseller resmi.' }
+    }
+
+    // Check if user has a pending application
+    const existing = await prisma.b2BDeal.findFirst({
+      where: {
+        ownerId: session.user.id,
+        dealName: 'Reseller Application',
+        stage: { in: ['PROSPECTING', 'NEGOTIATION'] }
+      }
+    })
+
+    if (existing) {
+      return { success: false as const, error: 'Pendaftaran Reseller Anda sebelumnya masih dalam antrean/sedang diproses.' }
+    }
+
+    // Fetch user phone/email
+    const userObj = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { phone: true, email: true, name: true }
+    })
+
+    if (!userObj || !userObj.phone) {
+      return { success: false as const, error: 'Nomor WhatsApp wajib diisi di profil Anda sebelum mendaftar Reseller.' }
+    }
+
+    const newDeal = await prisma.b2BDeal.create({
+      data: {
+        companyName: parsed.data.companyName,
+        contactName: userObj.name || 'Pelanggan',
+        phone: userObj.phone,
+        email: userObj.email || null,
+        dealName: 'Reseller Application',
+        notes: `Alamat Bisnis: ${parsed.data.address}\n\nCatatan Tambahan: ${parsed.data.notes || '-'}`,
+        stage: 'PROSPECTING',
+        ownerId: session.user.id
+      }
+    })
+
+    return { success: true as const, data: newDeal }
+  } catch (err) {
+    console.error('[RESELLER_APPLY_ERROR]', err)
+    return { success: false as const, error: 'Gagal mengirimkan pendaftaran reseller.' }
   }
 }

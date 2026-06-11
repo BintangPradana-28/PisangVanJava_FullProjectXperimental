@@ -55,8 +55,12 @@ export async function generateSnapToken(params: GenerateSnapTokenParams): Promis
 
     const transaction = await snap.createTransaction(requestData)
     return transaction.token
-  } catch (error) {
-    console.error('[SECURITY] Failed to generate Snap Token', error)
+  } catch (error: any) {
+    console.error('[SECURITY] Failed to generate Snap Token.', {
+      message: error?.message,
+      apiResponse: error?.ApiResponse,
+      httpStatusCode: error?.httpStatusCode
+    })
     return null
   }
 }

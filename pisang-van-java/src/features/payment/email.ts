@@ -3,6 +3,7 @@ import React from 'react'
 import { prisma } from '@/lib/prisma'
 import { resend } from '@/src/lib/resend'
 import OrderConfirmationEmail from './OrderConfirmationEmail'
+import OrderStatusEmail from './OrderStatusEmail'
 
 export async function sendOrderConfirmationEmail(orderId: string): Promise<boolean> {
   if (!resend) {
@@ -76,6 +77,67 @@ export async function sendOrderConfirmationEmail(orderId: string): Promise<boole
     return true
   } catch (error) {
     console.error('[EMAIL] Exception while sending email:', error)
+    return false
+  }
+}
+
+export async function sendOrderStatusEmail(orderId: string, status: string): Promise<boolean> {
+  if (!resend) {
+    console.warn('[EMAIL] Resend is not configured. Skipping status update email.')
+    return false
+  }
+
+  try {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        user: true
+      }
+    })
+
+    if (!order) {
+      console.error(`[EMAIL] Order ${orderId} not found`)
+      return false
+    }
+
+    const customerEmail = order.user?.email
+    if (!customerEmail) {
+      console.log(`[EMAIL] No email found for order ${orderId}, skipping status email.`)
+      return false
+    }
+
+    const htmlContent = await render(
+      React.createElement(OrderStatusEmail, {
+        customerName: order.customerName,
+        orderId: order.id,
+        status: status
+      })
+    )
+
+    const statusLabels: Record<string, string> = {
+      PROCESSING: 'Sedang Diproses 🍳',
+      READY: 'Siap Diambil/Dikirim 🎉',
+      COMPLETED: 'Selesai 🍌',
+      CANCELED: 'Dibatalkan ❌'
+    }
+    const statusLabel = statusLabels[status] || status
+
+    const { error } = await resend.emails.send({
+      from: 'Pisang Van Java <noreply@pisangvanjava.com>',
+      to: customerEmail,
+      subject: `Update Pesanan #${order.id.slice(-6).toUpperCase()}: ${statusLabel} - Pisang Van Java`,
+      html: htmlContent
+    })
+
+    if (error) {
+      console.error('[EMAIL] Failed to send status update email:', error)
+      return false
+    }
+
+    console.log(`[EMAIL] Status update email (${status}) sent to ${customerEmail} for order ${orderId}`)
+    return true
+  } catch (error) {
+    console.error('[EMAIL] Exception while sending status email:', error)
     return false
   }
 }

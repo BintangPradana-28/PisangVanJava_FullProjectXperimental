@@ -7,6 +7,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { useLanguage } from '@/context/LanguageContext'
+import { useSession } from 'next-auth/react'
+import { useSettings } from '@/context/SettingsContext'
+import { generateWaCartLink } from '@/src/lib/wa-link-client'
 import {
   selectCartItemCount,
   selectCartItems,
@@ -25,6 +28,8 @@ const formatPrice = (n: number): string =>
 export default function KeranjangPage() {
   const router = useRouter()
   const { t } = useLanguage()
+  const { data: session } = useSession()
+  const { getSetting } = useSettings()
 
   const cartItems = useCartStore(selectCartItems)
   const updateQuantity = useCartStore((s) => s.updateQuantity)
@@ -36,6 +41,33 @@ export default function KeranjangPage() {
   const handleClearCart = () => {
     clearCart()
     toast.success('Keranjang dikosongkan')
+  }
+
+  const handleWhatsAppOrder = () => {
+    const resolveBaseType = (name: string): string => {
+      const normalized = name.toLowerCase()
+      if (normalized.includes('kembung')) return 'kembung'
+      if (normalized.includes('lumpia')) return 'lumpia'
+      if (normalized.includes('krispy')) return 'krispy'
+      return 'kembung'
+    }
+
+    const waItems = cartItems.map((item) => ({
+      name: item.variantName.split('(')[0].trim(),
+      baseType: resolveBaseType(item.variantName),
+      quantity: item.quantity,
+      toppings: item.toppings ? item.toppings.map((t) => t.name) : []
+    }))
+
+    const phone = getSetting('kontak_whatsapp', '6281312167554')
+    const name = session?.user?.name || 'Pelanggan'
+    const link = generateWaCartLink(phone, name, waItems)
+
+    if (link && link !== '#') {
+      window.open(link, '_blank', 'noopener,noreferrer')
+    } else {
+      toast.error('Gagal membuat link WhatsApp. Periksa item keranjang Anda.')
+    }
   }
 
   return (
@@ -179,12 +211,20 @@ export default function KeranjangPage() {
                   {formatPrice(cartTotal)}
                 </span>
               </div>
-              <button
-                onClick={() => router.push('/checkout')}
-                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-2xl transition-all active:scale-[0.98] shadow-lg shadow-amber-200 dark:shadow-amber-900/30 text-sm"
-              >
-                Lanjut ke Checkout →
-              </button>
+              <div className="space-y-2">
+                <button
+                  onClick={() => router.push('/checkout')}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-2xl transition-all active:scale-[0.98] shadow-lg shadow-amber-200 dark:shadow-amber-900/30 text-sm"
+                >
+                  Lanjut ke Checkout →
+                </button>
+                <button
+                  onClick={handleWhatsAppOrder}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-2xl transition-all active:scale-[0.98] shadow-lg shadow-emerald-200 dark:shadow-emerald-900/30 text-sm flex items-center justify-center gap-2"
+                >
+                  <span>💬</span> Pesan via WhatsApp (Tanpa Form)
+                </button>
+              </div>
               <p className="text-[10px] text-zinc-400 text-center mt-3">
                 🔒 Data Anda terenkripsi. Harga dikunci server.
               </p>

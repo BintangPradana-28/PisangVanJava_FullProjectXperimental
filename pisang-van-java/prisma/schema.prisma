@@ -82,6 +82,7 @@ model User {
   addresses   Address[]
   authLogs    AuthLog[]
   complaints  Complaint[]
+  koinLogs    KoinPisangLog[]
 
   @@index([email])
 }
@@ -454,3 +455,17 @@ model Payment {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 }
+
+model KoinPisangLog {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Int      // Jumlah koin (bisa positif/negatif)
+  description String   // Deskripsi perubahan (misal: "Referral Bonus", "Redeemed at Checkout", dll)
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+

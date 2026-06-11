@@ -245,6 +245,8 @@ export const config = {
     '/profile/:path*',
     '/track-order/:path*',
     '/api/cart/:path*',
-    '/menu-spesial/:path*'
+    '/menu-spesial/:path*',
+    '/kitchen/:path*',
+    '/kasir/:path*'
   ]
 }

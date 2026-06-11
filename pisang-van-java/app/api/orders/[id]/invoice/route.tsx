@@ -2,6 +2,7 @@ import { Document, Page, renderToStream, StyleSheet, Text, View } from '@react-p
 import { NextResponse } from 'next/server'
 import React from 'react'
 import { prisma } from '@/lib/prisma'
+import { supabase } from '@/lib/supabase'
 
 // Create styles
 const styles = StyleSheet.create({
@@ -162,18 +163,58 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
 
+    const fileName = `invoice-${id}.pdf`
+
+    // 1. Try to fetch from Supabase Storage first
+    try {
+      const { data: fileData, error: downloadError } = await supabase.storage
+        .from('invoices')
+        .download(fileName)
+
+      if (fileData && !downloadError) {
+        const arrayBuffer = await fileData.arrayBuffer()
+        return new NextResponse(new Uint8Array(arrayBuffer), {
+          headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename="invoice-${order.id.slice(-8)}.pdf"`
+          }
+        })
+      }
+    } catch (storageErr) {
+      console.warn('Supabase storage fetch failed, generating dynamically:', storageErr)
+    }
+
+    // 2. If not found in storage, render dynamically
     const stream = await renderToStream(<Invoice order={order} />)
 
-    // Convert Node stream to Web stream for Next.js response
-    const readableStream = new ReadableStream({
-      start(controller) {
-        stream.on('data', (chunk) => controller.enqueue(chunk))
-        stream.on('end', () => controller.close())
-        stream.on('error', (err) => controller.error(err))
-      }
+    // Convert Node stream to Buffer
+    const chunks: Uint8Array[] = []
+    const buffer = await new Promise<Buffer>((resolve, reject) => {
+      stream.on('data', (chunk) => chunks.push(chunk))
+      stream.on('end', () => resolve(Buffer.concat(chunks)))
+      stream.on('error', (err) => reject(err))
     })
 
-    return new NextResponse(readableStream as any, {
+    // 3. Upload to Supabase Storage for caching
+    try {
+      // Ensure bucket exists (just in case)
+      await supabase.storage.createBucket('invoices', { public: true })
+    } catch (bucketErr) {
+      // Ignore if bucket already exists
+    }
+
+    const { error: uploadError } = await supabase.storage
+      .from('invoices')
+      .upload(fileName, buffer, {
+        contentType: 'application/pdf',
+        upsert: true
+      })
+
+    if (uploadError) {
+      console.error('Failed to cache invoice in Supabase Storage:', uploadError.message)
+    }
+
+    return new NextResponse(new Uint8Array(buffer), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="invoice-${order.id.slice(-8)}.pdf"`

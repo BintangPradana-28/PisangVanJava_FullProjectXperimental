@@ -11,7 +11,20 @@ export default async function VoucherPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { koinPisang: true, role: true }
+    select: {
+      koinPisang: true,
+      role: true,
+      koinLogs: {
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+        select: {
+          id: true,
+          amount: true,
+          description: true,
+          createdAt: true
+        }
+      }
+    }
   })
 
   if (!user) {
@@ -37,5 +50,10 @@ export default async function VoucherPage() {
     }
   })
 
-  return <VoucherClient koinPisang={user.koinPisang} vouchers={vouchers} />
+  const serializedLogs = user.koinLogs.map((log: { id: string; amount: number; description: string; createdAt: Date }) => ({
+    ...log,
+    createdAt: log.createdAt.toISOString()
+  }))
+
+  return <VoucherClient koinPisang={user.koinPisang} vouchers={vouchers} koinLogs={serializedLogs} />
 }

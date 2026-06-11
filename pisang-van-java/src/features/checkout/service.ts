@@ -9,7 +9,7 @@ import { auth } from '@/src/auth'
 import { createPendingPayment } from '@/src/features/payment/payment.service'
 import { generateSnapToken } from '@/src/features/payment/service'
 
-const ROLE_VALUES = ['ADMIN', 'CUSTOMER', 'RESELLER'] as const
+const ROLE_VALUES = ['ADMIN', 'CUSTOMER', 'RESELLER', 'KITCHEN', 'CASHIER'] as const
 const BASE_TYPE_VALUES = ['kembung', 'lumpia', 'krispy'] as const
 const ORDER_STATUS_VALUES = [
   'PENDING_PAYMENT',
@@ -672,6 +672,16 @@ export async function createCheckoutOrder(
         items: []
       }
     })
+
+    if (netPointChange !== 0) {
+      await tx.koinPisangLog.create({
+        data: {
+          userId: actor.userId,
+          amount: netPointChange,
+          description: `Pembelian order #${order.id.slice(-6).toUpperCase()} (Dapat: +${earnedPoints}, Tukar: -${pointsToUse})`
+        }
+      })
+    }
 
     return {
       orderId: order.id,

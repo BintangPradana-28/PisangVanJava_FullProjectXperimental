@@ -13,12 +13,21 @@ interface VoucherData {
   endDate: Date
 }
 
+interface KoinLogData {
+  id: string
+  amount: number
+  description: string
+  createdAt: string
+}
+
 export default function VoucherClient({
   koinPisang,
-  vouchers
+  vouchers,
+  koinLogs = []
 }: {
   koinPisang: number
   vouchers: VoucherData[]
+  koinLogs?: KoinLogData[]
 }) {
   const formatPrice = (n: number) =>
     new Intl.NumberFormat('id-ID', {
@@ -66,6 +75,61 @@ export default function VoucherClient({
             <p className="text-xs text-white/70 mt-1">Dapatkan 1% koin dari setiap pesanan.</p>
           </div>
         </div>
+      </section>
+
+      {/* ── Histori Transaksi Koin ── */}
+      <section className="bg-white dark:bg-zinc-900 rounded-3xl p-6 md:p-8 shadow-sm border border-zinc-200/50 dark:border-zinc-800/80">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+            <Coins className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold font-serif text-zinc-900 dark:text-zinc-100">
+              Riwayat Koin
+            </h2>
+            <p className="text-xs text-zinc-500">Histori perolehan dan penggunaan koin Anda</p>
+          </div>
+        </div>
+
+        {koinLogs.length === 0 ? (
+          <div className="text-center py-8 text-zinc-500 text-sm">
+            Belum ada riwayat transaksi koin.
+          </div>
+        ) : (
+          <div className="divide-y divide-zinc-100 dark:divide-zinc-800 max-h-80 overflow-y-auto pr-2 space-y-3">
+            {koinLogs.map((log) => {
+              const isPositive = log.amount >= 0
+              return (
+                <div key={log.id} className="flex justify-between items-center py-3 first:pt-0 last:pb-0">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                      {log.description}
+                    </span>
+                    <span className="text-xs text-zinc-400">
+                      {new Intl.DateTimeFormat('id-ID', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }).format(new Date(log.createdAt))}
+                    </span>
+                  </div>
+                  <span
+                    className={`text-sm font-bold ${
+                      isPositive
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-rose-600 dark:text-rose-400'
+                    }`}
+                  >
+                    {isPositive ? '+' : ''}
+                    {new Intl.NumberFormat('id-ID').format(log.amount)}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </section>
 
       {/* ── Daftar Voucher ── */}

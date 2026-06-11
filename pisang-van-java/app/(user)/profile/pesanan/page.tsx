@@ -20,7 +20,6 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'react-hot-toast'
 import { getUserOrders } from '@/app/actions/orderHistory'
-import { generateInvoicePDF } from '@/src/lib/generateInvoice'
 import { useCartStore } from '@/src/stores/cart.store'
 import 'dayjs/locale/id'
 import Link from 'next/link'
@@ -455,7 +454,7 @@ export default function PesananPage() {
                             {/* Payment Action Button */}
                             {order.status === 'PENDING_PAYMENT' && (
                               <Link
-                                href={`/checkout/payment?orderId=${order.id}`}
+                                href={`/payment/${order.id}`}
                                 className="block w-full bg-[#D4802A] hover:bg-[#b56d24] text-white px-6 py-3 rounded-xl font-bold text-sm text-center transition-all shadow-md active:scale-95 mb-3"
                               >
                                 Selesaikan Pembayaran
@@ -464,12 +463,14 @@ export default function PesananPage() {
 
                             {/* Action Buttons */}
                             <div className="flex flex-col gap-2.5">
-                              <button
-                                onClick={() => generateInvoicePDF(order)}
-                                className="w-full flex items-center justify-center gap-2 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95"
+                              <a
+                                href={`/api/orders/${order.id}/invoice`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full flex items-center justify-center gap-2 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 text-center"
                               >
                                 <Download className="w-4 h-4" /> Unduh Invoice (PDF)
-                              </button>
+                              </a>
 
                               <button
                                 onClick={() => handleReorder(order)}

@@ -34,6 +34,14 @@ export async function POST(req: Request) {
         }
       })
 
+      await tx.koinPisangLog.create({
+        data: {
+          userId: targetUserId,
+          amount: amount,
+          description: `Penyesuaian manual oleh Admin: ${reason}`
+        }
+      })
+
       await tx.auditLog.create({
         data: {
           action: 'MANUAL_KOIN_ADJUSTMENT',

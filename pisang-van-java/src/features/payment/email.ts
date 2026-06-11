@@ -18,7 +18,7 @@ export async function sendOrderConfirmationEmail(orderId: string): Promise<boole
         items: {
           include: {
             variant: true,
-            topping: true
+            toppings: true
           }
         },
         user: true
@@ -43,11 +43,16 @@ export async function sendOrderConfirmationEmail(orderId: string): Promise<boole
         minimumFractionDigits: 0
       }).format(n)
 
-    const mappedItems = order.items.map((item: any) => ({
-      name: `${item.variant.flavorName} (${item.baseType})${item.topping ? ` + ${item.topping.name}` : ''}`,
-      qty: item.quantity,
-      subtotal: formatPrice(item.subtotal)
-    }))
+    const mappedItems = order.items.map((item: any) => {
+      const toppingText = item.toppings && item.toppings.length > 0
+        ? ` + ${item.toppings.map((t: any) => t.name).join(', ')}`
+        : ''
+      return {
+        name: `${item.variant.flavorName} (${item.baseType})${toppingText}`,
+        qty: item.quantity,
+        subtotal: formatPrice(item.subtotal)
+      }
+    })
 
     const htmlContent = await render(
       React.createElement(OrderConfirmationEmail, {

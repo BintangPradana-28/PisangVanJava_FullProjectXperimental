@@ -100,7 +100,9 @@ export async function POST(req: NextRequest) {
           items: {
             create: data.items.map((item) => ({
               variantId: item.variantId,
-              toppingId: item.toppingId || undefined,
+              toppings: item.toppingId
+                ? { connect: [{ id: item.toppingId }] }
+                : undefined,
               baseType: item.baseType,
               quantity: item.quantity,
               unitPrice: item.unitPrice,

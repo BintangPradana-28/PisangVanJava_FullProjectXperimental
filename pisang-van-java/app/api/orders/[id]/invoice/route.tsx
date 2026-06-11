@@ -156,7 +156,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       include: {
         user: true,
         items: {
-          include: { variant: true, topping: true }
+          include: { variant: true, toppings: true }
         }
       }
     })

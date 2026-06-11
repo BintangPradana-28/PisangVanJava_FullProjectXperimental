@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
                 flavorName: true
               }
             },
-            topping: {
+            toppings: {
               select: {
                 name: true,
                 emoji: true

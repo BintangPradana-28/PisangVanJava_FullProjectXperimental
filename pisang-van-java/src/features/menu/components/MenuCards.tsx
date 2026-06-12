@@ -81,11 +81,11 @@ const ProductImage = ({
         blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
       />
       {available ? (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border border-zinc-100 dark:border-zinc-800 rounded-full px-3 py-1 text-xs font-bold text-primary dark:text-zinc-300">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border border-zinc-100 dark:border-zinc-800 rounded-[4px] px-3 py-1 text-xs font-bold text-primary dark:text-zinc-300">
           Freshly Fried
         </div>
       ) : (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600/90 backdrop-blur-sm border border-red-700 rounded-full px-3 py-1 text-xs font-bold text-white shadow-md">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600/90 backdrop-blur-sm border border-red-700 rounded-[4px] px-3 py-1 text-xs font-bold text-white shadow-md">
           Sold Out
         </div>
       )}
@@ -176,7 +176,7 @@ export default function MenuCards({ products }: Props) {
               <button
                 key={tag}
                 onClick={() => setActiveTag(tag)}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition-all active:scale-95 ${
+                className={`px-5 py-2 rounded-[4px] text-sm font-medium transition-all active:scale-95 ${
                   activeTag === tag
                     ? 'bg-amber-brand text-white shadow-sbx-card'
                     : 'bg-surface-container hover:bg-surface-container-high text-on-surface-variant border border-outline-variant/30'
@@ -205,7 +205,7 @@ export default function MenuCards({ products }: Props) {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.05 }}
-                  className={`bg-white dark:bg-zinc-900 rounded-[12px] overflow-hidden border border-outline-variant/30 dark:border-zinc-800/60 hover:border-secondary/40 shadow-sbx-card hover:shadow-lg transition-all duration-300 flex flex-col group ${!available ? 'opacity-80 grayscale-[50%]' : ''}`}
+                  className={`bg-white dark:bg-zinc-900 rounded-[4px] overflow-hidden border border-outline-variant/30 dark:border-zinc-800/60 hover:border-secondary/40 shadow-sbx-card transition-all duration-300 flex flex-col group ${!available ? 'opacity-80 grayscale-[50%]' : ''}`}
                 >
                   {/* Image Container */}
                   <ProductImage src={image} alt={product.flavorName} available={available} />
@@ -222,14 +222,14 @@ export default function MenuCards({ products }: Props) {
                     <div className="flex items-center justify-center gap-1.5 mb-2 mt-1 w-full">
                       {product.stock > 0 ? (
                         <>
-                          <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                          <span className="w-2 h-2 rounded-[4px] bg-green-500"></span>
                           <span className="text-xs font-semibold text-green-600 dark:text-green-400 tracking-wide">
                             Tersedia: <span className="font-bold">{product.stock}</span> porsi
                           </span>
                         </>
                       ) : (
                         <>
-                          <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                          <span className="w-2 h-2 rounded-[4px] bg-red-500"></span>
                           <span className="text-xs font-semibold text-red-600 dark:text-red-400 tracking-wide">
                             Habis Terjual
                           </span>
@@ -253,7 +253,7 @@ export default function MenuCards({ products }: Props) {
                           ) : null}
                         </>
                       ) : (
-                        <span className="font-bold text-[#D4802A] bg-[#D4802A]/10 px-2 py-0.5 rounded-full text-xs">
+                        <span className="font-bold text-[#D4802A] bg-[#D4802A]/10 px-2 py-0.5 rounded-[4px] text-xs">
                           {getSalesMagnetTag(product.flavorName)}
                         </span>
                       )}
@@ -296,8 +296,8 @@ export default function MenuCards({ products }: Props) {
                         disabled={!available}
                         className={
                           available
-                            ? 'bg-amber-brand hover:bg-amber-brand/90 text-white font-bold text-sm px-8 py-3 rounded-full shadow-sbx-card transition-all duration-200 focus:outline-none flex items-center justify-center gap-1.5 active:scale-95'
-                            : 'bg-zinc-300 text-zinc-500 cursor-not-allowed font-bold text-sm px-8 py-3 rounded-full flex items-center justify-center gap-1.5 opacity-70'
+                            ? 'bg-amber-brand hover:bg-amber-brand/90 text-white font-bold text-sm px-8 py-3 rounded-[4px] shadow-sbx-card transition-all duration-200 focus:outline-none flex items-center justify-center gap-1.5 active:scale-95'
+                            : 'bg-zinc-300 text-zinc-500 cursor-not-allowed font-bold text-sm px-8 py-3 rounded-[4px] flex items-center justify-center gap-1.5 opacity-70'
                         }
                       >
                         <span>{available ? t('menu_btn_order') : 'Habis Terjual'}</span>
@@ -320,7 +320,7 @@ export default function MenuCards({ products }: Props) {
         >
           <Link
             href="/menu-spesial"
-            className="inline-flex items-center gap-2 font-bold text-sm px-8 py-3.5 rounded-full transition-all active:scale-95 bg-amber-brand text-white shadow-sbx-card"
+            className="inline-flex items-center gap-2 font-bold text-sm px-8 py-3.5 rounded-[4px] transition-all active:scale-95 bg-amber-brand text-white shadow-sbx-card"
           >
             🍌 Lihat Semua Menu &amp; Varian →
           </Link>

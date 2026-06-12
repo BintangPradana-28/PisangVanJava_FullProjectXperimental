@@ -177,7 +177,7 @@ export default function ManageVouchersClient() {
 
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-[4px] h-8 w-8 border-b-2 border-brown"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brown"></div>
         </div>
       ) : vouchers.length === 0 ? (
         <div className="bg-white p-8 rounded-[4px] border border-zinc-200 text-center">

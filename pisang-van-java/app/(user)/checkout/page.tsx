@@ -350,7 +350,7 @@ export default function CheckoutPage() {
   if (authStatus === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
-        <div className="w-10 h-10 rounded-[4px] border-4 border-amber-500 border-t-transparent animate-spin" />
+        <div className="w-10 h-10 rounded-full border-4 border-amber-500 border-t-transparent animate-spin" />
       </div>
     )
   }
@@ -918,7 +918,7 @@ export default function CheckoutPage() {
                       >
                         {checkoutMutation.isPending ? (
                           <>
-                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-[4px] animate-spin" />{' '}
+                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />{' '}
                             Memproses...
                           </>
                         ) : paymentMethod === 'WHATSAPP' ? (

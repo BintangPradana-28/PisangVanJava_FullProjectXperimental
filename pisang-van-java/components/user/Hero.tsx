@@ -14,6 +14,8 @@ const ShoppingBagIcon = () => (
     strokeWidth="2.5"
     strokeLinecap="round"
     strokeLinejoin="round"
+    role="img"
+    aria-label="Shopping Bag"
   >
     <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
     <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -102,6 +104,7 @@ export default function Hero({
                     <div className="flex gap-0.5">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <Star
+                          // biome-ignore lint/suspicious/noArrayIndexKey: Static array for rendering stars
                           key={i}
                           className={`w-3.5 h-3.5 ${i < Math.round(averageRating) ? 'fill-amber-400 text-amber-400' : 'text-amber-400/30'}`}
                         />

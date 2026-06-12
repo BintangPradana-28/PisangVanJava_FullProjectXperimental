@@ -45,7 +45,7 @@ export default function LocationMap() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="lg:col-span-1 bg-surface-container-low dark:bg-zinc-900 border border-outline-variant/30 dark:border-zinc-850 rounded-3xl p-8 flex flex-col justify-between"
+            className="lg:col-span-1 bg-surface-container-low dark:bg-zinc-900 border border-outline-variant/30 dark:border-zinc-800 rounded-[4px] p-8 flex flex-col justify-between"
           >
             <div>
               <h3 className="font-serif text-2xl font-bold text-primary dark:text-zinc-100 mb-6">
@@ -54,7 +54,7 @@ export default function LocationMap() {
 
               <div className="space-y-6">
                 <div>
-                  <div className="text-xs text-on-surface-variant dark:text-zinc-400 uppercase tracking-wider font-semibold mb-1">
+                  <div className="text-xs text-secondary dark:text-amber-500 uppercase tracking-wider font-semibold mb-1">
                     {t('location_address_label')}
                   </div>
                   <p className="text-primary dark:text-zinc-300 font-medium text-sm sm:text-base leading-relaxed">
@@ -63,7 +63,7 @@ export default function LocationMap() {
                 </div>
 
                 <div>
-                  <div className="text-xs text-on-surface-variant dark:text-zinc-400 uppercase tracking-wider font-semibold mb-1">
+                  <div className="text-xs text-secondary dark:text-amber-500 uppercase tracking-wider font-semibold mb-1">
                     {t('location_hours_label')}
                   </div>
                   <p className="text-primary dark:text-zinc-300 font-medium text-sm sm:text-base leading-relaxed">
@@ -72,7 +72,7 @@ export default function LocationMap() {
                 </div>
 
                 <div>
-                  <div className="text-xs text-on-surface-variant dark:text-zinc-400 uppercase tracking-wider font-semibold mb-1">
+                  <div className="text-xs text-secondary dark:text-amber-500 uppercase tracking-wider font-semibold mb-1">
                     {t('location_delivery_label')}
                   </div>
                   <p className="text-primary dark:text-zinc-300 font-medium text-sm sm:text-base leading-relaxed">
@@ -87,7 +87,7 @@ export default function LocationMap() {
                 href={`https://maps.google.com/?q=${encodeURIComponent(getSetting('alamat', 'Jakarta Timur'))}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-secondary dark:text-emerald-450 font-bold text-sm hover:underline"
+                className="inline-flex items-center gap-2 text-secondary dark:text-amber-500 font-bold text-sm hover:underline"
               >
                 <span>{t('location_maps_btn')}</span>
                 <span>→</span>
@@ -101,7 +101,7 @@ export default function LocationMap() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="lg:col-span-2 h-[450px] lg:h-auto rounded-3xl overflow-hidden shadow-sm border border-outline-variant/30 dark:border-zinc-800 bg-surface-container-high dark:bg-zinc-900/60"
+            className="lg:col-span-2 h-[450px] lg:h-auto rounded-[4px] overflow-hidden shadow-sm border border-outline-variant/30 dark:border-zinc-800 bg-surface-container-high dark:bg-zinc-900/60"
           >
             {/* Google Maps Iframe with high reliability Location */}
             <MapEmbed
@@ -123,12 +123,7 @@ export default function LocationMap() {
         >
           <Link
             href="/lokasi-kontak"
-            className="inline-flex items-center gap-2 font-bold text-sm px-8 py-3.5 rounded-full transition-all active:scale-95 hover:-translate-y-0.5 hover:shadow-xl"
-            style={{
-              background: '#D4802A',
-              color: 'white',
-              boxShadow: '0 4px 18px rgba(212,128,42,0.28)'
-            }}
+            className="inline-flex items-center gap-2 font-bold text-sm px-8 py-3.5 rounded-[4px] transition-all active:scale-95 hover:-translate-y-0.5 bg-amber-brand hover:bg-amber-brand/90 text-white shadow-sbx-card hover:shadow-sm"
           >
             📍 {t('location_btn_detail')} →
           </Link>

@@ -199,27 +199,18 @@ export default function LokasiKontakPage() {
   }
 
   return (
-    <div
-      className="min-h-screen"
-      style={{ background: 'var(--background-custom)', color: 'var(--text-custom)' }}
-    >
+    <div className="min-h-screen bg-surface-container-lowest dark:bg-zinc-955 text-primary dark:text-zinc-100 transition-colors duration-300">
       <Toaster
         position="top-center"
         toastOptions={{ className: '!rounded-[4px] !text-sm !font-medium !shadow-sm' }}
       />
 
       {/* ── Hero — compact ──────────────────────────────────────────────── */}
-      <section className="pt-28 pb-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-hero-pattern opacity-40 pointer-events-none" />
+      <section className="relative pt-28 pb-12 overflow-hidden bg-cream-50 dark:bg-zinc-900 border-b border-outline-variant/20 dark:border-zinc-800">
+        <div className="absolute inset-0 opacity-40 pointer-events-none" />
         {/* decorative blobs */}
-        <div
-          className="absolute -top-24 -right-24 w-96 h-96 rounded-[4px] opacity-10 pointer-events-none"
-          style={{ background: 'radial-gradient(circle,#D4802A,transparent)' }}
-        />
-        <div
-          className="absolute -bottom-16 -left-16 w-72 h-72 rounded-[4px] opacity-10 pointer-events-none"
-          style={{ background: 'radial-gradient(circle,#D4802A,transparent)' }}
-        />
+        <div className="absolute -top-24 -right-16 w-96 h-96 rounded-[4px] opacity-10 pointer-events-none bg-[radial-gradient(circle,_var(--tw-gradient-stops))] from-amber-600 to-transparent" />
+        <div className="absolute -bottom-16 -left-16 w-72 h-72 rounded-[4px] opacity-10 pointer-events-none bg-[radial-gradient(circle,_var(--tw-gradient-stops))] from-amber-600 to-transparent" />
 
         <div className="max-w-[1200px] mx-auto px-6 relative z-10">
           <motion.div
@@ -229,19 +220,13 @@ export default function LokasiKontakPage() {
             className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6"
           >
             <div>
-              <span
-                className="inline-block text-xs font-bold tracking-[0.22em] uppercase px-4 py-1.5 rounded-[4px] mb-5"
-                style={{ background: 'rgba(212,128,42,0.12)', color: '#D4802A' }}
-              >
+              <span className="inline-block text-xs font-bold tracking-[0.22em] uppercase px-4 py-1.5 rounded-[4px] mb-5 bg-amber-600/10 text-amber-700 dark:text-amber-500">
                 {t('kontak_title_section')}
               </span>
-              <h1
-                className="font-serif text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.1]"
-                style={{ color: 'var(--text-custom)' }}
-              >
+              <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.1] text-brown-900 dark:text-zinc-100">
                 {t('kontak_hero_title')}
                 <br />
-                <span className="italic font-normal" style={{ color: '#D4802A' }}>
+                <span className="text-amber-700 dark:text-amber-500 italic font-normal">
                   {t('kontak_hero_subtitle')}
                 </span>
               </h1>
@@ -251,7 +236,7 @@ export default function LokasiKontakPage() {
       </section>
 
       {/* ── Contact Form + Map ───────────────────────────────────────────── */}
-      <section className="py-16" style={{ background: 'var(--card-bg)' }}>
+      <section className="py-16 bg-white dark:bg-zinc-950">
         <div className="max-w-[1200px] mx-auto px-6 grid lg:grid-cols-2 gap-12 items-start">
           {/* ── Left: Form + Socials ── */}
           <motion.div
@@ -260,29 +245,17 @@ export default function LokasiKontakPage() {
             viewport={{ once: true }}
           >
             {/* Form */}
-            <div
-              className="rounded-[4px] p-8"
-              style={{
-                background: 'var(--surface-custom)',
-                border: '1px solid var(--border-custom)'
-              }}
-            >
-              <h2
-                className="font-serif text-2xl font-bold mb-1"
-                style={{ color: 'var(--text-custom)' }}
-              >
+            <div className="rounded-[4px] p-8 bg-cream-50 dark:bg-zinc-900 border border-cream-200/60 dark:border-zinc-800 shadow-sm">
+              <h2 className="font-serif text-2xl font-bold mb-1 text-brown-900 dark:text-zinc-100">
                 {t('kontak_send_message')}
               </h2>
-              <p className="text-sm mb-6" style={{ color: 'var(--text-custom)' }}>
+              <p className="text-sm mb-6 text-brown-600 dark:text-zinc-400">
                 {t('kontak_send_message_desc')}
               </p>
 
               <form onSubmit={handleWA} className="space-y-4">
                 <div>
-                  <label
-                    className="block text-[11px] font-bold tracking-widest uppercase mb-1.5"
-                    style={{ color: '#D4802A' }}
-                  >
+                  <label className="block text-[11px] font-bold tracking-widest uppercase mb-1.5 text-amber-700 dark:text-amber-500">
                     {t('kontak_label_name')}
                   </label>
                   <input
@@ -291,19 +264,11 @@ export default function LokasiKontakPage() {
                     value={form.nama}
                     onChange={(e) => setForm((p) => ({ ...p, nama: e.target.value }))}
                     placeholder={t('kontak_placeholder_name')}
-                    className="w-full px-4 py-3 text-sm rounded-[4px] outline-none transition-all"
-                    style={{
-                      background: 'var(--background-custom)',
-                      border: '1px solid var(--border-custom)',
-                      color: 'var(--text-custom)'
-                    }}
+                    className="w-full px-4 py-3 text-sm rounded-[4px] outline-none transition-all bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-amber-500 focus:border-transparent text-zinc-800 dark:text-zinc-100"
                   />
                 </div>
                 <div>
-                  <label
-                    className="block text-[11px] font-bold tracking-widest uppercase mb-1.5"
-                    style={{ color: '#D4802A' }}
-                  >
+                  <label className="block text-[11px] font-bold tracking-widest uppercase mb-1.5 text-amber-700 dark:text-amber-500">
                     {t('kontak_label_message')}
                   </label>
                   <textarea
@@ -312,12 +277,7 @@ export default function LokasiKontakPage() {
                     value={form.pesan}
                     onChange={(e) => setForm((p) => ({ ...p, pesan: e.target.value }))}
                     placeholder={t('kontak_placeholder_message')}
-                    className="w-full px-4 py-3 text-sm rounded-[4px] outline-none transition-all resize-none"
-                    style={{
-                      background: 'var(--background-custom)',
-                      border: '1px solid var(--border-custom)',
-                      color: 'var(--text-custom)'
-                    }}
+                    className="w-full px-4 py-3 text-sm rounded-[4px] outline-none transition-all resize-none bg-white dark:bg-zinc-905 border border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-amber-500 focus:border-transparent text-zinc-800 dark:text-zinc-100"
                   />
                 </div>
 
@@ -327,12 +287,11 @@ export default function LokasiKontakPage() {
                     id="consent"
                     checked={consent}
                     onChange={(e) => setConsent(e.target.checked)}
-                    className="mt-1 shrink-0 accent-[#D4802A] w-4 h-4 rounded cursor-pointer"
+                    className="mt-1 shrink-0 accent-amber-brand w-4 h-4 rounded-sm cursor-pointer"
                   />
                   <label
                     htmlFor="consent"
-                    className="text-xs cursor-pointer select-none"
-                    style={{ color: 'var(--text-custom)', opacity: 0.8 }}
+                    className="text-xs cursor-pointer select-none text-brown-700 dark:text-zinc-400"
                   >
                     {t('kontak_consent_label')}
                   </label>
@@ -341,16 +300,15 @@ export default function LokasiKontakPage() {
                 <button
                   type="submit"
                   disabled={sending}
-                  className="w-full py-3.5 rounded-[4px] text-sm font-bold tracking-wide transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
-                  style={{
-                    background: '#D4802A',
-                    color: 'white',
-                    boxShadow: '0 8px 24px rgba(212,128,42,0.25)'
-                  }}
+                  className="w-full py-3.5 rounded-[4px] text-sm font-bold tracking-wide transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 bg-amber-brand hover:bg-amber-brand/90 text-white shadow-sbx-card hover:shadow-sm"
                 >
                   {sending ? (
                     <>
-                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <svg
+                        className="w-4 h-4 animate-spin text-current"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
                         <circle
                           className="opacity-30"
                           cx="12"
@@ -369,7 +327,7 @@ export default function LokasiKontakPage() {
                     </>
                   ) : (
                     <>
-                      <WhatsAppIcon className="w-4 h-4" />
+                      <WhatsAppIcon className="w-4 h-4 text-current" />
                       {t('kontak_btn_submit')}
                     </>
                   )}
@@ -379,10 +337,7 @@ export default function LokasiKontakPage() {
 
             {/* Social links */}
             <div className="mt-6">
-              <p
-                className="text-[11px] font-bold tracking-widest uppercase mb-4"
-                style={{ color: '#D4802A' }}
-              >
+              <p className="text-[11px] font-bold tracking-widest uppercase mb-4 text-amber-700 dark:text-amber-500">
                 {t('kontak_follow_us')}
               </p>
               <div className="flex flex-wrap gap-3">
@@ -404,14 +359,10 @@ export default function LokasiKontakPage() {
                         })
                       }
                     }}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-[4px] transition-all group ${soon ? 'cursor-default opacity-70' : 'hover:-translate-y-0.5 hover:shadow-md'}`}
-                    style={{
-                      background: 'var(--surface-custom)',
-                      border: '1px solid var(--border-custom)'
-                    }}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-[4px] transition-all group ${soon ? 'cursor-default opacity-70' : 'hover:-translate-y-0.5 hover:shadow-sm hover:bg-cream-100/30 dark:hover:bg-zinc-800 bg-cream-50 dark:bg-zinc-900 border border-cream-200 dark:border-zinc-800'}`}
                   >
                     <Icon className="w-4 h-4" style={{ color }} />
-                    <span className="text-xs font-bold" style={{ color: 'var(--text-custom)' }}>
+                    <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">
                       {label} {soon && '(Soon)'}
                     </span>
                   </a>
@@ -429,10 +380,7 @@ export default function LokasiKontakPage() {
             className="space-y-4"
           >
             {/* Map */}
-            <div
-              className="rounded-[4px] overflow-hidden shadow-sm h-[300px]"
-              style={{ border: '1px solid var(--border-custom)' }}
-            >
+            <div className="rounded-[4px] overflow-hidden border border-cream-200 dark:border-zinc-800 shadow-sm h-[320px]">
               <MapEmbed
                 address={getSetting(
                   'alamat',
@@ -445,42 +393,26 @@ export default function LokasiKontakPage() {
             {infoCards.map(({ id, label, val, svgPath, iconColor, soon }) => (
               <div
                 key={id}
-                className="flex gap-4 items-start p-4 rounded-[4px] transition-all hover:shadow-sm"
-                style={{
-                  background: 'var(--surface-custom)',
-                  border: '1px solid var(--border-custom)'
-                }}
+                className="flex gap-4 items-start p-5 rounded-[4px] transition-all hover:shadow-sm bg-cream-50 dark:bg-zinc-900 border border-cream-200 dark:border-zinc-800"
               >
                 {/* Icon */}
-                <div
-                  className="w-10 h-10 rounded-[4px] flex items-center justify-center shrink-0"
-                  style={{ background: 'rgba(212,128,42,0.1)' }}
-                >
+                <div className="w-10 h-10 rounded-[4px] flex items-center justify-center shrink-0 bg-amber-600/10 dark:bg-amber-500/10">
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill={iconColor} aria-hidden="true">
                     <path d={svgPath} />
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span
-                      className="text-[10px] font-bold uppercase tracking-wider"
-                      style={{ color: '#D4802A' }}
-                    >
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-500">
                       {label}
                     </span>
                     {soon && (
-                      <span
-                        className="text-[9px] font-bold px-2 py-0.5 rounded-[4px]"
-                        style={{ background: 'rgba(212,128,42,0.12)', color: '#D4802A' }}
-                      >
+                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-[4px] bg-amber-600/10 text-amber-700 dark:text-amber-500">
                         {t('kontak_soon')}
                       </span>
                     )}
                   </div>
-                  <p
-                    className="text-sm font-medium leading-snug"
-                    style={{ color: 'var(--text-custom)', opacity: soon ? 0.6 : 1 }}
-                  >
+                  <p className="text-sm font-medium leading-snug text-zinc-800 dark:text-zinc-200">
                     {val}
                   </p>
                 </div>
@@ -491,7 +423,7 @@ export default function LokasiKontakPage() {
       </section>
 
       {/* ── FAQ ─────────────────────────────────────────────────────────── */}
-      <section className="py-20" style={{ background: 'var(--background-custom)' }}>
+      <section className="py-20 bg-cream-50 dark:bg-zinc-900/50 border-t border-outline-variant/10 dark:border-zinc-900">
         <div className="max-w-[760px] mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -499,16 +431,10 @@ export default function LokasiKontakPage() {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <div
-              className="text-xs font-bold tracking-[0.22em] uppercase mb-3"
-              style={{ color: '#D4802A' }}
-            >
+            <div className="text-xs font-bold tracking-[0.22em] uppercase mb-3 text-amber-700 dark:text-amber-500">
               {t('faq_subtitle')}
             </div>
-            <h2
-              className="font-serif text-3xl sm:text-4xl font-bold"
-              style={{ color: 'var(--text-custom)' }}
-            >
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-brown-900 dark:text-zinc-100">
               {t('faq_title')}
             </h2>
           </motion.div>
@@ -521,20 +447,17 @@ export default function LokasiKontakPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.07 }}
-                className="rounded-[4px] overflow-hidden"
-                style={{ background: 'var(--card-bg)', border: '1px solid var(--border-custom)' }}
+                className="rounded-[4px] overflow-hidden bg-white dark:bg-zinc-900 border border-cream-200/80 dark:border-zinc-800 shadow-sm"
               >
                 <button
-                  className="w-full flex items-center justify-between px-6 py-4 text-left font-semibold text-sm transition-colors"
-                  style={{ color: 'var(--text-custom)' }}
+                  className="w-full flex items-center justify-between px-6 py-4 text-left font-semibold text-sm transition-colors text-zinc-800 dark:text-zinc-200 hover:bg-cream-50/50 dark:hover:bg-zinc-800/50"
                   onClick={() => setFaq(openFaq === i ? null : i)}
                 >
                   <span className="pr-4">{q}</span>
                   <span
-                    className="text-xl shrink-0 font-light transition-transform duration-300"
+                    className="text-xl shrink-0 font-light transition-transform duration-300 text-amber-600"
                     style={{
-                      transform: openFaq === i ? 'rotate(45deg)' : 'rotate(0deg)',
-                      color: '#D4802A'
+                      transform: openFaq === i ? 'rotate(45deg)' : 'rotate(0deg)'
                     }}
                   >
                     +
@@ -550,10 +473,7 @@ export default function LokasiKontakPage() {
                       transition={{ duration: 0.25, ease: 'easeInOut' }}
                       style={{ overflow: 'hidden' }}
                     >
-                      <div
-                        className="px-6 pb-5 pt-1 text-sm leading-relaxed border-t"
-                        style={{ color: 'var(--text-custom)', borderColor: 'var(--border-custom)' }}
-                      >
+                      <div className="px-6 pb-5 pt-1 text-sm leading-relaxed border-t border-cream-100 dark:border-zinc-800 text-zinc-650 dark:text-zinc-400">
                         {a}
                       </div>
                     </motion.div>
@@ -566,10 +486,7 @@ export default function LokasiKontakPage() {
       </section>
 
       {/* ── CTA strip ───────────────────────────────────────────────────── */}
-      <section
-        className="py-16 text-white text-center"
-        style={{ background: 'linear-gradient(135deg, #3D1C02 0%, #5a2e0a 100%)' }}
-      >
+      <section className="py-20 text-white text-center bg-gradient-to-br from-brown-800 to-brown-950 dark:from-zinc-900 dark:to-black">
         <div className="max-w-xl mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -590,14 +507,13 @@ export default function LokasiKontakPage() {
                     behavior: 'smooth'
                   })
                 }}
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-[4px] font-bold text-sm transition-all active:scale-95 hover:shadow-sm"
-                style={{ background: '#25D366', color: 'white' }}
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-[4px] font-bold text-sm transition-all active:scale-[0.98] hover:shadow-sm bg-green-wa hover:bg-green-wa/90 text-white"
               >
                 <WhatsAppIcon className="w-4 h-4" /> {t('kontak_chat_now')}
               </button>
               <Link
                 href="/menu-spesial"
-                className="px-8 py-3.5 rounded-[4px] font-bold text-sm transition-all active:scale-95 border border-white/30 hover:bg-white/10"
+                className="px-8 py-3.5 rounded-[4px] font-bold text-sm transition-all active:scale-[0.98] border border-white/30 hover:bg-white/10"
               >
                 🍌 {t('hero_menu_btn')}
               </Link>

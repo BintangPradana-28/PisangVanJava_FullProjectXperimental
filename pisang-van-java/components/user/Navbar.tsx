@@ -8,7 +8,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useLanguage } from '@/context/LanguageContext'
 import { useSettings } from '@/context/SettingsContext'
 import { useTheme } from '@/context/ThemeContext'
-import { selectCartItemCount, useCartStore } from '@/src/stores/cart.store'
+import { selectCartItemCount, selectCartDisplayTotal, useCartStore } from '@/src/stores/cart.store'
+import { formatPrice } from '@/lib/utils'
 import CartModal from './CartModal'
 
 const ShoppingBagIcon = () => (
@@ -33,6 +34,7 @@ export default function Navbar() {
   const { locale, setLocale, t } = useLanguage()
   const { getSetting } = useSettings()
   const cartCount = useCartStore(selectCartItemCount)
+  const cartTotal = useCartStore(selectCartDisplayTotal)
   const isHydrated = useCartStore((s) => s._hasHydrated)
   const pathname = usePathname()
 
@@ -410,22 +412,52 @@ export default function Navbar() {
         </AnimatePresence>
       </header>
 
-      {/* Floating Frap CTA Button */}
-      <button
-        onClick={() => setIsCartOpen(true)}
-        className="fixed bottom-6 right-6 z-[60] w-14 h-14 bg-amber-brand hover:bg-amber-brand/90 text-white rounded-[4px] flex items-center justify-center shadow-sbx-frap transition-all duration-200 active:scale-95 active:shadow-sm focus:outline-none group"
-        aria-label="Buka Keranjang"
-      >
-        <ShoppingBagIcon />
-        {isHydrated && cartCount > 0 && (
-          <span
-            key={`frap-${cartPopKey}`}
-            className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-[4px] flex items-center justify-center border-2 border-amber-brand cart-pop"
-          >
-            {cartCount}
-          </span>
-        )}
-      </button>
+      {/* Floating/Sticky Cart Button */}
+      {isHydrated && cartCount > 0 && (
+        <button
+          onClick={() => setIsCartOpen(true)}
+          className="fixed z-[60] bg-amber-brand hover:bg-amber-brand/90 text-white shadow-2xl transition-all duration-200 active:scale-[0.98] focus:outline-none
+            /* Mobile Sticky Bar layout */
+            bottom-0 left-0 right-0 w-full rounded-t-lg py-4 px-6 flex items-center justify-between sm:hidden
+            /* Desktop Floating Button layout */
+            sm:bottom-6 sm:right-6 sm:w-14 sm:h-14 sm:rounded-[4px] sm:justify-center"
+          aria-label="Buka Keranjang"
+        >
+          {/* Mobile view content */}
+          <div className="flex items-center gap-3 sm:hidden">
+            <ShoppingBagIcon />
+            <div className="text-left">
+              <span className="font-bold text-sm block leading-none text-[#1a0f0a]">Lihat Keranjang</span>
+              <span className="text-xs text-[#1a0f0a]/80 mt-0.5 block leading-none">{cartCount} Item</span>
+            </div>
+          </div>
+          <div className="font-bold text-base text-[#1a0f0a] sm:hidden">
+            {formatPrice(cartTotal)}
+          </div>
+
+          {/* Desktop view content */}
+          <div className="hidden sm:flex items-center justify-center relative">
+            <ShoppingBagIcon />
+            <span
+              key={`frap-${cartPopKey}`}
+              className="absolute -top-3.5 -right-3.5 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-[4px] flex items-center justify-center border-2 border-amber-brand cart-pop"
+            >
+              {cartCount}
+            </span>
+          </div>
+        </button>
+      )}
+
+      {/* Floating empty cart button (desktop only) */}
+      {(!isHydrated || cartCount === 0) && (
+        <button
+          onClick={() => setIsCartOpen(true)}
+          className="fixed bottom-6 right-6 z-[60] w-14 h-14 bg-amber-brand hover:bg-amber-brand/90 text-white rounded-[4px] flex items-center justify-center shadow-sbx-frap transition-all duration-200 active:scale-95 active:shadow-sm focus:outline-none group"
+          aria-label="Buka Keranjang"
+        >
+          <ShoppingBagIcon />
+        </button>
+      )}
 
       {/* Cart Drawer component */}
       <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />

@@ -10,23 +10,27 @@ import HeroBanner from './HeroBanner' // We'll extract the hero part to a small 
 // Removing force-dynamic to allow Next.js optimizations
 export const dynamic = 'force-dynamic'
 
-const getCachedProducts = async () => {
-  try {
-    return await prisma.menuVariant.findMany({
-      where: { isDeleted: false },
-      orderBy: { flavorName: 'asc' },
-      include: {
-        reviews: { select: { rating: true } }
-      }
-    })
-  } catch (e) {
-    console.warn(
-      '[Safe Log] DB fetch failed for menu-spesial',
-      e instanceof Error ? e.message : String(e)
-    )
-    return []
-  }
-}
+const getCachedProducts = unstable_cache(
+  async () => {
+    try {
+      return await prisma.menuVariant.findMany({
+        where: { isDeleted: false },
+        orderBy: { flavorName: 'asc' },
+        include: {
+          reviews: { select: { rating: true } }
+        }
+      })
+    } catch (e) {
+      console.warn(
+        '[Safe Log] DB fetch failed for menu-spesial',
+        e instanceof Error ? e.message : String(e)
+      )
+      return []
+    }
+  },
+  ['menu-spesial-all-products'],
+  { revalidate: 3600, tags: ['menu'] }
+)
 
 export default async function MenuSpesialPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -129,11 +133,34 @@ export default async function MenuSpesialPage(props: {
     })
   }
 
+  const menuJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Menu',
+    'name': 'Menu Spesial Pisang Goreng Van Java',
+    'description': 'Pilihan varian rasa premium pisang kembung, lumpia, dan krispy',
+    'numberOfItems': filtered.length,
+    'hasMenuItem': filtered.map((p: any) => ({
+      '@type': 'MenuItem',
+      'name': p.flavorName,
+      'description': p.deskripsi_topping || `${p.flavorName} premium`,
+      'offers': {
+        '@type': 'Offer',
+        'priceCurrency': 'IDR',
+        'price': p.priceKembung || p.priceLumpia || p.priceKrispy,
+        'availability': p.isAvailable && p.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
+      }
+    }))
+  }
+
   return (
     <div
       className="min-h-screen"
       style={{ background: 'var(--background-custom)', color: 'var(--text-custom)' }}
     >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(menuJsonLd) }}
+      />
       {/* ── Hero ── */}
       <HeroBanner />
 

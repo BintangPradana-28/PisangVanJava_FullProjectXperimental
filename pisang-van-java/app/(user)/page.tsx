@@ -187,8 +187,51 @@ export default async function HomePage() {
     : 0
   const totalReviews = reviewAggregates._count.rating || 0
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Restaurant',
+    'name': 'Pisang Goreng Van Java',
+    'image': activeBanner?.imageUrl || 'https://pisangvanjava.com/kitchen.png',
+    '@id': 'https://pisangvanjava.com',
+    'url': 'https://pisangvanjava.com',
+    'telephone': '+628123456789',
+    'priceRange': '$$',
+    'address': {
+      '@type': 'PostalAddress',
+      'streetAddress': 'Jl. Kaliurang No. 12',
+      'addressLocality': 'Sleman',
+      'addressRegion': 'Yogyakarta',
+      'postalCode': '55281',
+      'addressCountry': 'ID'
+    },
+    'openingHoursSpecification': {
+      '@type': 'OpeningHoursSpecification',
+      'dayOfWeek': [
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+        'Sunday'
+      ],
+      'opens': '10:00',
+      'closes': '21:00'
+    },
+    'servesCuisine': 'Indonesian F&B',
+    'aggregateRating': totalReviews >= 5 ? {
+      '@type': 'AggregateRating',
+      'ratingValue': averageRating,
+      'reviewCount': totalReviews
+    } : undefined
+  }
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Hero banner={activeBanner} averageRating={averageRating} totalReviews={totalReviews} />
       <About />
       <MenuCards products={homeProducts} />

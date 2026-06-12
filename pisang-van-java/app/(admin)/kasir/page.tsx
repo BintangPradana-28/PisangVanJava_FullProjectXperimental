@@ -9,7 +9,8 @@ export const revalidate = 0
 export default async function KasirPage() {
   const session = await auth()
 
-  if (!session || session.user.role !== 'ADMIN') {
+  const POS_ROLES = ['ADMIN', 'SUPER_ADMIN', 'CASHIER'] as const
+  if (!session || !POS_ROLES.includes(session.user.role as (typeof POS_ROLES)[number])) {
     redirect('/login')
   }
 
@@ -26,7 +27,7 @@ export default async function KasirPage() {
   ])
 
   return (
-    <div className="h-screen w-full overflow-hidden bg-gray-50 flex flex-col">
+    <div className="h-screen w-full overflow-hidden bg-zinc-50 dark:bg-zinc-950 flex flex-col">
       <PosClient products={products} toppings={toppings} />
     </div>
   )

@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import { type NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { logAudit } from '@/lib/audit'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/src/auth'
 import { hashPassword, verifyPassword } from '@/src/lib/password'
@@ -10,6 +11,10 @@ const PIN_SETTING_KEY = 'pos_manager_pin'
 // --- VALIDATION SCHEMAS ---
 const verifyPinSchema = z.object({
   pin: z.string().length(4, 'PIN harus 4 digit')
+})
+
+const resetPinSchema = z.object({
+  newPin: z.string().length(4, 'PIN Baru harus 4 digit').regex(/^\d+$/, 'Hanya angka')
 })
 
 const updatePinSchema = z.object({
@@ -26,10 +31,27 @@ function generateApprovalToken() {
   return `${payload}.${signature}`
 }
 
-// Helper to check Authorization
+// Helper to check Authorization — PIN verification is allowed for all POS roles
+const POS_VERIFY_ROLES = ['ADMIN', 'SUPER_ADMIN', 'CASHIER'] as const
+const PIN_MANAGE_ROLES = ['ADMIN', 'SUPER_ADMIN'] as const
+
+async function getPosUser() {
+  const session = await auth()
+  if (
+    !session?.user?.id ||
+    !POS_VERIFY_ROLES.includes(session.user.role as (typeof POS_VERIFY_ROLES)[number])
+  )
+    return null
+  return session.user
+}
+
 async function getAdminUser() {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') return null
+  if (
+    !session?.user?.id ||
+    !PIN_MANAGE_ROLES.includes(session.user.role as (typeof PIN_MANAGE_ROLES)[number])
+  )
+    return null
   return session.user
 }
 
@@ -48,9 +70,9 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// 2. POST: Verify PIN for POS Override
+// 2. POST: Verify PIN for POS Override (CASHIER, ADMIN, SUPER_ADMIN)
 export async function POST(req: NextRequest) {
-  const admin = await getAdminUser()
+  const admin = await getPosUser()
   if (!admin) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
 
   try {
@@ -121,7 +143,60 @@ export async function PUT(req: NextRequest) {
       }
     })
 
+    await logAudit('POS_PIN_UPDATED', 'SiteSetting', PIN_SETTING_KEY, {
+      updatedBy: admin.id,
+      role: admin.role
+    })
+
     return NextResponse.json({ success: true, message: 'PIN berhasil diperbarui.' })
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 400 })
+  }
+}
+
+// 4. DELETE: Reset PIN (Forgot PIN — SUPER_ADMIN only, bypasses old PIN)
+export async function DELETE(req: NextRequest) {
+  const admin = await getAdminUser()
+  if (!admin) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+
+  // Only SUPER_ADMIN can force-reset without old PIN
+  if (admin.role !== 'SUPER_ADMIN') {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Hanya Super Admin yang dapat mereset PIN.'
+      },
+      { status: 403 }
+    )
+  }
+
+  try {
+    const body = await req.json()
+    const { newPin } = resetPinSchema.parse(body)
+
+    const hashedPin = await hashPassword(newPin)
+
+    await prisma.siteSetting.upsert({
+      where: { key: PIN_SETTING_KEY },
+      update: { value: hashedPin },
+      create: {
+        key: PIN_SETTING_KEY,
+        value: hashedPin,
+        label: 'POS Manager PIN',
+        group: 'pos_security'
+      }
+    })
+
+    await logAudit('POS_PIN_RESET', 'SiteSetting', PIN_SETTING_KEY, {
+      resetBy: admin.id,
+      role: 'SUPER_ADMIN',
+      reason: 'Forgot PIN — force reset'
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: 'PIN berhasil direset oleh Super Admin.'
+    })
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 400 })
   }

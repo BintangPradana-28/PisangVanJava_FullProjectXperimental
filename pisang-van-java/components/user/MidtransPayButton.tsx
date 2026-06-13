@@ -1,5 +1,6 @@
 'use client'
 
+import { env } from '@/src/env'
 import { CreditCard, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -16,7 +17,7 @@ export default function MidtransPayButton({ snapToken }: Props) {
 
   useEffect(() => {
     // Load Midtrans Snap script
-    const isProduction = process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true'
+    const isProduction = env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true'
     const scriptUrl = isProduction
       ? 'https://app.midtrans.com/snap/snap.js'
       : 'https://app.sandbox.midtrans.com/snap/snap.js'
@@ -24,7 +25,8 @@ export default function MidtransPayButton({ snapToken }: Props) {
     // We need to pass the client key from env, but since it's client-side, we must use NEXT_PUBLIC_
     // However, Midtrans Snap token generation is done server-side. For the frontend snap.js script,
     // Midtrans actually uses `data-client-key` attribute.
-    const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || ''
+    const clientKey = env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || ''
+
 
     if (window.snap) {
       setIsReady(true)

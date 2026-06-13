@@ -1,6 +1,7 @@
 'use client'
 import { useEffect } from 'react'
 import type { CartItem } from './PosCart'
+import type { Topping } from './PosModifierModal'
 
 export interface ReceiptData {
   orderId?: string
@@ -119,9 +120,13 @@ export default function PosReceiptModal({ isOpen, onClose, data }: PosReceiptMod
                         <div className="text-[10px] text-gray-600">
                           {item.quantity}x @ {formatRupiah(item.subtotal / item.quantity)}
                         </div>
-                        {item.topping && (
+                        {item.toppings && item.toppings.length > 0 ? (
+                          <div className="text-[10px] text-gray-600">
+                            + {item.toppings.map((t: Topping) => t.name).join(', ')}
+                          </div>
+                        ) : item.topping ? (
                           <div className="text-[10px] text-gray-600">+ {item.topping.name}</div>
-                        )}
+                        ) : null}
                       </td>
                       <td className="py-1 text-right font-semibold">
                         {formatRupiah(item.subtotal)}

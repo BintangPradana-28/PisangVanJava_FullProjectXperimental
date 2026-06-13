@@ -82,6 +82,7 @@ export default function PosClient({ products, toppings }: PosClientProps): React
     (orderItem: {
       product: ProductType
       baseType: 'Kembung' | 'Lumpia' | 'Krispy'
+      toppings: Topping[]
       topping: Topping | null
       quantity: number
       subtotal: number

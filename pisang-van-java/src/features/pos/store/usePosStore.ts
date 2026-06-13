@@ -18,6 +18,7 @@ export interface PosCartItem {
   id: string // Client-side UUID per cart line
   product: ProductType
   baseType: 'Kembung' | 'Lumpia' | 'Krispy'
+  toppings: Topping[]
   topping: Topping | null
   quantity: number
   subtotal: number
@@ -49,6 +50,7 @@ interface PosState {
   addItem: (orderItem: {
     product: ProductType
     baseType: 'Kembung' | 'Lumpia' | 'Krispy'
+    toppings: Topping[]
     topping: Topping | null
     quantity: number
     subtotal: number
@@ -93,12 +95,13 @@ export const usePosStore = create<PosState>()(
       // ─── Cart Actions ───────────────────────────────────────
       addItem: (orderItem) =>
         set((state) => {
-          // Merge identical items (same product + baseType + topping)
+          // Merge identical items (same product + baseType + toppings list)
           const existingIndex = state.items.findIndex(
             (i) =>
               i.product.id === orderItem.product.id &&
               i.baseType === orderItem.baseType &&
-              i.topping?.id === orderItem.topping?.id
+              (i.toppings || []).length === (orderItem.toppings || []).length &&
+              (i.toppings || []).every((t, idx) => t.id === orderItem.toppings?.[idx]?.id)
           )
 
           if (existingIndex > -1) {

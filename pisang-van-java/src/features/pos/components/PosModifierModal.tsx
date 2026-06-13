@@ -18,7 +18,8 @@ interface PosModifierModalProps {
   onClose: () => void
   onAdd: (orderItem: {
     product: ProductType
-    baseType: string
+    baseType: 'Kembung' | 'Lumpia' | 'Krispy'
+    toppings: Topping[]
     topping: Topping | null
     quantity: number
     subtotal: number
@@ -32,7 +33,7 @@ export default function PosModifierModal({
   onAdd
 }: PosModifierModalProps) {
   const [selectedBase, setSelectedBase] = useState<'Kembung' | 'Lumpia' | 'Krispy'>('Kembung')
-  const [selectedTopping, setSelectedTopping] = useState<Topping | null>(null)
+  const [selectedToppings, setSelectedToppings] = useState<Topping[]>([])
   const [quantity, setQuantity] = useState(1)
 
   if (!product) return null
@@ -42,8 +43,8 @@ export default function PosModifierModal({
   if (selectedBase === 'Lumpia') basePrice = product.priceLumpia
   else if (selectedBase === 'Krispy') basePrice = product.priceKrispy
 
-  // Calculate Add-on Price
-  const toppingPrice = selectedTopping ? selectedTopping.price : 0
+  // Calculate Add-on Price for all selected toppings
+  const toppingPrice = selectedToppings.reduce((sum, t) => sum + t.price, 0)
 
   // Calculate Subtotal
   const subtotal = (basePrice + toppingPrice) * quantity
@@ -52,13 +53,14 @@ export default function PosModifierModal({
     onAdd({
       product,
       baseType: selectedBase,
-      topping: selectedTopping,
+      toppings: selectedToppings,
+      topping: selectedToppings[0] || null, // Fallback for single-topping legacy uses
       quantity,
       subtotal
     })
     // Reset state for next time
     setSelectedBase('Kembung')
-    setSelectedTopping(null)
+    setSelectedToppings([])
     setQuantity(1)
     onClose()
   }
@@ -119,9 +121,9 @@ export default function PosModifierModal({
               <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">
                 2. Topping (Opsional)
               </h3>
-              {selectedTopping && (
+              {selectedToppings.length > 0 && (
                 <button
-                  onClick={() => setSelectedTopping(null)}
+                  onClick={() => setSelectedToppings([])}
                   className="text-xs text-red-500 font-bold"
                 >
                   Hapus Topping
@@ -133,11 +135,18 @@ export default function PosModifierModal({
               {toppings
                 .filter((t) => t.isActive)
                 .map((topping) => {
-                  const isSelected = selectedTopping?.id === topping.id
+                  const isSelected = selectedToppings.some((t) => t.id === topping.id)
+                  const handleToppingClick = () => {
+                    setSelectedToppings((prev) =>
+                      prev.some((t) => t.id === topping.id)
+                        ? prev.filter((t) => t.id !== topping.id)
+                        : [...prev, topping]
+                    )
+                  }
                   return (
                     <button
                       key={topping.id}
-                      onClick={() => setSelectedTopping(topping)}
+                      onClick={handleToppingClick}
                       className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all active:scale-95 text-left ${
                         isSelected
                           ? 'border-orange-500 bg-orange-50'
@@ -169,7 +178,7 @@ export default function PosModifierModal({
               >
                 -
               </button>
-              <span className="w-12 text-center font-bold text-2xl">{quantity}</span>
+              <span className="w-12 text-center font-bold text-2xl text-gray-900">{quantity}</span>
               <button
                 onClick={() => setQuantity(quantity + 1)}
                 className="w-12 h-12 rounded-xl bg-orange-500 shadow-sm font-bold text-xl text-white hover:bg-orange-600 active:scale-95"

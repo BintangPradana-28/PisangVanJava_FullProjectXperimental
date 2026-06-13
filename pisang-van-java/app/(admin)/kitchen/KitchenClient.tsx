@@ -119,9 +119,15 @@ export default function KitchenClient({ initialOrders }: KitchenClientProps) {
   const [connectionStatus, setConnectionStatus] = useState<
     'connecting' | 'connected' | 'disconnected'
   >('disconnected')
+  const [reconnectTrigger, setReconnectTrigger] = useState(0)
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set())
   const [, forceRender] = useState(0)
   const prevOrderIdsRef = useRef<Set<string>>(new Set(initialOrders.map((o) => o.id)))
+
+  const handleReconnect = () => {
+    setReconnectTrigger((prev) => prev + 1)
+    toast.success('Mencoba menyambungkan kembali...')
+  }
 
   // Audio Context state
   const [isAudioUnlocked, setIsAudioUnlocked] = useState(false)
@@ -228,7 +234,10 @@ export default function KitchenClient({ initialOrders }: KitchenClientProps) {
 
   // ── Supabase Realtime Subscription ───────────────────────────────────────────
   useEffect(() => {
-    if (!supabaseBrowserClient) return
+    if (!supabaseBrowserClient) {
+      setConnectionStatus('disconnected')
+      return
+    }
 
     setConnectionStatus('connecting')
 
@@ -276,7 +285,78 @@ export default function KitchenClient({ initialOrders }: KitchenClientProps) {
       setConnectionStatus('disconnected')
       supabaseBrowserClient?.removeChannel(channel)
     }
-  }, [])
+  }, [reconnectTrigger])
+
+  // ── Polling Fallback ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    let timer: NodeJS.Timeout
+
+    const pollActiveOrders = async () => {
+      try {
+        const res = await fetch('/api/orders?limit=40', {
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' }
+        })
+        if (!res.ok) return
+        const json = await res.json()
+        if (json.success && json.data?.orders) {
+          const fetchedOrders: KitchenOrder[] = json.data.orders.map((o: any) => ({
+            id: o.id,
+            customerName: o.customerName,
+            status: o.status,
+            notes: o.notes,
+            source: o.source,
+            deliveryMethod: o.deliveryMethod,
+            createdAt: o.createdAt,
+            items: o.items.map((item: any) => ({
+              id: item.id,
+              baseType: item.baseType,
+              quantity: item.quantity,
+              variant: item.variant,
+              toppings: item.toppings || []
+            }))
+          }))
+
+          const activeStatuses = ['PENDING_PAYMENT', 'PROCESSING', 'READY']
+          const activeFetched = fetchedOrders.filter((o) => activeStatuses.includes(o.status))
+
+          setOrders((prev) => {
+            const merged = [...prev]
+
+            activeFetched.forEach((newOrd) => {
+              const idx = merged.findIndex((o) => o.id === newOrd.id)
+              if (idx !== -1) {
+                if (updatingIds.has(newOrd.id)) {
+                  merged[idx] = { ...newOrd, status: merged[idx].status }
+                } else {
+                  merged[idx] = newOrd
+                }
+              } else {
+                merged.push(newOrd)
+              }
+            })
+
+            return merged.filter((o) => {
+              if (updatingIds.has(o.id)) return true
+              return activeFetched.some((newO) => newO.id === o.id)
+            })
+          })
+        }
+      } catch (err) {
+        console.error('[KDS] Polling error:', err)
+      }
+    }
+
+    // Trigger polling immediately if disconnected
+    if (connectionStatus !== 'connected') {
+      pollActiveOrders()
+    }
+
+    const intervalMs = connectionStatus === 'connected' ? 60000 : 10000
+    timer = setInterval(pollActiveOrders, intervalMs)
+
+    return () => clearInterval(timer)
+  }, [connectionStatus, updatingIds])
 
   // Detect new orders and play notification sound
   useEffect(() => {
@@ -450,11 +530,19 @@ export default function KitchenClient({ initialOrders }: KitchenClientProps) {
             </span>
             <span className="text-zinc-400 font-bold">
               {connectionStatus === 'connected'
-                ? 'Live Connection'
+                ? 'Terhubung (Realtime)'
                 : connectionStatus === 'connecting'
-                  ? 'Connecting...'
-                  : 'Disconnected'}
+                  ? 'Menghubungkan...'
+                  : 'Terputus (Cadangan Polling Aktif)'}
             </span>
+            {connectionStatus !== 'connected' && (
+              <button
+                onClick={handleReconnect}
+                className="text-[10px] bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold px-2.5 py-1 rounded transition-colors ml-1 active:scale-95 border border-amber-600/30"
+              >
+                Hubungkan 🔄
+              </button>
+            )}
           </div>
 
           {/* Order count badge */}

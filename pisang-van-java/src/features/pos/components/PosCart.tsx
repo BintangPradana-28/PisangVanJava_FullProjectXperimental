@@ -25,6 +25,7 @@ export interface CartItem {
   id: string // temporary client-side id
   product: ProductType
   baseType: string
+  toppings: Topping[]
   topping: Topping | null
   quantity: number
   subtotal: number
@@ -171,6 +172,7 @@ export default function PosCart(): React.JSX.Element {
       items: items.map((item) => ({
         variantId: item.product.id,
         toppingId: item.topping?.id || null,
+        toppingIds: item.toppings ? item.toppings.map((t) => t.id) : item.topping ? [item.topping.id] : [],
         baseType: item.baseType,
         quantity: item.quantity,
         unitPrice: item.subtotal / item.quantity,
@@ -291,7 +293,11 @@ export default function PosCart(): React.JSX.Element {
                   </h3>
                   <div className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
                     Dasar: <span className="font-semibold">{item.baseType}</span>
-                    {item.topping && <span> • + {item.topping.name}</span>}
+                    {item.toppings && item.toppings.length > 0 ? (
+                      <span> • + {item.toppings.map((t) => t.name).join(', ')}</span>
+                    ) : item.topping ? (
+                      <span> • + {item.topping.name}</span>
+                    ) : null}
                   </div>
                 </div>
                 <button

@@ -17,6 +17,7 @@ import { coreApi } from '@/src/lib/midtrans'
 const orderItemSchema = z.object({
   variantId: z.string().cuid('Invalid Variant ID'),
   toppingId: z.string().cuid('Invalid Topping ID').nullable().optional(),
+  toppingIds: z.array(z.string().cuid('Invalid Topping ID')).optional(),
   baseType: z.enum(['Kembung', 'Lumpia', 'Krispy']),
   quantity: z.number().int().min(1, 'Minimal 1 porsi').max(99),
   unitPrice: z.number().min(0),
@@ -154,14 +155,27 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           notes: data.notes,
           discountAmount: safeDiscount,
           items: {
-            create: data.items.map((item) => ({
-              variantId: item.variantId,
-              toppings: item.toppingId ? { connect: [{ id: item.toppingId }] } : undefined,
-              baseType: item.baseType,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              subtotal: item.subtotal
-            }))
+            create: data.items.map((item) => {
+              const connectIds: { id: string }[] = []
+              if (item.toppingId) {
+                connectIds.push({ id: item.toppingId })
+              }
+              if (item.toppingIds && item.toppingIds.length > 0) {
+                item.toppingIds.forEach((id) => {
+                  if (!connectIds.some((c) => c.id === id)) {
+                    connectIds.push({ id })
+                  }
+                })
+              }
+              return {
+                variantId: item.variantId,
+                toppings: connectIds.length > 0 ? { connect: connectIds } : undefined,
+                baseType: item.baseType,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                subtotal: item.subtotal
+              }
+            })
           }
         }
       })

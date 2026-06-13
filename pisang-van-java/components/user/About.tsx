@@ -96,7 +96,7 @@ export default function About() {
                   initial={{ opacity: 0, y: 15 }}
                   animate={visible ? { opacity: 1, y: 0 } : {}}
                   transition={{ duration: 0.4, delay: 0.3 + i * 0.08 }}
-                  className="bg-surface-container-low dark:bg-zinc-900 border border-outline-variant/20 dark:border-zinc-850 rounded-[4px] p-4.5 hover:shadow-md transition-all duration-200"
+                  className="bg-surface-container-low dark:bg-zinc-900 border border-outline-variant/20 dark:border-zinc-850 rounded-[4px] p-5 md:p-6 hover:shadow-md transition-all duration-200"
                 >
                   <div className="text-2xl mb-2">{icon}</div>
                   <div className="font-serif text-lg font-bold text-primary dark:text-zinc-200 leading-tight mb-1">

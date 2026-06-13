@@ -572,20 +572,20 @@ export default function ProfileDataDiriPage() {
                     <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">
                       {t('profile_email_current')}
                     </label>
-                    <div className="flex gap-3">
+                    <div className="flex flex-col sm:flex-row gap-3">
                       <input
                         type="email"
                         value={session?.user?.email || ''}
                         disabled
-                        className="flex-1 p-3.5 rounded-[4px] border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 cursor-not-allowed outline-none"
+                        className="flex-1 p-3.5 rounded-[4px] border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 cursor-not-allowed outline-none w-full"
                       />
                       <button
                         onClick={handleRequestEmailOTP}
                         disabled={isEmailLoading}
-                        className="px-6 py-3 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-bold rounded-[4px] transition-all disabled:opacity-50 whitespace-nowrap"
+                        className="w-full sm:w-auto px-6 py-3.5 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-bold rounded-[4px] transition-all disabled:opacity-50 whitespace-nowrap flex items-center justify-center"
                       >
                         {isEmailLoading ? (
-                          <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                          <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
                           t('profile_email_change_btn')
                         )}

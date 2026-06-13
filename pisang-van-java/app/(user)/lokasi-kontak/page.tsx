@@ -199,7 +199,7 @@ export default function LokasiKontakPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-container-lowest dark:bg-zinc-955 text-primary dark:text-zinc-100 transition-colors duration-300">
+    <div className="min-h-screen bg-surface-container-lowest dark:bg-zinc-950 text-primary dark:text-zinc-100 transition-colors duration-300">
       <Toaster
         position="top-center"
         toastOptions={{ className: '!rounded-[4px] !text-sm !font-medium !shadow-sm' }}
@@ -277,7 +277,7 @@ export default function LokasiKontakPage() {
                     value={form.pesan}
                     onChange={(e) => setForm((p) => ({ ...p, pesan: e.target.value }))}
                     placeholder={t('kontak_placeholder_message')}
-                    className="w-full px-4 py-3 text-sm rounded-[4px] outline-none transition-all resize-none bg-white dark:bg-zinc-905 border border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-amber-500 focus:border-transparent text-zinc-800 dark:text-zinc-100"
+                    className="w-full px-4 py-3 text-sm rounded-[4px] outline-none transition-all resize-none bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-amber-500 focus:border-transparent text-zinc-800 dark:text-zinc-100"
                   />
                 </div>
 

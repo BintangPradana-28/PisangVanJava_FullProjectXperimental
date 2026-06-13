@@ -143,7 +143,7 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
 
 
   return (
-    <section className="min-h-screen bg-surface-container-lowest dark:bg-zinc-955 px-4 py-10 pb-32 md:pb-10 text-primary dark:text-zinc-100 transition-colors duration-300">
+    <section className="min-h-screen bg-surface-container-lowest dark:bg-zinc-950 px-4 py-10 pb-32 md:pb-10 text-primary dark:text-zinc-100 transition-colors duration-300">
       <div className="mx-auto flex max-w-4xl flex-col gap-6">
         <Link
           href="/menu-spesial"
@@ -220,7 +220,7 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
               ))}
             </div>
 
-            <div className="mt-6 space-y-2 rounded-[4px] bg-cream-50 p-4 dark:bg-zinc-955">
+            <div className="mt-6 space-y-2 rounded-[4px] bg-cream-50 p-4 dark:bg-zinc-950">
               {order.discountAmount > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-brown-500 dark:text-zinc-400">
@@ -316,8 +316,8 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
             </div>
 
             {canPay ? (
-              order.midtransToken ? (
-                <MidtransPayButton snapToken={order.midtransToken} />
+              snapToken ? (
+                <MidtransPayButton snapToken={snapToken} />
               ) : (
                 <div className="w-full text-center p-3 text-sm text-rose-600 font-bold bg-rose-50 rounded-[4px] border border-rose-200">
                   Gagal membuat sesi pembayaran (Token Missing).
@@ -337,7 +337,7 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
       </div>
 
       {/* Mobile Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-cream-200 bg-white p-4 px-6 shadow-[0_-10px_40px_rgba(0,0,0,0.06)] dark:border-zinc-850 dark:bg-zinc-955 md:hidden pb-safe">
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-cream-200 bg-white p-4 px-6 shadow-[0_-10px_40px_rgba(0,0,0,0.06)] dark:border-zinc-850 dark:bg-zinc-950 md:hidden pb-safe">
         <div className="flex items-center justify-between mb-3">
           <div>
             <p className="text-xs font-semibold text-brown-500 dark:text-zinc-400">Total Tagihan</p>
@@ -353,8 +353,8 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
           </div>
         </div>
         {canPay ? (
-          order.midtransToken ? (
-            <MidtransPayButton snapToken={order.midtransToken} />
+          snapToken ? (
+            <MidtransPayButton snapToken={snapToken} />
           ) : (
             <div className="w-full text-center p-3 text-sm text-rose-600 font-bold bg-rose-50 rounded-[4px] border border-rose-200">
               Gagal membuat sesi pembayaran (Token Missing).

@@ -38,7 +38,7 @@ export default function PaymentError({ error, reset }: PaymentErrorProps) {
   }, [error, orderId])
 
   return (
-    <div className="min-h-screen bg-surface-container-lowest dark:bg-zinc-955 flex items-center justify-center px-4 text-primary dark:text-zinc-100 transition-colors duration-300">
+    <div className="min-h-screen bg-surface-container-lowest dark:bg-zinc-950 flex items-center justify-center px-4 text-primary dark:text-zinc-100 transition-colors duration-300">
       <div className="w-full max-w-md bg-white rounded-[4px] shadow-sbx-card border border-cream-200/60 p-8 text-center dark:bg-zinc-900 dark:border-zinc-800">
         <div className="w-16 h-16 bg-amber-brand/10 rounded-[4px] flex items-center justify-center mx-auto mb-6">
           <CreditCard className="w-8 h-8 text-amber-brand" />

@@ -1,9 +1,11 @@
 import * as Sentry from '@sentry/nextjs'
 import { type NextRequest, NextResponse } from 'next/server'
+import { OrderStatus, PaymentStatus, Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { redis } from '@/lib/redis'
 import { sendOrderConfirmationEmail } from '@/src/features/payment/email'
 import { verifyMidtransSignature } from '@/src/features/payment/service'
+import { mapMidtransStatusToPaymentStatus } from '@/src/features/payment/payment-status.mapper'
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,7 +19,15 @@ export async function POST(req: NextRequest) {
       gross_amount,
       signature_key,
       transaction_status,
-      transaction_id
+      transaction_id,
+      payment_type,
+      va_numbers,
+      bank,
+      qris_acquirer,
+      settlement_time,
+      expiry_time,
+      acquirer,
+      fraud_status
     } = payload
 
     if (!order_id || !status_code || !gross_amount || !signature_key) {
@@ -53,13 +63,20 @@ export async function POST(req: NextRequest) {
       })
     }
 
+    // Resolve real order ID from the potentially prefixed order_id
+    const realOrderId = order_id.startsWith('PVJ-')
+      ? order_id.substring(4, order_id.lastIndexOf('-'))
+      : order_id
+
     // Verify order exists and amount matches
     const order = await prisma.order.findUnique({
-      where: { id: order_id }
+      where: { id: realOrderId }
     })
 
     if (!order) {
-      Sentry.captureMessage(`[SECURITY] Midtrans webhook order not found: ${order_id}`, 'warning')
+      Sentry.captureMessage(`[SECURITY] Midtrans webhook order not found: ${realOrderId} (raw: ${order_id})`, 'warning')
+      // Rollback Redis lock so retry can be processed
+      await redis.del(lockKey)
       return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 })
     }
 
@@ -70,80 +87,125 @@ export async function POST(req: NextRequest) {
         `[SECURITY] Midtrans webhook amount mismatch: received ${gross_amount}, expected ${order.totalPrice}`,
         'error'
       )
+      // Rollback Redis lock
+      await redis.del(lockKey)
       return NextResponse.json({ success: false, error: 'Amount mismatch' }, { status: 400 })
     }
 
-    // Determine target order status
-    let newStatus = order.status
-    let paymentPaidAt = order.paymentPaidAt
+    // Determine target payment and order status
+    const newPaymentStatus = mapMidtransStatusToPaymentStatus(
+      transaction_status,
+      fraud_status
+    )
 
-    if (transaction_status === 'settlement' || transaction_status === 'capture') {
-      newStatus = 'processing'
-      paymentPaidAt = new Date()
+    let targetOrderStatus: OrderStatus = order.status
+    if (newPaymentStatus === PaymentStatus.PAID) {
+      targetOrderStatus = OrderStatus.PROCESSING
     } else if (
-      transaction_status === 'cancel' ||
-      transaction_status === 'expire' ||
-      transaction_status === 'deny'
+      newPaymentStatus === PaymentStatus.FAILED ||
+      newPaymentStatus === PaymentStatus.CANCELED ||
+      newPaymentStatus === PaymentStatus.EXPIRED
     ) {
-      newStatus = 'cancelled'
+      targetOrderStatus = OrderStatus.CANCELED
     }
 
-    if (newStatus === 'processing' && order.status !== 'processing' && order.status !== 'paid') {
-      await prisma.order.update({
-        where: { id: order_id },
-        data: {
-          status: newStatus,
-          paymentStatus: transaction_status,
-          midtransTransactionId: transaction_id,
-          paymentPaidAt
+    const paymentChannel = va_numbers?.[0]?.bank ?? bank ?? qris_acquirer ?? null
+    const vaNumber = va_numbers?.[0]?.va_number ?? null
+    const finalAcquirer = acquirer ?? qris_acquirer ?? null
+    const settlementTime = settlement_time ? new Date(settlement_time) : null
+    const expiryTime = expiry_time ? new Date(expiry_time) : null
+
+    // Execute atomic transaction for Payment and Order updates
+    let sendEmail = false
+
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // 1. Upsert/Update the Payment record
+      await tx.payment.upsert({
+        where: { orderId: realOrderId },
+        create: {
+          orderId: realOrderId,
+          midtransOrderId: order_id,
+          transactionId: transaction_id,
+          status: newPaymentStatus,
+          paymentType: payment_type,
+          paymentChannel,
+          grossAmount: new Prisma.Decimal(gross_amount),
+          fraudStatus: fraud_status ?? null,
+          settlementTime,
+          expiryTime,
+          vaNumber,
+          acquirer: finalAcquirer,
+          currency: payload.currency || 'IDR',
+          rawWebhookPayload: payload as unknown as Prisma.InputJsonValue
+        },
+        update: {
+          midtransOrderId: order_id,
+          transactionId: transaction_id,
+          status: newPaymentStatus,
+          paymentType: payment_type,
+          paymentChannel,
+          grossAmount: new Prisma.Decimal(gross_amount),
+          fraudStatus: fraud_status ?? null,
+          settlementTime,
+          expiryTime,
+          vaNumber,
+          acquirer: finalAcquirer,
+          rawWebhookPayload: payload as unknown as Prisma.InputJsonValue
         }
       })
 
-      // Trigger order confirmation email in the background
-      sendOrderConfirmationEmail(order_id).catch(console.error)
-    } else if (newStatus === 'cancelled' && order.status !== 'cancelled') {
-      const orderWithItems = await prisma.order.findUnique({
-        where: { id: order_id },
-        include: { items: true }
-      })
-
-      await prisma.$transaction(async (tx: any) => {
+      // 2. Perform Order status transitions safely
+      if (targetOrderStatus === OrderStatus.PROCESSING) {
         const updateCount = await tx.order.updateMany({
-          where: { id: order_id, status: { not: 'cancelled' } },
+          where: { id: realOrderId, status: OrderStatus.PENDING_PAYMENT },
           data: {
-            status: newStatus,
-            paymentStatus: transaction_status,
-            midtransTransactionId: transaction_id,
-            paymentPaidAt
+            status: OrderStatus.PROCESSING,
+            confirmedAt: new Date()
+          }
+        })
+        if (updateCount.count > 0) {
+          sendEmail = true
+        }
+      } else if (targetOrderStatus === OrderStatus.CANCELED) {
+        // Zero-Trust: Only restore stock IF the order is transitioning from PENDING_PAYMENT to CANCELED.
+        // This prevents double-incrementing stock if multiple cancel webhooks arrive.
+        const updateCount = await tx.order.updateMany({
+          where: { id: realOrderId, status: OrderStatus.PENDING_PAYMENT },
+          data: {
+            status: OrderStatus.CANCELED
           }
         })
 
-        // Zero-Trust: Only restore stock IF this exact transaction was the one to transition the order to cancelled.
-        // Prevents ghost inventory inflation via concurrent webhook replays.
         if (updateCount.count > 0) {
+          const orderWithItems = await tx.order.findUnique({
+            where: { id: realOrderId },
+            include: { items: true }
+          })
           for (const item of orderWithItems?.items || []) {
-            await tx.menuVariant.updateMany({
-              where: { id: item.variantId },
-              data: { stock: { increment: item.quantity } }
-            })
+            if (item.variantId) {
+              await tx.menuVariant.update({
+                where: { id: item.variantId },
+                data: { stock: { increment: item.quantity } }
+              })
+            }
           }
         }
-      })
-    } else {
-      await prisma.order.update({
-        where: { id: order_id },
-        data: {
-          status: newStatus,
-          paymentStatus: transaction_status,
-          midtransTransactionId: transaction_id,
-          paymentPaidAt
-        }
-      })
+      }
+    })
+
+    if (sendEmail) {
+      // Trigger order confirmation email in the background
+      sendOrderConfirmationEmail(realOrderId).catch(console.error)
     }
 
-    return NextResponse.json({ success: true, message: 'Webhook processed' })
+    return NextResponse.json({ success: true, message: 'Webhook processed successfully' })
   } catch (error) {
     Sentry.captureException(error)
+    console.error('[Midtrans Webhook Error]', error)
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 })
   }
+}
+
+export async function GET() {
+  return NextResponse.json({ message: 'Method not allowed' }, { status: 405 })
 }

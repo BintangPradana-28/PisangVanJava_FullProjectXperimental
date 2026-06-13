@@ -10,6 +10,10 @@ import {
   requireCheckoutActor
 } from '@/src/features/checkout/service'
 import { env } from '@/src/env'
+import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
+import { generateSnapToken } from '@/src/features/payment/service'
+
 
 
 interface PaymentPageProps {
@@ -57,6 +61,86 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
   const canPay = order.status === 'PENDING_PAYMENT'
   const alreadyPaid =
     order.status === 'PROCESSING' || order.status === 'READY' || order.status === 'COMPLETED'
+
+  let snapToken = order.midtransToken
+
+  // Check if token has expired (older than 24 hours) or is missing
+  const TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000 // 24 hours
+  const isExpired =
+    !order.midtransToken ||
+    new Date().getTime() - new Date(order.createdAt).getTime() > TOKEN_EXPIRY_MS
+
+  if (canPay && isExpired) {
+    try {
+      const midtransOrderId = `PVJ-${order.id}-${Date.now()}`
+      const midtransItems: Array<{ id: string; price: number; quantity: number; name: string }> =
+        order.items.map((item) => {
+          const unitPrice = item.subtotal / item.quantity
+          return {
+            id: item.variant?.flavorName || 'Pisang',
+            price: unitPrice,
+            quantity: item.quantity,
+            name: `${item.variant?.flavorName || 'Pisang'} (${item.baseType})`
+          }
+        })
+
+      if (order.deliveryMethod === 'DELIVERY' && order.deliveryFee > 0) {
+        midtransItems.push({
+          id: 'delivery-fee',
+          price: order.deliveryFee,
+          quantity: 1,
+          name: 'Ongkos Kirim'
+        })
+      }
+
+      if (order.discountAmount > 0) {
+        midtransItems.push({
+          id: 'discount',
+          price: -order.discountAmount,
+          quantity: 1,
+          name: order.voucherCode ? `Diskon (${order.voucherCode})` : 'Diskon Koin'
+        })
+      }
+
+      const newSnapToken = await generateSnapToken({
+        orderId: midtransOrderId,
+        grossAmount: order.totalPrice,
+        customerName: order.customerName,
+        customerPhone: order.customerPhone,
+        items: midtransItems
+      })
+
+      if (newSnapToken) {
+        // Update order in database with the new token
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { midtransToken: newSnapToken }
+        })
+
+        // Upsert Payment record for webhook reconciliation
+        await prisma.payment.upsert({
+          where: { orderId: order.id },
+          create: {
+            orderId: order.id,
+            midtransOrderId,
+            grossAmount: new Prisma.Decimal(order.totalPrice),
+            status: 'PENDING',
+            currency: 'IDR'
+          },
+          update: {
+            midtransOrderId,
+            grossAmount: new Prisma.Decimal(order.totalPrice),
+            status: 'PENDING'
+          }
+        })
+
+        snapToken = newSnapToken
+      }
+    } catch (err) {
+      console.error('[MIDTRANS] Failed to regenerate expired payment token:', err)
+    }
+  }
+
 
   return (
     <section className="min-h-screen bg-surface-container-lowest dark:bg-zinc-955 px-4 py-10 pb-32 md:pb-10 text-primary dark:text-zinc-100 transition-colors duration-300">

@@ -4,17 +4,16 @@ const prisma = new PrismaClient()
 
 async function main() {
   const order = await prisma.order.findUnique({
-    where: { id: 'cmpt388j80007dv9kw0oxu6yk' },
-    select: { userId: true, source: true, status: true, id: true, customerName: true }
+    where: { id: 'cmq1toxc100099kd2co0vb7ln' }
   })
-  console.log('Order Details:', order)
+  console.log('Order Details:', JSON.stringify(order, null, 2))
 
-  const allOrders = await prisma.order.findMany({
-    orderBy: { createdAt: 'desc' },
-    take: 5,
-    select: { id: true, userId: true, source: true }
+  const payment = await prisma.payment.findUnique({
+    where: { orderId: 'cmq1toxc100099kd2co0vb7ln' }
   })
-  console.log('Last 5 Orders:', allOrders)
+  console.log('Payment Details:', JSON.stringify(payment, null, 2))
 }
 
 main().finally(() => prisma.$disconnect())
+
+

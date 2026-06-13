@@ -402,307 +402,341 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
 
               {/* ── BODY (Scrollable) ── */}
               <div className="flex-1 overflow-y-auto min-h-0">
-                {/* ===== EMPTY STATE ===== */}
-                {cartItems.length === 0 && (
-                  <div className="flex flex-col items-center justify-center h-64 text-zinc-400 dark:text-zinc-500 gap-4">
-                    <div className="text-6xl">🛍️</div>
-                    <div className="text-center">
-                      <p className="font-semibold text-zinc-500 dark:text-zinc-400">
-                        {t('cart_empty')}
-                      </p>
-                      <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-1">
-                        Belum ada produk di keranjang Anda
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        onClose()
-                        router.push('/menu-spesial')
-                      }}
-                      className="mt-2 px-6 py-2.5 bg-[#D4802A] text-white text-sm font-bold rounded-[4px] hover:bg-[#b56d24] transition-all active:scale-95"
+                <AnimatePresence mode="wait">
+                  {/* ===== EMPTY STATE ===== */}
+                  {cartItems.length === 0 && (
+                    <motion.div
+                      key="empty"
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      transition={{ duration: 0.2 }}
+                      className="flex flex-col items-center justify-center h-64 text-zinc-400 dark:text-zinc-500 gap-4"
                     >
-                      Mulai Belanja →
-                    </button>
-                  </div>
-                )}
-
-                {/* ===== TAB: KERANJANG ===== */}
-                {cartItems.length > 0 && activeTab === 'cart' && (
-                  <div className="p-5 space-y-3">
-                    {cartItems.map((item, index) => (
-                      <motion.div
-                        key={`${item.cartItemId}`}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ delay: index * 0.04 }}
-                        className="flex items-start gap-4 p-4 rounded-[4px] bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800 hover:border-[#D4802A]/30 transition-all"
+                      <div className="text-6xl">🛍️</div>
+                      <div className="text-center">
+                        <p className="font-semibold text-zinc-500 dark:text-zinc-400">
+                          {t('cart_empty')}
+                        </p>
+                        <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-1">
+                          Belum ada produk di keranjang Anda
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          onClose()
+                          router.push('/menu-spesial')
+                        }}
+                        className="mt-2 px-6 py-2.5 bg-[#D4802A] text-white text-sm font-bold rounded-[4px] hover:bg-[#b56d24] transition-all active:scale-95"
                       >
-                        {/* Product Emoji Avatar */}
-                        <div className="w-12 h-12 rounded-[4px] bg-gradient-to-br from-amber-100 to-orange-100 dark:from-zinc-700 dark:to-zinc-800 flex items-center justify-center text-2xl shrink-0 shadow-sm">
-                          🍌
-                        </div>
+                        Mulai Belanja →
+                      </button>
+                    </motion.div>
+                  )}
 
-                        {/* Product Detail */}
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-sm text-zinc-800 dark:text-zinc-100 truncate">
-                            {item.variantName}
-                          </h4>
-                          {item.toppings && item.toppings.length > 0 && (
-                            <span className="text-xs text-amber-500 font-medium">
-                              + {item.toppings.map((t: any) => t.name).join(', ')}
-                            </span>
-                          )}
-                          {item.notes && (
-                            <p className="text-xs text-zinc-400 dark:text-zinc-500 italic mt-0.5 truncate">
-                              "{item.notes}"
-                            </p>
-                          )}
-                          <div className="flex items-center justify-between mt-2">
-                            {/* Quantity Control — Shopee Style: minus→trash saat qty=1 */}
-                            <div className="flex items-center gap-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-[4px] p-0.5 shadow-sm">
-                              <button
-                                onClick={() =>
-                                  item.quantity === 1
-                                    ? removeFromCart(item.cartItemId)
-                                    : updateQuantity(item.cartItemId, item.quantity - 1)
-                                }
-                                className={`w-7 h-7 rounded-[4px] flex items-center justify-center transition-all active:scale-90 ${
-                                  item.quantity === 1
-                                    ? 'text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600'
-                                    : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-[#D4802A]'
-                                }`}
-                                aria-label={
-                                  item.quantity === 1 ? 'Hapus item' : 'Kurangi kuantitas'
-                                }
-                              >
-                                {item.quantity === 1 ? (
-                                  <Trash2 className="w-3 h-3" />
-                                ) : (
-                                  <Minus className="w-3 h-3" />
-                                )}
-                              </button>
-                              <span className="w-7 text-center text-sm font-bold text-zinc-800 dark:text-zinc-100">
-                                {item.quantity}
+                  {/* ===== TAB: KERANJANG ===== */}
+                  {cartItems.length > 0 && activeTab === 'cart' && (
+                    <motion.div
+                      key="cart"
+                      initial={{ opacity: 0, x: -16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 16 }}
+                      transition={{ duration: 0.2, ease: 'easeOut' }}
+                      className="p-5 space-y-3"
+                    >
+                      {cartItems.map((item, index) => (
+                        <motion.div
+                          key={`${item.cartItemId}`}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          transition={{ delay: index * 0.04 }}
+                          className="flex items-start gap-4 p-4 rounded-[4px] bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800 hover:border-[#D4802A]/30 transition-all"
+                        >
+                          {/* Product Emoji Avatar */}
+                          <div className="w-12 h-12 rounded-[4px] bg-gradient-to-br from-amber-100 to-orange-100 dark:from-zinc-700 dark:to-zinc-800 flex items-center justify-center text-2xl shrink-0 shadow-sm">
+                            🍌
+                          </div>
+
+                          {/* Product Detail */}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-sm text-zinc-800 dark:text-zinc-100 truncate">
+                              {item.variantName}
+                            </h4>
+                            {item.toppings && item.toppings.length > 0 && (
+                              <span className="text-xs text-amber-500 font-medium">
+                                + {item.toppings.map((t: any) => t.name).join(', ')}
                               </span>
-                              <button
-                                onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
-                                className="w-7 h-7 rounded-[4px] flex items-center justify-center bg-[#D4802A] text-white hover:bg-[#b56d24] transition-all active:scale-90"
-                                aria-label="Tambah kuantitas"
-                              >
-                                <Plus className="w-3 h-3" />
-                              </button>
-                            </div>
+                            )}
+                            {item.notes && (
+                              <p className="text-xs text-zinc-400 dark:text-zinc-500 italic mt-0.5 truncate">
+                                "{item.notes}"
+                              </p>
+                            )}
+                            <div className="flex items-center justify-between mt-2">
+                              {/* Quantity Control — Shopee Style: minus→trash saat qty=1 */}
+                              <div className="flex items-center gap-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-[4px] p-0.5 shadow-sm">
+                                <button
+                                  onClick={() =>
+                                    item.quantity === 1
+                                      ? removeFromCart(item.cartItemId)
+                                      : updateQuantity(item.cartItemId, item.quantity - 1)
+                                  }
+                                  className={`w-7 h-7 rounded-[4px] flex items-center justify-center transition-all active:scale-90 ${
+                                    item.quantity === 1
+                                      ? 'text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600'
+                                      : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-[#D4802A]'
+                                  }`}
+                                  aria-label={
+                                    item.quantity === 1 ? 'Hapus item' : 'Kurangi kuantitas'
+                                  }
+                                >
+                                  {item.quantity === 1 ? (
+                                    <Trash2 className="w-3 h-3" />
+                                  ) : (
+                                    <Minus className="w-3 h-3" />
+                                  )}
+                                </button>
+                                <motion.span
+                                  key={item.quantity}
+                                  initial={{ scaleY: 1.35, scaleX: 0.75 }}
+                                  animate={{ scaleY: 1, scaleX: 1 }}
+                                  transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+                                  className="w-7 text-center text-sm font-bold text-zinc-800 dark:text-zinc-100 inline-block"
+                                >
+                                  {item.quantity}
+                                </motion.span>
+                                <button
+                                  onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
+                                  className="w-7 h-7 rounded-[4px] flex items-center justify-center bg-[#D4802A] text-white hover:bg-[#b56d24] transition-all active:scale-90"
+                                  aria-label="Tambah kuantitas"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
 
-                            {/* Price */}
-                            <span className="text-sm font-bold text-[#D4802A]">
-                              <CartItemSubtotal
-                                cartItemId={item.cartItemId}
-                                formatPrice={formatPrice}
-                              />
-                            </span>
+                              {/* Price */}
+                              <span className="text-sm font-bold text-[#D4802A]">
+                                <CartItemSubtotal
+                                  cartItemId={item.cartItemId}
+                                  formatPrice={formatPrice}
+                                />
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Remove Button */}
+                          <button
+                            onClick={() => removeFromCart(item.cartItemId)}
+                            className="p-1.5 rounded-lg text-zinc-300 dark:text-zinc-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all active:scale-90"
+                            aria-label="Hapus item"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  )}
+
+                  {/* ===== TAB: CHECKOUT DETAIL ===== */}
+                  {cartItems.length > 0 && activeTab === 'checkout' && (
+                    <motion.div
+                      key="checkout"
+                      initial={{ opacity: 0, x: 16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -16 }}
+                      transition={{ duration: 0.2, ease: 'easeOut' }}
+                      className="p-5 space-y-5"
+                    >
+                      {/* — Customer Info (RHF + Zod Iron Gate) — */}
+                      <div className="space-y-3">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                          Informasi Pemesan
+                        </h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">
+                              Nama Lengkap *
+                            </label>
+                            <input
+                              {...register('customerName')}
+                              type="text"
+                              placeholder="Nama Anda..."
+                              className={`w-full px-3 py-2.5 border rounded-[4px] text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 focus:outline-none focus:ring-2 transition-all bg-zinc-50 dark:bg-zinc-800/50 ${
+                                errors.customerName
+                                  ? 'border-red-400 focus:ring-red-300/30'
+                                  : 'border-zinc-200 dark:border-zinc-700 focus:ring-[#D4802A]/30 focus:border-[#D4802A]'
+                              }`}
+                            />
+                            {errors.customerName && (
+                              <p className="mt-1 text-[10px] text-red-500 font-medium">
+                                {errors.customerName.message}
+                              </p>
+                            )}
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">
+                              Nomor WhatsApp *
+                            </label>
+                            <input
+                              {...register('customerPhone')}
+                              type="tel"
+                              placeholder="08123456789"
+                              className={`w-full px-3 py-2.5 border rounded-[4px] text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 focus:outline-none focus:ring-2 transition-all bg-zinc-50 dark:bg-zinc-800/50 ${
+                                errors.customerPhone
+                                  ? 'border-red-400 focus:ring-red-300/30'
+                                  : 'border-zinc-200 dark:border-zinc-700 focus:ring-[#D4802A]/30 focus:border-[#D4802A]'
+                              }`}
+                            />
+                            {errors.customerPhone && (
+                              <p className="mt-1 text-[10px] text-red-500 font-medium">
+                                {errors.customerPhone.message}
+                              </p>
+                            )}
                           </div>
                         </div>
-
-                        {/* Remove Button */}
-                        <button
-                          onClick={() => removeFromCart(item.cartItemId)}
-                          className="p-1.5 rounded-lg text-zinc-300 dark:text-zinc-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all active:scale-90"
-                          aria-label="Hapus item"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-
-                {/* ===== TAB: CHECKOUT DETAIL ===== */}
-                {cartItems.length > 0 && activeTab === 'checkout' && (
-                  <div className="p-5 space-y-5">
-                    {/* — Customer Info (RHF + Zod Iron Gate) — */}
-                    <div className="space-y-3">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-                        Informasi Pemesan
-                      </h3>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">
-                            Nama Lengkap *
-                          </label>
-                          <input
-                            {...register('customerName')}
-                            type="text"
-                            placeholder="Nama Anda..."
-                            className={`w-full px-3 py-2.5 border rounded-[4px] text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 focus:outline-none focus:ring-2 transition-all bg-zinc-50 dark:bg-zinc-800/50 ${
-                              errors.customerName
-                                ? 'border-red-400 focus:ring-red-300/30'
-                                : 'border-zinc-200 dark:border-zinc-700 focus:ring-[#D4802A]/30 focus:border-[#D4802A]'
-                            }`}
-                          />
-                          {errors.customerName && (
-                            <p className="mt-1 text-[10px] text-red-500 font-medium">
-                              {errors.customerName.message}
-                            </p>
-                          )}
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">
-                            Nomor WhatsApp *
-                          </label>
-                          <input
-                            {...register('customerPhone')}
-                            type="tel"
-                            placeholder="08123456789"
-                            className={`w-full px-3 py-2.5 border rounded-[4px] text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 focus:outline-none focus:ring-2 transition-all bg-zinc-50 dark:bg-zinc-800/50 ${
-                              errors.customerPhone
-                                ? 'border-red-400 focus:ring-red-300/30'
-                                : 'border-zinc-200 dark:border-zinc-700 focus:ring-[#D4802A]/30 focus:border-[#D4802A]'
-                            }`}
-                          />
-                          {errors.customerPhone && (
-                            <p className="mt-1 text-[10px] text-red-500 font-medium">
-                              {errors.customerPhone.message}
-                            </p>
-                          )}
-                        </div>
                       </div>
-                    </div>
 
-                    {/* — Delivery Method — */}
-                    <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-3">
-                        Metode Pengiriman
-                      </h3>
-                      <div className="grid grid-cols-2 gap-2 mb-3">
-                        <button
-                          onClick={() => setDeliveryMethod('DELIVERY')}
-                          className={`flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-[4px] transition-all border-2 ${
+                      {/* — Delivery Method — */}
+                      <div>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-3">
+                          Metode Pengiriman
+                        </h3>
+                        <div className="grid grid-cols-2 gap-2 mb-3">
+                          <button
+                            type="button"
+                            onClick={() => setDeliveryMethod('DELIVERY')}
+                            className={`flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-[4px] transition-all border-2 ${
+                              deliveryMethod === 'DELIVERY'
+                                ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 border-[#D4802A]'
+                                : 'bg-white dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700'
+                            }`}
+                          >
+                            🛵 Pesan Antar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeliveryMethod('PICKUP')}
+                            className={`flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-[4px] transition-all border-2 ${
+                              deliveryMethod === 'PICKUP'
+                                ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 border-[#D4802A]'
+                                : 'bg-white dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700'
+                            }`}
+                          >
+                            🏪 Ambil Sendiri
+                          </button>
+                        </div>
+                        <textarea
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                          placeholder={
                             deliveryMethod === 'DELIVERY'
-                              ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 border-[#D4802A]'
-                              : 'bg-white dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700'
-                          }`}
-                        >
-                          🛵 Pesan Antar
-                        </button>
-                        <button
-                          onClick={() => setDeliveryMethod('PICKUP')}
-                          className={`flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-[4px] transition-all border-2 ${
-                            deliveryMethod === 'PICKUP'
-                              ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 border-[#D4802A]'
-                              : 'bg-white dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700'
-                          }`}
-                        >
-                          🏪 Ambil Sendiri
-                        </button>
+                              ? 'Alamat pengiriman lengkap...'
+                              : 'Catatan tambahan (opsional)...'
+                          }
+                          rows={2}
+                          className="w-full px-3 py-2.5 border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 rounded-[4px] text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#D4802A]/30 focus:border-[#D4802A] transition-all resize-none"
+                        />
                       </div>
-                      <textarea
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        placeholder={
-                          deliveryMethod === 'DELIVERY'
-                            ? 'Alamat pengiriman lengkap...'
-                            : 'Catatan tambahan (opsional)...'
-                        }
-                        rows={2}
-                        className="w-full px-3 py-2.5 border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 rounded-[4px] text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#D4802A]/30 focus:border-[#D4802A] transition-all resize-none"
-                      />
-                    </div>
 
-                    {/* — Voucher — */}
-                    <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-3">
-                        Kode Promo
-                      </h3>
-                      <div className="flex gap-2">
-                        <div className="relative flex-1">
-                          <TicketPercent
-                            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400"
-                            aria-hidden
-                          />
-                          <input
-                            type="text"
-                            value={voucherCode}
-                            onChange={(e) => {
-                              const next = e.target.value.toUpperCase()
-                              setVoucherCode(next)
-                              if (appliedVoucher !== null && next.trim() !== appliedVoucher.code) {
-                                setAppliedVoucher(null)
-                              }
-                            }}
-                            placeholder="Kode promo"
-                            className="w-full pl-9 pr-3 py-2.5 border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 rounded-[4px] text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#D4802A]/30 focus:border-[#D4802A] transition-all"
-                          />
+                      {/* — Voucher — */}
+                      <div>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-3">
+                          Kode Promo
+                        </h3>
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <TicketPercent
+                              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400"
+                              aria-hidden
+                            />
+                            <input
+                              type="text"
+                              value={voucherCode}
+                              onChange={(e) => {
+                                const next = e.target.value.toUpperCase()
+                                setVoucherCode(next)
+                                if (
+                                  appliedVoucher !== null &&
+                                  next.trim() !== appliedVoucher.code
+                                ) {
+                                  setAppliedVoucher(null)
+                                }
+                              }}
+                              placeholder="Kode promo"
+                              className="w-full pl-9 pr-3 py-2.5 border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 rounded-[4px] text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#D4802A]/30 focus:border-[#D4802A] transition-all"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleApplyVoucher}
+                            disabled={isValidatingVoucher || cartTotal <= 0}
+                            className="px-5 rounded-[4px] text-sm font-bold border-2 border-amber-300 bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isValidatingVoucher ? '...' : 'Pakai'}
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          onClick={handleApplyVoucher}
-                          disabled={isValidatingVoucher || cartTotal <= 0}
-                          className="px-5 rounded-[4px] text-sm font-bold border-2 border-amber-300 bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isValidatingVoucher ? '...' : 'Pakai'}
-                        </button>
+                        {appliedVoucher && (
+                          <p className="mt-1.5 text-xs font-semibold text-green-600 dark:text-green-400">
+                            ✅ Voucher <strong>{appliedVoucher.code}</strong> aktif — hemat{' '}
+                            {formatPrice(appliedVoucher.discountAmount)}
+                          </p>
+                        )}
                       </div>
-                      {appliedVoucher && (
-                        <p className="mt-1.5 text-xs font-semibold text-green-600 dark:text-green-400">
-                          ✅ Voucher <strong>{appliedVoucher.code}</strong> aktif — hemat{' '}
-                          {formatPrice(appliedVoucher.discountAmount)}
-                        </p>
-                      )}
-                    </div>
 
-                    {/* — Payment Method — */}
-                    <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-3">
-                        Metode Pembayaran
-                      </h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setPaymentMethod('WHATSAPP')}
-                          className={`flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-[4px] transition-all border-2 ${
-                            paymentMethod === 'WHATSAPP'
-                              ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 border-green-400'
-                              : 'bg-white dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700'
-                          }`}
-                        >
-                          <MessageCircle className="w-4 h-4" aria-hidden />
-                          COD
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPaymentMethod('ONLINE')}
-                          className={`flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-[4px] transition-all border-2 ${
-                            paymentMethod === 'ONLINE'
-                              ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 border-blue-400'
-                              : 'bg-white dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700'
-                          }`}
-                        >
-                          <CreditCard className="w-4 h-4" aria-hidden />
-                          Online
-                        </button>
+                      {/* — Payment Method — */}
+                      <div>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-3">
+                          Metode Pembayaran
+                        </h3>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setPaymentMethod('WHATSAPP')}
+                            className={`flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-[4px] transition-all border-2 ${
+                              paymentMethod === 'WHATSAPP'
+                                ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 border-green-400'
+                                : 'bg-white dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700'
+                            }`}
+                          >
+                            <MessageCircle className="w-4 h-4" aria-hidden />
+                            COD
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPaymentMethod('ONLINE')}
+                            className={`flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-[4px] transition-all border-2 ${
+                              paymentMethod === 'ONLINE'
+                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 border-blue-400'
+                                : 'bg-white dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700'
+                            }`}
+                          >
+                            <CreditCard className="w-4 h-4" aria-hidden />
+                            Online
+                          </button>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* — Consent — */}
-                    <div className="flex items-start gap-2.5">
-                      <input
-                        type="checkbox"
-                        id="privacy-consent-modal"
-                        checked={consent}
-                        onChange={(e) => setConsent(e.target.checked)}
-                        className="mt-0.5 shrink-0 accent-[#D4802A] w-4 h-4 rounded cursor-pointer"
-                      />
-                      <label
-                        htmlFor="privacy-consent-modal"
-                        className="text-xs text-zinc-500 dark:text-zinc-400 cursor-pointer leading-relaxed"
-                      >
-                        Saya menyetujui data saya disimpan sesuai Kebijakan Privasi perusahaan untuk
-                        keperluan pemesanan.
-                      </label>
-                    </div>
-                  </div>
-                )}
+                      {/* — Consent — */}
+                      <div className="flex items-start gap-2.5">
+                        <input
+                          type="checkbox"
+                          id="privacy-consent-modal"
+                          checked={consent}
+                          onChange={(e) => setConsent(e.target.checked)}
+                          className="mt-0.5 shrink-0 accent-[#D4802A] w-4 h-4 rounded cursor-pointer"
+                        />
+                        <label
+                          htmlFor="privacy-consent-modal"
+                          className="text-xs text-zinc-500 dark:text-zinc-400 cursor-pointer leading-relaxed"
+                        >
+                          Saya menyetujui data saya disimpan sesuai Kebijakan Privasi perusahaan
+                          untuk keperluan pemesanan.
+                        </label>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* ── FOOTER — Sticky Price Summary + CTA ── */}

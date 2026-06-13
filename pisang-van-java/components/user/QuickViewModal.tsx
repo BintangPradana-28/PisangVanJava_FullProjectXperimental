@@ -10,6 +10,8 @@ import { useSettings } from '@/context/SettingsContext'
 import type { ProductType } from '@/src/features/menu/components/MenuCards'
 import { isStoreOpen as checkStoreOpen } from '@/src/lib/time'
 import { type CartTopping, useCartStore } from '@/src/stores/cart.store'
+import { motion } from 'framer-motion'
+import { animateFlyToCart } from '@/src/lib/animations'
 
 interface QuickViewModalProps {
   product: ProductType | null
@@ -138,7 +140,7 @@ export default function QuickViewModal({
 
   const isFormValid = !!selectedType && !!selectedFlavor
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!isFormValid || !isStoreOpen) return
 
     const finalToppings: CartTopping[] = selectedToppings
@@ -152,6 +154,8 @@ export default function QuickViewModal({
 
     const finalProductId = matchedProduct ? matchedProduct.id : product.id
     const finalProductName = `${selectedFlavor} (${selectedType})`
+
+    animateFlyToCart(e.currentTarget)
 
     addToCart({
       menuVariantId: finalProductId,
@@ -200,7 +204,17 @@ export default function QuickViewModal({
               <Drawer.Description className="sr-only">
                 Sesuaikan opsi untuk {dynamicTitle}
               </Drawer.Description>
-              <p className="text-[#D4802A] font-bold text-lg">{formatPrice(basePrice)}</p>
+              <div className="flex flex-wrap items-center gap-3">
+                <p className="text-[#D4802A] font-bold text-lg">{formatPrice(basePrice)}</p>
+                {matchedProduct && matchedProduct.stock <= 5 && matchedProduct.stock > 0 && (
+                  <div className="flex items-center gap-1.5 animate-shake infinite [animation-duration:1.5s]">
+                    <span className="w-2 h-2 rounded-[4px] bg-amber-500 animate-pulse"></span>
+                    <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
+                      ⚠️ Stok Terbatas: Sisa {matchedProduct.stock} porsi!
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
             <button
               onClick={onClose}
@@ -387,9 +401,15 @@ export default function QuickViewModal({
               >
                 -
               </button>
-              <span className="w-6 text-center font-bold text-zinc-800 dark:text-zinc-100 text-lg">
+              <motion.span
+                key={quantity}
+                initial={{ scaleY: 1.35, scaleX: 0.75 }}
+                animate={{ scaleY: 1, scaleX: 1 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+                className="w-6 text-center font-bold text-zinc-800 dark:text-zinc-100 text-lg inline-block"
+              >
                 {quantity}
-              </span>
+              </motion.span>
               <button
                 type="button"
                 onClick={() => setQuantity((q) => q + 1)}
@@ -401,7 +421,7 @@ export default function QuickViewModal({
 
             {/* Tombol Add to Cart */}
             <button
-              onClick={handleAddToCart}
+              onClick={(e) => handleAddToCart(e)}
               disabled={!isFormValid || !isStoreOpen}
               className={`flex-1 py-3.5 px-4 rounded-[4px] font-bold text-sm transition-all duration-200 shadow-md flex items-center justify-center gap-2 ${
                 isFormValid && isStoreOpen

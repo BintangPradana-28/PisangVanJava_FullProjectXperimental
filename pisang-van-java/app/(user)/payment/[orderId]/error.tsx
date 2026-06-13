@@ -64,7 +64,9 @@ export default function PaymentError({ error, reset }: PaymentErrorProps) {
         </p>
 
         {error.digest && (
-          <p className="text-xs text-brown-400 font-mono mb-6 dark:text-zinc-500">Kode error: {error.digest}</p>
+          <p className="text-xs text-brown-400 font-mono mb-6 dark:text-zinc-500">
+            Kode error: {error.digest}
+          </p>
         )}
 
         <div className="flex flex-col gap-3">

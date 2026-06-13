@@ -4,6 +4,7 @@
 // Interactive 5-star rating input with optimistic feedback and server action support.
 
 import { useState, useTransition } from 'react'
+import { motion } from 'framer-motion'
 
 interface StarRatingProps {
   variantId: string
@@ -50,6 +51,9 @@ export default function StarRating({ variantId, existingRating, onSubmit }: Star
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [localSparkles, setLocalSparkles] = useState<
+    Array<{ id: number; angle: number; distance: number }>
+  >([])
 
   const displayRating = hovered || selected
 
@@ -137,10 +141,35 @@ export default function StarRating({ variantId, existingRating, onSubmit }: Star
             onClick={() => {
               setSelected(star)
               setError(null)
+              const newSparkles = Array.from({ length: 6 }).map((_, i) => ({
+                id: Date.now() + i,
+                angle: (i * 360) / 6,
+                distance: Math.random() * 20 + 20
+              }))
+              setLocalSparkles(newSparkles)
+              setTimeout(() => setLocalSparkles([]), 650)
             }}
-            className="focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded-sm"
+            className="focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded-sm relative"
           >
             <StarIcon filled={star <= displayRating} hovered={star <= hovered} />
+            {selected === star &&
+              localSparkles.map((sp) => (
+                <motion.span
+                  key={sp.id}
+                  initial={{ x: 0, y: 0, scale: 0, opacity: 1 }}
+                  animate={{
+                    x: Math.cos((sp.angle * Math.PI) / 180) * sp.distance,
+                    y: Math.sin((sp.angle * Math.PI) / 180) * sp.distance,
+                    scale: [0, 1.2, 0.5, 0],
+                    opacity: 0
+                  }}
+                  transition={{ duration: 0.6, ease: 'easeOut' }}
+                  className="absolute text-amber-400 text-xs pointer-events-none"
+                  style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
+                >
+                  ✨
+                </motion.span>
+              ))}
           </button>
         ))}
         {displayRating > 0 && (

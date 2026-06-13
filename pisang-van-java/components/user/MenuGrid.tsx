@@ -12,6 +12,7 @@ import { useLanguage } from '@/context/LanguageContext'
 import { useSettings } from '@/context/SettingsContext'
 import type { ProductType } from '@/src/features/menu/components/MenuCards'
 import { isStoreOpen as checkStoreOpen } from '@/src/lib/time'
+import { animateFlyHeart } from '@/src/lib/animations'
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('id-ID', {
@@ -121,6 +122,9 @@ export default function MenuGrid({ products }: { products: ProductType[] }) {
     const isFav = favorites.includes(variantId)
     // Optimistic UI
     setFavorites((prev) => (isFav ? prev.filter((id) => id !== variantId) : [...prev, variantId]))
+    if (!isFav) {
+      animateFlyHeart(e.currentTarget as HTMLElement)
+    }
 
     try {
       const res = await fetch('/api/favorites', {
@@ -225,11 +229,19 @@ export default function MenuGrid({ products }: { products: ProductType[] }) {
 
                       {/* Stock Indicator */}
                       <div className="flex items-center gap-1.5 mb-2 mt-1">
-                        {product.stock > 0 ? (
+                        {product.stock > 5 ? (
                           <>
                             <span className="w-2 h-2 rounded-[4px] bg-green-500"></span>
                             <span className="text-xs font-semibold text-green-600 dark:text-green-400 tracking-wide">
                               Tersedia: <span className="font-bold">{product.stock}</span> porsi
+                            </span>
+                          </>
+                        ) : product.stock > 0 ? (
+                          <>
+                            <span className="w-2.5 h-2.5 rounded-[4px] bg-amber-500 animate-pulse"></span>
+                            <span className="text-xs font-bold text-amber-600 dark:text-amber-400 tracking-wide animate-shake infinite [animation-duration:1.5s]">
+                              ⚠️ Stok Terbatas:{' '}
+                              <span className="font-extrabold">{product.stock}</span> porsi!
                             </span>
                           </>
                         ) : (

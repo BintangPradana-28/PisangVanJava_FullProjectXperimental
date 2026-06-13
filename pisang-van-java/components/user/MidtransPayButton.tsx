@@ -27,7 +27,6 @@ export default function MidtransPayButton({ snapToken }: Props) {
     // Midtrans actually uses `data-client-key` attribute.
     const clientKey = env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || ''
 
-
     if (window.snap) {
       setIsReady(true)
       return

@@ -14,8 +14,6 @@ import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { generateSnapToken } from '@/src/features/payment/service'
 
-
-
 interface PaymentPageProps {
   params: Promise<{
     orderId: string
@@ -141,7 +139,6 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
     }
   }
 
-
   return (
     <section className="min-h-screen bg-[var(--background-custom)] px-4 py-10 pb-32 md:pb-10 text-primary dark:text-zinc-100 transition-colors duration-300">
       <div className="mx-auto flex max-w-4xl flex-col gap-6">
@@ -254,7 +251,9 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
                 <ReceiptText className="h-5 w-5" aria-hidden="true" />
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-brown-400 dark:text-zinc-500">Order</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-brown-400 dark:text-zinc-500">
+                  Order
+                </p>
                 <p className="text-sm font-semibold text-brown-900 dark:text-zinc-150">
                   #{order.id.slice(-8)}
                 </p>

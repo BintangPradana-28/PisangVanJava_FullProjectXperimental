@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "e-commerce-retail": {
+      "source": "dylantarre/animation-principles",
+      "sourceType": "github",
+      "skillPath": "skills/08-by-industry/e-commerce-retail/SKILL.md",
+      "computedHash": "30f664bb02feaf1c87d0d98485f4093c231a1530a5098cd5c05062a3d273c201"
+    },
     "frontend-design": {
       "source": "anthropics/skills",
       "sourceType": "github",

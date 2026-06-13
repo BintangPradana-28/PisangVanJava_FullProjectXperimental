@@ -1,9 +1,11 @@
 import { CheckCircle2, Home } from 'lucide-react'
 import Link from 'next/link'
+import ConfettiCanvas from '@/components/user/ConfettiCanvas'
 
 export default function ThanksPage() {
   return (
     <section className="min-h-[80vh] flex flex-col items-center justify-center bg-zinc-50 px-4 py-10 dark:bg-zinc-950">
+      <ConfettiCanvas />
       <div className="w-full max-w-md rounded-[4px] bg-white p-8 text-center shadow-sm dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
         <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[4px] bg-green-100 dark:bg-green-900/30">
           <CheckCircle2

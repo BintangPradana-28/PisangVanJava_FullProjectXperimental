@@ -74,7 +74,10 @@ export async function POST(req: NextRequest) {
     })
 
     if (!order) {
-      Sentry.captureMessage(`[SECURITY] Midtrans webhook order not found: ${realOrderId} (raw: ${order_id})`, 'warning')
+      Sentry.captureMessage(
+        `[SECURITY] Midtrans webhook order not found: ${realOrderId} (raw: ${order_id})`,
+        'warning'
+      )
       // Rollback Redis lock so retry can be processed
       await redis.del(lockKey)
       return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 })
@@ -93,10 +96,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Determine target payment and order status
-    const newPaymentStatus = mapMidtransStatusToPaymentStatus(
-      transaction_status,
-      fraud_status
-    )
+    const newPaymentStatus = mapMidtransStatusToPaymentStatus(transaction_status, fraud_status)
 
     let targetOrderStatus: OrderStatus = order.status
     if (newPaymentStatus === PaymentStatus.PAID) {

@@ -101,6 +101,9 @@ export default function ProfileOrderDetailClient({ order }: ProfileOrderDetailCl
 
   const activeIndex = ORDER_STAGES.findIndex((s) => s.id === order.status)
   const isCanceled = order.status === 'CANCELED'
+  const activeBarStyle = {
+    width: `${activeIndex === -1 ? 0 : (activeIndex / (ORDER_STAGES.length - 1)) * 100}%`
+  }
 
   return (
     <motion.div
@@ -141,12 +144,10 @@ export default function ProfileOrderDetailClient({ order }: ProfileOrderDetailCl
             <div className="relative flex justify-between items-center w-full">
               {/* Connecting Line Background */}
               <div className="absolute top-4 left-0 w-full h-1 bg-zinc-100 dark:bg-zinc-800 -z-10 rounded-full"></div>
-              {/* Connecting Line Active */}
+              {/* Connecting Line Active — dynamic width: Tailwind cannot express computed percentages at runtime */}
               <div
                 className="absolute top-4 left-0 h-1 bg-amber-500 -z-10 rounded-full transition-all duration-500 ease-in-out"
-                style={{
-                  width: `${activeIndex === -1 ? 0 : (activeIndex / (ORDER_STAGES.length - 1)) * 100}%`
-                }}
+                style={activeBarStyle}
               ></div>
 
               {ORDER_STAGES.map((stage, index) => {

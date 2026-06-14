@@ -286,7 +286,7 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
               <div
                 className="absolute left-3.5 top-5 w-0.5 bg-amber-500 -translate-x-1/2 transition-all duration-700 ease-in-out"
                 style={progressHeightStyle}
-              />
+              >{/* NOSONAR — dynamic height requires runtime JS value; cannot use Tailwind for computed % */}</div>
 
               {ORDER_STEPS.map((step, index) => {
                 const isCompleted = index <= stepIdx

@@ -94,6 +94,7 @@ export async function GET(req: NextRequest) {
     const desc = searchParams.get('desc') || 'Heritage Premium F&B'
 
     return new ImageResponse(
+      // NOSONAR — Satori (Edge Runtime) requires inline styles; CSS files/Tailwind NOT supported in this sandbox
       <div style={styles.container}>
         {/* Logo */}
         <div style={styles.logoWrapper}>

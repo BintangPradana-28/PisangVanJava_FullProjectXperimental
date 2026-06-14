@@ -156,10 +156,7 @@ export default async function MenuSpesialPage(props: {
   }
 
   return (
-    <div
-      className="min-h-screen"
-      style={{ background: 'var(--background-custom)', color: 'var(--text-custom)' }}
-    >
+    <div className="min-h-screen bg-[var(--background-custom)] text-[var(--text-custom)]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(menuJsonLd) }}
@@ -174,10 +171,7 @@ export default async function MenuSpesialPage(props: {
       <MenuGrid products={filtered} />
 
       {/* ── Info Banner ── */}
-      <section
-        className="py-16 text-white"
-        style={{ background: 'linear-gradient(135deg, #3D1C02 0%, #5a2e0a 100%)' }}
-      >
+      <section className="py-16 text-white bg-gradient-to-br from-[#3D1C02] to-[#5a2e0a]">
         <div className="max-w-[1200px] mx-auto px-6 text-center">
           <div className="text-4xl mb-4">📍</div>
           <h2 className="font-serif text-2xl sm:text-3xl font-bold mb-3">

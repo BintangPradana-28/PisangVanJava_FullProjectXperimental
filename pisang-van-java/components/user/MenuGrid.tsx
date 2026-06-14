@@ -151,19 +151,13 @@ export default function MenuGrid({ products }: { products: ProductType[] }) {
         {products.length === 0 ? (
           <div className="text-center py-24">
             <div className="text-6xl mb-4">🍌</div>
-            <p
-              className="text-lg font-serif font-bold mb-2"
-              style={{ color: 'var(--text-custom)' }}
-            >
+            <p className="text-lg font-serif font-bold mb-2 text-[var(--text-custom)]">
               {t('menu_empty_title')}
             </p>
-            <p className="text-sm" style={{ color: 'var(--text-custom)' }}>
-              {t('menu_empty_desc')}
-            </p>
+            <p className="text-sm text-[var(--text-custom)]">{t('menu_empty_desc')}</p>
             <button
               onClick={() => router.push('?', { scroll: false })}
-              className="mt-4 text-sm font-bold px-6 py-2.5 rounded-[4px] transition-all"
-              style={{ background: '#D4802A', color: 'white' }}
+              className="mt-6 text-xs font-bold px-6 py-3 rounded-[4px] shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center gap-1.5 focus:outline-none bg-[#D4802A] text-white"
             >
               {t('menu_reset_btn')}
             </button>
@@ -222,8 +216,7 @@ export default function MenuGrid({ products }: { products: ProductType[] }) {
                     {/* Content */}
                     <div className="p-6 flex flex-col items-center text-center flex-grow">
                       <h3
-                        className={`font-serif text-2xl font-bold mb-1 ${!available ? 'text-zinc-500' : ''}`}
-                        style={available ? { color: 'var(--text-custom)' } : {}}
+                        className={`font-serif text-2xl font-bold mb-1 ${available ? 'text-[var(--text-custom)]' : 'text-zinc-500'}`}
                       >
                         {product.flavorName}
                       </h3>
@@ -269,35 +262,22 @@ export default function MenuGrid({ products }: { products: ProductType[] }) {
                         ) : null}
                       </Link>
 
-                      <p
-                        className="text-sm leading-relaxed mb-6 flex-grow"
-                        style={{ color: 'var(--text-custom)' }}
-                      >
+                      <p className="text-sm leading-relaxed mb-6 flex-grow text-[var(--text-custom)]">
                         {product.deskripsi_topping ||
                           (() => {
                             const key = getFlavorDescriptionKey(product.flavorName)
                             return key ? t(key) : t('menu_default_desc')
                           })()}
                       </p>
-                      <div
-                        className="w-full border-t pt-6 pb-8 flex flex-col items-center gap-3 mt-auto"
-                        style={{ borderColor: 'var(--border-custom)' }}
-                      >
+                      <div className="w-full border-t border-[var(--border-custom)] pt-6 pb-8 flex flex-col items-center gap-3 mt-auto">
                         <div className="text-center">
-                          <div
-                            className="text-[10px] uppercase tracking-wider font-semibold mb-0.5"
-                            style={{
-                              color: 'var(--text-custom)',
-                              opacity: 0.8
-                            }}
-                          >
+                          <div className="text-[10px] uppercase tracking-wider font-semibold mb-0.5 text-[var(--text-custom)] opacity-80">
                             {session?.user.role === 'RESELLER'
                               ? 'Harga Grosir (Mulai)'
                               : t('menu_price_label')}
                           </div>
                           <div
-                            className={`font-sans text-lg font-bold ${!available ? 'text-zinc-500' : ''}`}
-                            style={available ? { color: '#D4802A' } : {}}
+                            className={`font-sans text-lg font-bold ${available ? 'text-[#D4802A]' : 'text-zinc-500'}`}
                           >
                             {session?.user.role === 'RESELLER' && product.wholesaleKembung > 0 ? (
                               <div className="flex flex-col items-center leading-tight">
@@ -312,17 +292,13 @@ export default function MenuGrid({ products }: { products: ProductType[] }) {
                           </div>
                         </div>
                         <button
+                          type="button"
                           onClick={() => available && isStoreOpen && setSelected(product)}
                           disabled={!available || !isStoreOpen}
                           className={
                             available && isStoreOpen
-                              ? 'font-bold text-sm px-8 py-3 rounded-[4px] shadow-md transition-all duration-200 active:scale-95 hover:shadow-sm'
+                              ? 'bg-[#D4802A] text-white font-bold text-sm px-8 py-3 rounded-[4px] shadow-md transition-all duration-200 active:scale-95 hover:shadow-sm'
                               : 'bg-zinc-300 text-zinc-500 cursor-not-allowed font-bold text-sm px-8 py-3 rounded-[4px] flex items-center justify-center gap-1.5 opacity-70'
-                          }
-                          style={
-                            available && isStoreOpen
-                              ? { background: '#D4802A', color: 'white' }
-                              : {}
                           }
                         >
                           {!isStoreOpen

@@ -227,10 +227,7 @@ export default function QuickViewModal({
           </div>
 
           {/* Body (Bisa di-Scroll) */}
-          <div
-            className="flex-1 overflow-y-auto p-6 bg-zinc-50 dark:bg-zinc-900/50"
-            style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}
-          >
+          <div className="flex-1 overflow-y-auto p-6 bg-zinc-50 dark:bg-zinc-900/50 overscroll-contain [-webkit-overflow-scrolling:touch]">
             {/* Section Tipe (Grid 3 kolom) */}
             <div className="mb-8">
               <div className="flex justify-between items-end mb-3">

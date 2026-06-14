@@ -813,10 +813,10 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
                         </button>
                         {/* handleSubmit dari RHF memvalidasi Zod SEBELUM handleCheckout dipanggil */}
                         <button
+                          type="button"
                           onClick={handleSubmit(handleCheckout)}
                           disabled={isSubmitting}
-                          className="flex-1 py-3.5 flex items-center justify-center gap-2 text-white font-bold rounded-[4px] shadow-sm transition-all active:scale-95 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                          style={{ background: paymentMethod === 'ONLINE' ? '#1a56db' : '#2E7D32' }}
+                          className={`flex-1 py-3.5 flex items-center justify-center gap-2 text-white font-bold rounded-[4px] shadow-sm transition-all active:scale-95 text-sm disabled:opacity-50 disabled:cursor-not-allowed ${paymentMethod === 'ONLINE' ? 'bg-[#1a56db]' : 'bg-[#2E7D32]'}`}
                         >
                           {isSubmitting ? (
                             <>

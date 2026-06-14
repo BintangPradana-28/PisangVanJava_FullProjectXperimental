@@ -49,25 +49,25 @@ export default function TentangKamiPage() {
     }
   ]
 
-  const teamColors = ['#D4802A', '#8B6914', '#5a3e1b']
+  const teamBgColors = ['bg-[#D4802A]', 'bg-[#8B6914]', 'bg-[#5a3e1b]']
 
   const team = [
     {
       name: getSetting('about_team1_name', t('about_team1_name')),
       role: getSetting('about_team1_role', t('about_team1_role')),
-      color: teamColors[0],
+      bgColor: teamBgColors[0],
       desc: getSetting('about_team1_desc', t('about_team1_desc'))
     },
     {
       name: getSetting('about_team2_name', t('about_team2_name')),
       role: getSetting('about_team2_role', t('about_team2_role')),
-      color: teamColors[1],
+      bgColor: teamBgColors[1],
       desc: getSetting('about_team2_desc', t('about_team2_desc'))
     },
     {
       name: getSetting('about_team3_name', t('about_team3_name')),
       role: getSetting('about_team3_role', t('about_team3_role')),
-      color: teamColors[2],
+      bgColor: teamBgColors[2],
       desc: getSetting('about_team3_desc', t('about_team3_desc'))
     }
   ]
@@ -278,7 +278,7 @@ export default function TentangKamiPage() {
             </h2>
           </motion.div>
           <div className="grid sm:grid-cols-3 gap-8">
-            {team.map(({ name, role, color, desc }, i) => (
+            {team.map(({ name, role, bgColor, desc }, i) => (
               <motion.div
                 key={name}
                 initial={{ opacity: 0, y: 20 }}
@@ -288,8 +288,7 @@ export default function TentangKamiPage() {
                 className="rounded-[4px] p-6 text-center transition-all duration-300 hover:shadow-sm hover:-translate-y-1 bg-white dark:bg-zinc-900 border border-cream-200 dark:border-zinc-800 group"
               >
                 <div
-                  className="relative w-32 h-32 mx-auto mb-6 rounded-[4px] overflow-hidden border-4 border-cream-100 dark:border-zinc-800 group-hover:border-amber-500 transition-colors flex items-center justify-center"
-                  style={{ backgroundColor: color }}
+                  className={`relative w-32 h-32 mx-auto mb-6 rounded-[4px] overflow-hidden border-4 border-cream-100 dark:border-zinc-800 group-hover:border-amber-500 transition-colors flex items-center justify-center ${bgColor}`}
                 >
                   <span className="font-serif text-4xl font-bold text-white select-none">
                     {name

@@ -189,6 +189,9 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
 
   const stepIdx = ORDER_STEPS.findIndex((s) => s.status === currentStatus)
   const isCanceled = currentStatus === 'CANCELED'
+  const progressHeightStyle = {
+    height: `${stepIdx <= 0 ? 0 : (stepIdx / (ORDER_STEPS.length - 1)) * 90}%`
+  }
 
   // Pre-filled WhatsApp link construction
   const maskedId = order.id.slice(-5).toUpperCase()
@@ -282,9 +285,7 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
               <div className="absolute left-3.5 top-5 bottom-5 w-0.5 bg-zinc-150 dark:bg-zinc-800 -translate-x-1/2" />
               <div
                 className="absolute left-3.5 top-5 w-0.5 bg-amber-500 -translate-x-1/2 transition-all duration-700 ease-in-out"
-                style={{
-                  height: `${stepIdx <= 0 ? 0 : (stepIdx / (ORDER_STEPS.length - 1)) * 90}%`
-                }}
+                style={progressHeightStyle}
               />
 
               {ORDER_STEPS.map((step, index) => {

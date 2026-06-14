@@ -164,12 +164,13 @@ export default async function DashboardPage() {
             <div className="h-48 flex items-end gap-2 sm:gap-4">
               {data.chartData.map((d, i) => {
                 const height = Math.max((d.total / maxRevenue) * 100, 5)
+                const barStyle = { height: `${height}%` }
                 return (
                   <div key={i} className="flex-1 flex flex-col items-center group">
                     <div className="relative w-full flex justify-center h-full items-end">
                       <div
                         className="w-full max-w-[40px] bg-amber-brand/80 group-hover:bg-amber-brand rounded-t-md transition-all duration-300 cursor-pointer relative"
-                        style={{ height: `${height}%` }}
+                        style={barStyle}
                       >
                         <div className="opacity-0 group-hover:opacity-100 absolute -top-10 left-1/2 -translate-x-1/2 bg-brown-700 text-white text-[10px] py-1 px-2 rounded pointer-events-none whitespace-nowrap z-10 transition-opacity">
                           {formatPriceShort(d.total)} ({d.count} ord)

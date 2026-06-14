@@ -387,7 +387,11 @@ export function calculateDiscount(voucher: VoucherRecord, cartTotal: number): nu
   return null
 }
 
-export function selectBasePrice(variant: VariantRecord, baseType: BaseType, role: CheckoutRole): number {
+export function selectBasePrice(
+  variant: VariantRecord,
+  baseType: BaseType,
+  role: CheckoutRole
+): number {
   if (baseType === 'lumpia') {
     return role === 'RESELLER' && variant.wholesaleLumpia > 0
       ? variant.wholesaleLumpia

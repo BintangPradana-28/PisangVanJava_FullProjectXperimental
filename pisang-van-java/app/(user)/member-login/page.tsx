@@ -136,9 +136,7 @@ export default function MemberLoginPage() {
                 <p className="font-serif text-xl font-bold leading-none tracking-tight text-zinc-900 dark:text-zinc-100">
                   Pisang Goreng
                 </p>
-                <p className="font-serif text-lg font-bold text-[#D4802A]">
-                  Van Java
-                </p>
+                <p className="font-serif text-lg font-bold text-[#D4802A]">Van Java</p>
                 <p className="text-[9px] font-bold tracking-[0.35em] uppercase mt-0.5 text-zinc-500 dark:text-zinc-400">
                   {t('login_brand_subtitle')}
                 </p>
@@ -148,9 +146,7 @@ export default function MemberLoginPage() {
                 <h1 className="font-serif text-2xl sm:text-3xl font-bold mb-1 text-zinc-900 dark:text-zinc-100">
                   {t('login_title')}
                 </h1>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                  {t('login_subtitle')}
-                </p>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">{t('login_subtitle')}</p>
               </motion.div>
 
               <motion.form
@@ -159,9 +155,7 @@ export default function MemberLoginPage() {
                 className="space-y-4"
               >
                 <motion.div variants={item}>
-                  <label
-                    className="block text-[11px] font-bold tracking-widest uppercase mb-1.5 text-[#D4802A]"
-                  >
+                  <label className="block text-[11px] font-bold tracking-widest uppercase mb-1.5 text-[#D4802A]">
                     {t('login_email_label')}
                   </label>
                   <input
@@ -179,9 +173,7 @@ export default function MemberLoginPage() {
                 </motion.div>
 
                 <motion.div variants={item}>
-                  <label
-                    className="block text-[11px] font-bold tracking-widest uppercase mb-1.5 text-[#D4802A]"
-                  >
+                  <label className="block text-[11px] font-bold tracking-widest uppercase mb-1.5 text-[#D4802A]">
                     {t('login_password_label')}
                   </label>
                   <div className="relative">

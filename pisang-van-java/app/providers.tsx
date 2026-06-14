@@ -18,12 +18,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <SettingsProvider>
               <LanguageProvider>
                 {children}
-                <Toaster 
-                  position="top-center" 
+                <Toaster
+                  position="top-center"
                   reverseOrder={false}
                   toastOptions={{
-                    className: '!bg-white dark:!bg-zinc-900 !text-zinc-900 dark:!text-zinc-100 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm'
-                  }} 
+                    className:
+                      '!bg-white dark:!bg-zinc-900 !text-zinc-900 dark:!text-zinc-100 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm'
+                  }}
                 />
               </LanguageProvider>
             </SettingsProvider>

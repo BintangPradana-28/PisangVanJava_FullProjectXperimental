@@ -1,7 +1,14 @@
 import { OrderStatus } from '@prisma/client'
 import { z } from 'zod'
 
-export const ROLE_VALUES = ['SUPER_ADMIN', 'ADMIN', 'CUSTOMER', 'RESELLER', 'KITCHEN', 'CASHIER'] as const
+export const ROLE_VALUES = [
+  'SUPER_ADMIN',
+  'ADMIN',
+  'CUSTOMER',
+  'RESELLER',
+  'KITCHEN',
+  'CASHIER'
+] as const
 export const BASE_TYPE_VALUES = ['kembung', 'lumpia', 'krispy'] as const
 export const ORDER_STATUS_VALUES = [
   'PENDING_PAYMENT',

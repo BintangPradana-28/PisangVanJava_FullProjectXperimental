@@ -166,7 +166,7 @@ export async function POST(req: NextRequest) {
         })
         if (updateCount.count > 0) {
           sendEmail = true
-          
+
           // Increment soldCount for all items in the order
           const orderWithItems = await tx.order.findUnique({
             where: { id: realOrderId },
@@ -213,7 +213,7 @@ export async function POST(req: NextRequest) {
       sendOrderConfirmationEmail(realOrderId).catch(console.error)
     }
 
-    // Force real-time Edge Cache purge for Storefront and Dashboard 
+    // Force real-time Edge Cache purge for Storefront and Dashboard
     // This allows UI to show accurate stock and soldCount instantly without a hard reload.
     try {
       revalidatePath('/', 'layout')

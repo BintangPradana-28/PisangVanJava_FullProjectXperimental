@@ -2,14 +2,8 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { logAudit } from '@/lib/audit'
 import { sendWhatsAppNotification } from '@/lib/notifications'
 import { prisma } from '@/lib/prisma'
-import {
-  orderStatusInputSchema,
-  paymentFormInputSchema,
-} from '@/src/features/checkout/schemas'
-import {
-  hasValidSameOriginHeaders,
-  requireCheckoutActor
-} from '@/src/services/checkout.service'
+import { orderStatusInputSchema, paymentFormInputSchema } from '@/src/features/checkout/schemas'
+import { hasValidSameOriginHeaders, requireCheckoutActor } from '@/src/services/checkout.service'
 import { sendOrderStatusEmail } from '@/src/features/payment/email'
 
 interface OrderRouteContext {

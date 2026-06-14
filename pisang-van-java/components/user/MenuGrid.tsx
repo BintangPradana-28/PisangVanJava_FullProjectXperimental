@@ -258,14 +258,15 @@ export default function MenuGrid({ products }: { products: ProductType[] }) {
                             <span className="text-xs">({product.reviewCount})</span>
                           ) : null}
                         </Link>
-                        
+
                         {product.soldCount !== undefined && product.soldCount > 0 && (
                           <div className="flex items-center gap-1 text-xs font-medium text-zinc-500 bg-zinc-100 dark:bg-zinc-800/50 px-2 py-0.5 rounded-[4px]">
                             {product.soldCount > 50 && <span className="text-orange-500">🔥</span>}
                             <span>
-                              {product.soldCount >= 1000 
-                                ? `${(product.soldCount / 1000).toFixed(1)}k+` 
-                                : product.soldCount} Terjual
+                              {product.soldCount >= 1000
+                                ? `${(product.soldCount / 1000).toFixed(1)}k+`
+                                : product.soldCount}{' '}
+                              Terjual
                             </span>
                           </div>
                         )}

@@ -318,7 +318,7 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
 
       clearCart()
       idempotencyKeyRef.current = null
-      
+
       toast.success(
         paymentMethod === 'ONLINE'
           ? 'Pesanan dibuat. Lanjutkan pembayaran.'
@@ -863,9 +863,7 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
                               Memproses...
                             </>
                           ) : !session ? (
-                            <>
-                              Login untuk Checkout
-                            </>
+                            <>Login untuk Checkout</>
                           ) : (
                             <>
                               {paymentMethod === 'ONLINE' ? (
@@ -874,7 +872,8 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
                                 </>
                               ) : (
                                 <>
-                                  <MessageCircle className="w-4 h-4" aria-hidden /> {t('cart_checkout')}
+                                  <MessageCircle className="w-4 h-4" aria-hidden />{' '}
+                                  {t('cart_checkout')}
                                 </>
                               )}
                             </>

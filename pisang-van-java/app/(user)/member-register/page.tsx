@@ -153,9 +153,7 @@ export default function MemberRegisterPage() {
                 <p className="font-serif text-xl font-bold leading-none tracking-tight text-zinc-900 dark:text-zinc-100">
                   Pisang Goreng
                 </p>
-                <p className="font-serif text-lg font-bold text-[#D4802A]">
-                  Van Java
-                </p>
+                <p className="font-serif text-lg font-bold text-[#D4802A]">Van Java</p>
                 <p className="text-[9px] font-bold tracking-[0.35em] uppercase mt-0.5 text-zinc-500 dark:text-zinc-400">
                   {t('login_brand_subtitle')}
                 </p>
@@ -166,9 +164,7 @@ export default function MemberRegisterPage() {
                 <h1 className="font-serif text-2xl sm:text-3xl font-bold mb-1 text-zinc-900 dark:text-zinc-100">
                   {t('register_title')}
                 </h1>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                  {t('register_subtitle')}
-                </p>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">{t('register_subtitle')}</p>
               </motion.div>
 
               {/* Form */}

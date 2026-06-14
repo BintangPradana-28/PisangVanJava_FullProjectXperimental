@@ -117,9 +117,7 @@ export default function MemberForgotPasswordPage() {
                 <p className="font-serif text-xl font-bold leading-none tracking-tight text-zinc-900 dark:text-zinc-100">
                   Pisang Goreng
                 </p>
-                <p className="font-serif text-lg font-bold text-[#D4802A]">
-                  Van Java
-                </p>
+                <p className="font-serif text-lg font-bold text-[#D4802A]">Van Java</p>
                 <p className="text-[9px] font-bold tracking-[0.35em] uppercase mt-0.5 text-zinc-500 dark:text-zinc-400">
                   {t('login_brand_subtitle')}
                 </p>

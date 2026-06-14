@@ -252,7 +252,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
       clearCart()
       idempotencyKeyRef.current = null
-      
+
       toast.success(
         paymentMethod === 'ONLINE'
           ? 'Pesanan dibuat. Lanjutkan pembayaran.'
@@ -569,9 +569,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   {isSubmitting ? (
                     'Memproses...'
                   ) : !session ? (
-                    <>
-                      Login untuk Checkout
-                    </>
+                    <>Login untuk Checkout</>
                   ) : (
                     <>
                       {paymentMethod === 'ONLINE' ? (

@@ -16,7 +16,12 @@ import {
   VoucherValidationResult,
   checkoutActorSchema
 } from '@/src/features/checkout/schemas'
-import { executeCheckoutTransaction, evaluateVoucher, formatPrice, normalizeNullableText } from '@/src/repositories/checkout.repository'
+import {
+  executeCheckoutTransaction,
+  evaluateVoucher,
+  formatPrice,
+  normalizeNullableText
+} from '@/src/repositories/checkout.repository'
 
 const voucherRateLimit = new Ratelimit({
   redis,
@@ -144,8 +149,8 @@ export async function enforceIdempotency(key: string, actor: CheckoutActor): Pro
   } catch (error) {
     // [STRATEGI FAIL-OPEN]
     // Jika Redis down, kita mengembalikan `true` agar checkout tetap bisa berjalan.
-    // Risiko: Idempotency protection hilang sementara, namun sistem masih dilindungi 
-    // oleh OCC stock lock di Prisma yang mencegah oversell. Ini adalah trade-off 
+    // Risiko: Idempotency protection hilang sementara, namun sistem masih dilindungi
+    // oleh OCC stock lock di Prisma yang mencegah oversell. Ini adalah trade-off
     // sadar untuk memprioritaskan availability (ketersediaan) di atas strict consistency.
     console.error('[SECURITY] Redis idempotency check failed, failing open', error)
     return true

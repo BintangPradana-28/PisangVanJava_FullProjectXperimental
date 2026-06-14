@@ -255,7 +255,10 @@ export default function ManageUsersClient() {
 
             <form onSubmit={handleAdjustCoin} className="space-y-4">
               <div>
-                <label htmlFor="coinAdjustment" className="block text-xs font-bold text-gray-700 mb-1">
+                <label
+                  htmlFor="coinAdjustment"
+                  className="block text-xs font-bold text-gray-700 mb-1"
+                >
                   Jumlah (Gunakan minus untuk mengurangi)
                 </label>
                 <input

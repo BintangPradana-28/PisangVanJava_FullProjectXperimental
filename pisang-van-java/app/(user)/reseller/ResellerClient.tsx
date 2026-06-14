@@ -412,7 +412,7 @@ export default function ResellerClient({
                                 <td className="py-3.5 text-zinc-500 dark:text-zinc-450 font-medium">
                                   {order.deliveryMethod === 'DELIVERY' ? '🛵 Antar' : '🏪 Pickup'}
                                 </td>
-                                <td className="py-3.5 text-right font-bold text-zinc-850 dark:text-zinc-100">
+                                <td className="py-3.5 text-right font-bold text-zinc-800 dark:text-zinc-100">
                                   {formatPrice(order.totalPrice)}
                                 </td>
                                 <td className="py-3.5 text-right">

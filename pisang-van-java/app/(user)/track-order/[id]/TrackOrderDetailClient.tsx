@@ -200,7 +200,7 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
   const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waMessage)}`
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-150 py-12 px-4 md:py-20">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 py-12 px-4 md:py-20">
       <Toaster position="top-center" />
       <div className="max-w-xl mx-auto space-y-6">
         {/* Main Status Header Card */}
@@ -241,7 +241,7 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
             </div>
 
             {/* Connection Indicator */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200/40 dark:border-zinc-750 text-[10px] font-bold self-start sm:self-auto shrink-0">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200/40 dark:border-zinc-700 text-[10px] font-bold self-start sm:self-auto shrink-0">
               <span className="relative flex h-2 w-2">
                 {connectionStatus === 'connected' && (
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
@@ -282,7 +282,7 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
           ) : (
             <div className="relative pl-6 space-y-8 py-2">
               {/* Stepper Connecting Line */}
-              <div className="absolute left-3.5 top-5 bottom-5 w-0.5 bg-zinc-150 dark:bg-zinc-800 -translate-x-1/2" />
+              <div className="absolute left-3.5 top-5 bottom-5 w-0.5 bg-zinc-100 dark:bg-zinc-800 -translate-x-1/2" />
               <div
                 className="absolute left-3.5 top-5 w-0.5 bg-amber-500 -translate-x-1/2 transition-all duration-700 ease-in-out"
                 style={progressHeightStyle}
@@ -314,7 +314,7 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
                           {step.label}
                         </h3>
                         {isCompleted && time && (
-                          <span className="text-[10px] font-black text-zinc-400 bg-zinc-50 dark:bg-zinc-850 px-2 py-0.5 rounded border border-zinc-200/30">
+                          <span className="text-[10px] font-black text-zinc-400 bg-zinc-50 dark:bg-zinc-800 px-2 py-0.5 rounded border border-zinc-200/30">
                             {formatTime(time)}
                           </span>
                         )}

@@ -621,7 +621,7 @@ function OrderColumn({
         <h2 className="text-sm font-black text-zinc-300 tracking-wider uppercase flex items-center gap-2">
           {title}
         </h2>
-        <span className="bg-zinc-850 text-zinc-400 font-extrabold text-xs px-2.5 py-1 rounded-full border border-zinc-800">
+        <span className="bg-zinc-800 text-zinc-400 font-extrabold text-xs px-2.5 py-1 rounded-full border border-zinc-800">
           {orders.length}
         </span>
       </div>
@@ -639,7 +639,7 @@ function OrderColumn({
           ))}
         </AnimatePresence>
         {orders.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 text-zinc-605 text-xs uppercase tracking-widest font-bold">
+          <div className="flex flex-col items-center justify-center py-20 text-zinc-600 text-xs uppercase tracking-widest font-bold">
             ✨ Kosong
           </div>
         )}
@@ -702,7 +702,7 @@ function OrderCard({
       <div className="px-4 py-3.5 space-y-3 flex-1">
         {order.items.map((item) => (
           <div key={item.id} className="flex items-start gap-2.5">
-            <span className="bg-zinc-850 border border-zinc-750 text-amber-400 text-xs font-black rounded-lg w-7 h-7 flex items-center justify-center shrink-0">
+            <span className="bg-zinc-800 border border-zinc-700 text-amber-400 text-xs font-black rounded-lg w-7 h-7 flex items-center justify-center shrink-0">
               {item.quantity}x
             </span>
             <div className="flex-1 min-w-0">

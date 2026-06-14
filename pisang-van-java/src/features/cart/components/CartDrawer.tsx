@@ -317,7 +317,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 cartItems.map((item, index) => (
                   <div
                     key={`${item.cartItemId}`}
-                    className="p-4 border border-zinc-100 dark:border-zinc-850 bg-zinc-50/40 dark:bg-zinc-800/20 rounded-[4px] flex flex-col gap-2 relative"
+                    className="p-4 border border-zinc-100 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-800/20 rounded-[4px] flex flex-col gap-2 relative"
                   >
                     <div className="flex justify-between items-start">
                       <div>

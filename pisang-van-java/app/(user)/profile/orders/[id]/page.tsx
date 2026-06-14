@@ -99,7 +99,7 @@ export default async function ProfileOrderDetailPage({
     return (
       <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-8 text-center max-w-lg mx-auto my-12">
         <div className="text-5xl mb-4">🚫</div>
-        <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-150">Akses Terbatas</h2>
+        <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Akses Terbatas</h2>
         <p className="text-sm text-zinc-500 mt-2">
           Anda tidak diizinkan untuk melihat detail pesanan ini.
         </p>

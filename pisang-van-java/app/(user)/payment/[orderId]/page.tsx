@@ -191,10 +191,10 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
               {order.items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-start justify-between gap-4 border-b border-cream-100 pb-3 last:border-b-0 dark:border-zinc-850"
+                  className="flex items-start justify-between gap-4 border-b border-cream-100 pb-3 last:border-b-0 dark:border-zinc-800"
                 >
                   <div>
-                    <p className="text-sm font-bold text-brown-900 dark:text-zinc-150">
+                    <p className="text-sm font-bold text-brown-900 dark:text-zinc-100">
                       {item.quantity}x {item.variant.flavorName} ({item.baseType})
                     </p>
                     {item.toppings && item.toppings.length > 0 && (
@@ -210,7 +210,7 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
                       </div>
                     )}
                   </div>
-                  <span className="text-sm font-semibold text-brown-900 dark:text-zinc-150">
+                  <span className="text-sm font-semibold text-brown-900 dark:text-zinc-100">
                     {formatPrice(item.subtotal)}
                   </span>
                 </div>
@@ -231,13 +231,13 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
               {order.deliveryMethod === 'DELIVERY' && order.deliveryFee > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-brown-500 dark:text-zinc-400">Ongkos Kirim</span>
-                  <span className="font-semibold text-brown-900 dark:text-zinc-150">
+                  <span className="font-semibold text-brown-900 dark:text-zinc-100">
                     {formatPrice(order.deliveryFee)}
                   </span>
                 </div>
               )}
               <div className="flex justify-between border-t border-cream-200 pt-3 dark:border-zinc-800">
-                <span className="font-bold text-brown-900 dark:text-zinc-150">Total</span>
+                <span className="font-bold text-brown-900 dark:text-zinc-100">Total</span>
                 <span className="font-serif text-2xl font-bold text-amber-brand dark:text-amber-500">
                   {formatPrice(order.totalPrice)}
                 </span>
@@ -254,7 +254,7 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
                 <p className="text-xs font-bold uppercase tracking-wider text-brown-400 dark:text-zinc-500">
                   Order
                 </p>
-                <p className="text-sm font-semibold text-brown-900 dark:text-zinc-150">
+                <p className="text-sm font-semibold text-brown-900 dark:text-zinc-100">
                   #{order.id.slice(-8)}
                 </p>
               </div>
@@ -263,7 +263,7 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
             <div className="mb-5 space-y-2 text-sm">
               <div className="flex justify-between gap-4">
                 <span className="text-brown-500 dark:text-zinc-400">Nama</span>
-                <span className="text-right font-semibold text-brown-900 dark:text-zinc-150">
+                <span className="text-right font-semibold text-brown-900 dark:text-zinc-100">
                   {order.customerName}
                 </span>
               </div>
@@ -306,7 +306,7 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
                 </div>
               )}
 
-            <div className="mb-5 flex items-start gap-3 rounded-[4px] border border-cream-200 bg-cream-50 p-3 text-xs text-brown-650 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300">
+            <div className="mb-5 flex items-start gap-3 rounded-[4px] border border-cream-200 bg-cream-50 p-3 text-xs text-brown-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300">
               <ShieldCheck
                 className="mt-0.5 h-4 w-4 shrink-0 text-green-700 dark:text-green-400"
                 aria-hidden="true"
@@ -325,7 +325,7 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
             ) : (
               <Link
                 href="/track-order"
-                className="flex w-full items-center justify-center gap-2 rounded-[4px] bg-brown-900 px-4 py-3.5 text-sm font-bold text-white transition-colors hover:bg-brown-850 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200 active:scale-[0.98]"
+                className="flex w-full items-center justify-center gap-2 rounded-[4px] bg-brown-900 px-4 py-3.5 text-sm font-bold text-white transition-colors hover:bg-brown-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200 active:scale-[0.98]"
               >
                 <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
                 Lihat Riwayat Pesanan
@@ -336,7 +336,7 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
       </div>
 
       {/* Mobile Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-cream-200 bg-white p-4 px-6 shadow-[0_-10px_40px_rgba(0,0,0,0.06)] dark:border-zinc-850 dark:bg-[var(--surface-custom)] md:hidden pb-safe">
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-cream-200 bg-white p-4 px-6 shadow-[0_-10px_40px_rgba(0,0,0,0.06)] dark:border-zinc-800 dark:bg-[var(--surface-custom)] md:hidden pb-safe">
         <div className="flex items-center justify-between mb-3">
           <div>
             <p className="text-xs font-semibold text-brown-500 dark:text-zinc-400">Total Tagihan</p>
@@ -346,7 +346,7 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
           </div>
           <div className="text-right">
             <p className="text-xs font-semibold text-brown-500 dark:text-zinc-400">Order ID</p>
-            <p className="text-sm font-bold text-brown-900 dark:text-zinc-150">
+            <p className="text-sm font-bold text-brown-900 dark:text-zinc-100">
               #{order.id.slice(-8)}
             </p>
           </div>
@@ -362,7 +362,7 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
         ) : (
           <Link
             href="/track-order"
-            className="flex w-full items-center justify-center gap-2 rounded-[4px] bg-brown-900 px-4 py-3.5 text-sm font-bold text-white transition-colors hover:bg-brown-850 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200 active:scale-[0.98]"
+            className="flex w-full items-center justify-center gap-2 rounded-[4px] bg-brown-900 px-4 py-3.5 text-sm font-bold text-white transition-colors hover:bg-brown-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200 active:scale-[0.98]"
           >
             <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
             Lihat Riwayat Pesanan

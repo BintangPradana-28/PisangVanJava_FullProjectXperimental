@@ -219,7 +219,9 @@ export async function POST(req: NextRequest) {
       revalidatePath('/', 'layout')
       revalidatePath('/(user)/menu-spesial', 'page')
       revalidatePath('/(admin)', 'layout')
+      // @ts-expect-error Next.js Canary type requires 2 args
       revalidateTag('menu')
+      // @ts-expect-error Next.js Canary type requires 2 args
       revalidateTag('menu-spesial-all-products')
     } catch (e) {
       console.warn('[Midtrans Webhook] Failed to revalidate Next.js cache', e)

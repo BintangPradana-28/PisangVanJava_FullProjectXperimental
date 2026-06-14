@@ -165,7 +165,7 @@ export default function PosClient({ products, toppings }: PosClientProps): React
       {/* RIGHT PANE: Cart (30% on lg) + MOBILE FALLBACK DRAWER */}
       <div
         className={cn(
-          'fixed inset-0 z-50 lg:static lg:w-[380px] xl:w-[420px] shrink-0 transition-transform duration-300',
+          'fixed top-0 left-0 w-full h-[100dvh] z-50 lg:static lg:h-auto lg:w-[380px] xl:w-[420px] shrink-0 transition-transform duration-300',
           isCartOpenOnMobile ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
         )}
       >

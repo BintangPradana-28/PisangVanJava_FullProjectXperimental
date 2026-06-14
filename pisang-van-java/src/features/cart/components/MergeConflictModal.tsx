@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { type CartItem, useCartStore } from '@/src/stores/cart.store'
+import { type CartItem, useCartStore } from '@/src/features/cart/stores/cart.store'
 
 const formatRupiah = (value: number) => {
   return new Intl.NumberFormat('id-ID', {

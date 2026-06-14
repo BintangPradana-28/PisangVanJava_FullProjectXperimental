@@ -9,8 +9,8 @@ import { useLanguage } from '@/context/LanguageContext'
 import { useSettings } from '@/context/SettingsContext'
 import { useTheme } from '@/context/ThemeContext'
 import { formatPrice } from '@/lib/utils'
-import { selectCartDisplayTotal, selectCartItemCount, useCartStore } from '@/src/stores/cart.store'
-import CartModal from './CartModal'
+import { selectCartDisplayTotal, selectCartItemCount, useCartStore } from '@/src/features/cart/stores/cart.store'
+import CartModal from '@/src/features/cart/components/CartModal'
 
 const ShoppingBagIcon = () => (
   <svg

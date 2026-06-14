@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { prisma } from '@/lib/prisma'
-import { requireCheckoutActor } from '@/src/features/checkout/service'
+import { requireCheckoutActor } from '@/src/services/checkout.service'
 
 const trackOrderQuerySchema = z
   .object({

@@ -9,7 +9,7 @@ import { auth } from '@/src/auth'
 
 export default async function SettingsPage() {
   const session = await auth()
-  if (!session) redirect('/login')
+  if (!session) redirect('/member-login')
   const settings = await prisma.siteSetting.findMany({
     orderBy: [{ group: 'asc' }, { key: 'asc' }]
   })

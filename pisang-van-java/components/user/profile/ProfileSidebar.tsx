@@ -16,7 +16,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import { useLanguage } from '@/context/LanguageContext'
-import { useCartStore } from '@/src/stores/cart.store'
+import { useCartStore } from '@/src/features/cart/stores/cart.store'
 
 const menuItems = [
   { key: 'profile_menu_info', href: '/profile', icon: User },

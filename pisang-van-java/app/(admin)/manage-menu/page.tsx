@@ -13,7 +13,7 @@ export default async function ManageMenuPage() {
   // Zero Trust: Pastikan pengguna benar-benar memiliki sesi dari NextAuth
   const session = await auth()
   if (!session) {
-    redirect('/login')
+    redirect('/member-login')
   }
 
   // Mengambil data produk aktif

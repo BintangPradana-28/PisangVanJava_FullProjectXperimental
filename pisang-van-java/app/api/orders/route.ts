@@ -3,13 +3,16 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import {
   CheckoutSecurityError,
-  createCheckoutOrder,
   createOrderInputSchema,
+  orderQueryInputSchema
+} from '@/src/features/checkout/schemas'
+import {
+  createCheckoutOrder,
   enforceCheckoutRateLimit,
+  enforceIdempotency,
   hasValidSameOriginHeaders,
-  orderQueryInputSchema,
   requireCheckoutActor
-} from '@/src/features/checkout/service'
+} from '@/src/services/checkout.service'
 
 export async function GET(req: NextRequest) {
   const actor = await requireCheckoutActor()
@@ -105,14 +108,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
     }
 
-    const withinLimit = await enforceCheckoutRateLimit(actor)
-    if (!withinLimit) {
-      return NextResponse.json(
-        { success: false, error: 'Too many checkout attempts' },
-        { status: 429 }
-      )
-    }
-
     const payload = await readRequestJson(req)
     if (payload === null) {
       return NextResponse.json({ success: false, error: 'Invalid request' }, { status: 400 })
@@ -123,6 +118,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { success: false, error: 'Checkout payload rejected' },
         { status: 400 }
+      )
+    }
+
+    const isIdempotent = await enforceIdempotency(parsed.data.idempotencyKey, actor)
+    if (!isIdempotent) {
+      return NextResponse.json(
+        { success: false, error: 'Order is currently being processed' },
+        { status: 409 }
+      )
+    }
+
+    const withinLimit = await enforceCheckoutRateLimit(actor)
+    if (!withinLimit) {
+      return NextResponse.json(
+        { success: false, error: 'Too many checkout attempts' },
+        { status: 429 }
       )
     }
 

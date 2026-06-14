@@ -11,7 +11,7 @@ export default async function KasirPage() {
 
   const POS_ROLES = ['ADMIN', 'SUPER_ADMIN', 'CASHIER'] as const
   if (!session || !POS_ROLES.includes(session.user.role as (typeof POS_ROLES)[number])) {
-    redirect('/login')
+    redirect('/member-login')
   }
 
   // Fetch active products and toppings
@@ -27,7 +27,7 @@ export default async function KasirPage() {
   ])
 
   return (
-    <div className="h-screen w-full overflow-hidden bg-zinc-50 dark:bg-zinc-950 flex flex-col">
+    <div className="h-[100dvh] w-full overflow-hidden overscroll-none bg-zinc-50 dark:bg-zinc-950 flex flex-col">
       <PosClient products={products} toppings={toppings} />
     </div>
   )

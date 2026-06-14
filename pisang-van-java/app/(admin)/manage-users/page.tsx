@@ -6,7 +6,7 @@ import ManageUsersClient from './ManageUsersClient'
 export default async function ManageUsersPage() {
   const session = await auth()
   if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-    redirect('/login')
+    redirect('/member-login')
   }
 
   return (

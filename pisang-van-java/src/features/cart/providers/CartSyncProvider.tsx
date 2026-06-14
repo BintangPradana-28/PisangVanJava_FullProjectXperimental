@@ -2,9 +2,9 @@
 import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useEffect, useRef, useState } from 'react'
-import { MergeConflictModal } from '@/components/user/MergeConflictModal'
+import { MergeConflictModal } from '@/src/features/cart/components/MergeConflictModal'
 import { api } from '@/src/lib/api'
-import { type CartItem, useCartStore } from '@/src/stores/cart.store'
+import { type CartItem, useCartStore } from '@/src/features/cart/stores/cart.store'
 
 export function CartSyncProvider({ children }: { children: React.ReactNode }) {
   const { status } = useSession()

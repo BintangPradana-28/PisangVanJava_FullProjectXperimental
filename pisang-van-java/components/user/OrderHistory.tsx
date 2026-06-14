@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 // components/user/OrderHistory.tsx — Riwayat Pesanan Pelanggan
 import { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useCartStore } from '@/src/stores/cart.store'
+import { useCartStore } from '@/src/features/cart/stores/cart.store'
 
 interface OrderItem {
   id: string

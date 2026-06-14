@@ -44,7 +44,7 @@ export default async function KitchenPage() {
   const session = await auth()
 
   if (!session || !KITCHEN_ROLES.includes(session.user.role as (typeof KITCHEN_ROLES)[number])) {
-    redirect('/login')
+    redirect('/member-login')
   }
 
   // Fetch active orders (PROCESSING and READY) — N+1 prevention via nested select

@@ -9,7 +9,7 @@ import { auth } from '@/src/auth'
 export default async function ReportsPage(props: { searchParams: Promise<{ range?: string }> }) {
   const searchParams = await props.searchParams
   const session = await auth()
-  if (!session) redirect('/login')
+  if (!session) redirect('/member-login')
 
   const range = searchParams.range || '30'
   const now = new Date()

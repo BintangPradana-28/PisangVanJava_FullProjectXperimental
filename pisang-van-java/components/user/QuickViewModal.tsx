@@ -12,7 +12,7 @@ import { useSettings } from '@/context/SettingsContext'
 import type { ProductType } from '@/src/features/menu/components/MenuCards'
 import { animateFlyToCart } from '@/src/lib/animations'
 import { isStoreOpen as checkStoreOpen } from '@/src/lib/time'
-import { type CartTopping, useCartStore } from '@/src/stores/cart.store'
+import { type CartTopping, useCartStore } from '@/src/features/cart/stores/cart.store'
 
 interface QuickViewModalProps {
   product: ProductType | null

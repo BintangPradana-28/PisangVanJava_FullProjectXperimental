@@ -12,7 +12,7 @@ export default async function KontakLeadsPage() {
   // 1. THE IRON GATE (Auth Verification)
   const session = await auth()
   if (!session || session.user?.role !== 'ADMIN') {
-    redirect('/login')
+    redirect('/member-login')
   }
 
   // 2. FETCH LEADS (Secure Prisma Query)

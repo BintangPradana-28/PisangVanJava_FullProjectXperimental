@@ -474,7 +474,7 @@ export default function KitchenClient({ initialOrders }: KitchenClientProps) {
   const readyOrders = orders.filter((o) => o.status === 'READY')
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col h-screen overflow-hidden font-sans select-none">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col h-[100dvh] overflow-hidden overscroll-none font-sans select-none">
       <Toaster position="top-center" />
 
       {/* Header Bar */}

@@ -66,24 +66,30 @@ pnpm run db:studio # Open Prisma Studio
 ---
 
 ## 4. Project Structure
-Architecture: Feature-based / Clean Architecture (Zero-Trust)
+Architecture: Hybrid VSA (Vertical Slice Architecture) + Service Layer & Repository Pattern
+
 ```
 [root]/
+├── app/              # Next.js App Router (routing only)
+│   ├── (storefront)/ # menu, cart, checkout, profile pages
+│   ├── (admin)/      # admin dashboard pages
+│   └── api/          # route handlers and webhooks
 ├── src/
-│   ├── app/          # Next.js App Router (pages, layouts, api routes)
-│   ├── components/   # Shared UI components (shadcn, etc.)
-│   ├── features/     # Feature-based modules (pos, auth, menu)
-│   ├── lib/          # Core utilities, Prisma client, generic helpers
-│   └── types/        # Global TypeScript types and interfaces
+│   ├── features/     # Vertical Slices per domain (cart, checkout, loyalty, auth, etc.)
+│   │   └── [name]/   # contains store, components, hooks, and actions specific to the feature
+│   ├── services/     # Cross-feature business logic
+│   ├── repositories/ # Prisma data access layer
+│   └── shared/       # UI primitives, utils, types (lucide, shadcn wrappers, global config)
 ├── public/           # Static assets accessible to the public
 └── [config files]    # next.config.js, tailwind.config.js, package.json, etc.
 ```
 
 File placement rules:
-- New shared UI components must be placed in `src/components/`
-- Business logic and feature-specific components must be placed in `src/features/[feature-name]/`
-- TypeScript types should be placed in `src/types/` or alongside the feature.
-- Helpers and utilities must be placed in `src/lib/`
+- **Routing Layer (`app/`)**: Only place Next.js routing files (`page.tsx`, `layout.tsx`, `route.ts`). Business logic must be delegated.
+- **Features (`src/features/`)**: Place all domain-specific code here (components, stores, hooks, actions). This ensures high cohesion and low coupling.
+- **Services (`src/services/`)**: Place business logic that orchestrates multiple repositories or crosses feature boundaries.
+- **Repositories (`src/repositories/`)**: Place all Prisma database access operations here. Prevent raw DB queries inside components or features.
+- **Shared (`src/shared/` or `src/components/`, `src/lib/`)**: Place agnostic UI components (e.g., generic buttons), global utilities, and types.
 - **Do not create new root folders without prior confirmation.**
 
 ---

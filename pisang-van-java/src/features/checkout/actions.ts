@@ -3,14 +3,16 @@
 import { redirect } from 'next/navigation'
 
 import {
-  hasValidSameOriginHeaders,
   paymentFormInputSchema,
+  type VoucherValidationResult,
+  validateVoucherInputSchema
+} from '@/src/features/checkout/schemas'
+import {
+  hasValidSameOriginHeaders,
   processPaymentForActor,
   requireCheckoutActor,
-  type VoucherValidationResult,
-  validateVoucherForActor,
-  validateVoucherInputSchema
-} from '@/src/features/checkout/service'
+  validateVoucherForActor
+} from '@/src/services/checkout.service'
 
 export async function validateVoucher(
   rawCode: string,

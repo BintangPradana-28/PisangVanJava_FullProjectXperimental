@@ -205,7 +205,7 @@ export default function ManageUsersClient() {
                           </span>
                         )}
                       </div>
-                      {user.role !== 'ADMIN' && (
+                      {user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN' && (
                         <div className="flex items-center gap-2">
                           <select
                             className="border border-cream-300 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-brown-500 max-w-[120px]"

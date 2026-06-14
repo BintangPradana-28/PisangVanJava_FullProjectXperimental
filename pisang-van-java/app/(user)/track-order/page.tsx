@@ -13,7 +13,7 @@ import { useLanguage } from '@/context/LanguageContext'
 import { formatPrice } from '@/lib/utils'
 import { api } from '@/src/lib/api'
 import { supabaseBrowserClient } from '@/src/lib/supabase-client'
-import { useCartStore } from '@/src/stores/cart.store'
+import { useCartStore } from '@/src/features/cart/stores/cart.store'
 
 const STATUS_STEPS = ['pending', 'paid', 'processing', 'ready', 'done']
 const STATUS_ICONS: Record<string, string> = {

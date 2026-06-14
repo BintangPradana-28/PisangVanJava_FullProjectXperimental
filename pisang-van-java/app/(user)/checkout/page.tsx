@@ -15,7 +15,7 @@ import { useSettings } from '@/context/SettingsContext'
 import { validateVoucher } from '@/src/features/checkout/actions'
 import { api } from '@/src/lib/api'
 import { isStoreOpen } from '@/src/lib/time'
-import { selectCartDisplayTotal, useCartStore } from '@/src/stores/cart.store'
+import { selectCartDisplayTotal, useCartStore } from '@/src/features/cart/stores/cart.store'
 
 // ── Response Schema ─────────────────────────────────────────────────────────
 const orderResponseSchema = z.discriminatedUnion('success', [

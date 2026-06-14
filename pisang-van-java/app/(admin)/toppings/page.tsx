@@ -9,7 +9,7 @@ import { auth } from '@/src/auth'
 
 export default async function ToppingsPage() {
   const session = await auth()
-  if (!session) redirect('/login')
+  if (!session) redirect('/member-login')
   const toppings = await prisma.topping.findMany({ orderBy: { name: 'asc' } })
   return (
     <div className="flex min-h-screen">

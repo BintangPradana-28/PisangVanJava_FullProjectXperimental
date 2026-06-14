@@ -16,7 +16,7 @@ import {
   selectCartDisplayTotal as selectCartTotal,
   selectItemSubtotal,
   useCartStore
-} from '@/src/stores/cart.store'
+} from '@/src/features/cart/stores/cart.store'
 
 const formatPrice = (n: number): string =>
   new Intl.NumberFormat('id-ID', {

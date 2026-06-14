@@ -12,6 +12,7 @@ import {
   Trash2,
   X
 } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -27,7 +28,7 @@ import {
   selectCartItems,
   selectItemSubtotal,
   useCartStore
-} from '@/src/stores/cart.store'
+} from '@/src/features/cart/stores/cart.store'
 
 // ============================================================
 // ZOD SCHEMA — Client-side Quarantine (VP Engineering mandate)
@@ -113,6 +114,7 @@ const formatPrice = (amount: number) =>
 // ============================================================
 export default function CartModal({ isOpen, onClose }: CartModalProps) {
   const router = useRouter()
+  const { data: session } = useSession()
   const cartItems = useCartStore(selectCartItems)
   const updateQuantity = useCartStore((s) => s.updateQuantity)
   const removeFromCart = useCartStore((s) => s.removeItem)
@@ -130,6 +132,7 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
   const [isValidatingVoucher, setIsValidatingVoucher] = useState(false)
   const [consent, setConsent] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const idempotencyKeyRef = React.useRef<string | null>(null)
 
   // — Tab State —
   const [activeTab, setActiveTab] = useState<'cart' | 'checkout'>('cart')
@@ -223,6 +226,13 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
 
   // handleCheckout sekarang menerima data dari RHF yang sudah divalidasi Zod
   const handleCheckout = async (formData: CustomerInfoValues) => {
+    if (!session) {
+      toast.error('Silakan login terlebih dahulu untuk melakukan pemesanan.')
+      onClose()
+      router.push('/member-login')
+      return
+    }
+
     if (cartItems.length === 0) return
     if (deliveryMethod === 'DELIVERY' && address.trim().length === 0) {
       toast.error('Mohon isi alamat pengiriman lengkap.')
@@ -252,9 +262,14 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
       return
     }
 
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current = crypto.randomUUID()
+    }
+
     setIsSubmitting(true)
     try {
       const orderPayload = {
+        idempotencyKey: idempotencyKeyRef.current,
         customerName: formData.customerName.trim(),
         customerPhone: formData.customerPhone.trim(),
         notes: address.trim().length > 0 ? address.trim() : null,
@@ -280,6 +295,9 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
       }
       if (!parsedResponse.data.success || !res.ok) {
         toast.error(parsedResponse.data.success ? 'Checkout ditolak.' : parsedResponse.data.error)
+        if (res.status !== 409) {
+          idempotencyKeyRef.current = crypto.randomUUID()
+        }
         return
       }
 
@@ -299,6 +317,8 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
       }
 
       clearCart()
+      idempotencyKeyRef.current = null
+      
       toast.success(
         paymentMethod === 'ONLINE'
           ? 'Pesanan dibuat. Lanjutkan pembayaran.'
@@ -842,6 +862,10 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
                               </svg>
                               Memproses...
                             </>
+                          ) : !session ? (
+                            <>
+                              Login untuk Checkout
+                            </>
                           ) : (
                             <>
                               {paymentMethod === 'ONLINE' ? (
@@ -850,8 +874,7 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
                                 </>
                               ) : (
                                 <>
-                                  <MessageCircle className="w-4 h-4" aria-hidden />{' '}
-                                  {t('cart_checkout')}
+                                  <MessageCircle className="w-4 h-4" aria-hidden /> {t('cart_checkout')}
                                 </>
                               )}
                             </>

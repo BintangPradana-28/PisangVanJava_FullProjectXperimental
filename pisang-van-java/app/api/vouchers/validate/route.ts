@@ -1,11 +1,11 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
+import { validateVoucherInputSchema } from '@/src/features/checkout/schemas'
 import {
   hasValidSameOriginHeaders,
   requireCheckoutActor,
-  validateVoucherForActor,
-  validateVoucherInputSchema
-} from '@/src/features/checkout/service'
+  validateVoucherForActor
+} from '@/src/services/checkout.service'
 
 export async function POST(req: NextRequest) {
   const actor = await requireCheckoutActor()

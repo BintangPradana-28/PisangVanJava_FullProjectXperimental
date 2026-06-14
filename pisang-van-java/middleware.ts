@@ -170,7 +170,7 @@ const authMiddleware = auth(async (req) => {
   if (!token) {
     // Determine login portal based on route intent
     const isStaffRoute = requiredRoles.includes('ADMIN') && !requiredRoles.includes('CUSTOMER')
-    const loginUrl = isStaffRoute ? new URL('/login', req.url) : new URL('/member-login', req.url)
+    const loginUrl = new URL('/member-login', req.url)
 
     loginUrl.searchParams.set('callbackUrl', req.url)
     return NextResponse.redirect(loginUrl)

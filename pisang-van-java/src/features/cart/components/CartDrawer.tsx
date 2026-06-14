@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { CreditCard, MessageCircle, TicketPercent } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -15,7 +16,7 @@ import {
   selectCartItems,
   selectItemSubtotal,
   useCartStore
-} from '@/src/stores/cart.store'
+} from '@/src/features/cart/stores/cart.store'
 
 interface CartDrawerProps {
   isOpen: boolean
@@ -70,6 +71,7 @@ const createOrderResponseSchema = z.discriminatedUnion('success', [
 
 export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const router = useRouter()
+  const { data: session } = useSession()
   const cartItems = useCartStore(selectCartItems)
   const updateQuantity = useCartStore((s) => s.updateQuantity)
   const removeFromCart = useCartStore((s) => s.removeItem)
@@ -87,6 +89,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const [isValidatingVoucher, setIsValidatingVoucher] = useState(false)
   const [consent, setConsent] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const idempotencyKeyRef = React.useRef<string | null>(null)
 
   const deliveryFeeSetting = getSetting('store_delivery_fee', '0')
   const deliveryFee = /^[0-9]{1,9}$/.test(deliveryFeeSetting) ? Number(deliveryFeeSetting) : 0
@@ -143,6 +146,13 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   }
 
   const handleCheckout = async () => {
+    if (!session) {
+      toast.error('Silakan login terlebih dahulu untuk melakukan pemesanan.')
+      onClose()
+      router.push('/member-login')
+      return
+    }
+
     if (cartItems.length === 0) return
     if (!customerName.trim() || !customerPhone.trim()) {
       toast.error('Mohon isi nama dan nomor WhatsApp Anda.')
@@ -184,10 +194,15 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       return
     }
 
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current = crypto.randomUUID()
+    }
+
     setIsSubmitting(true)
 
     try {
       const orderPayload = {
+        idempotencyKey: idempotencyKeyRef.current,
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
         notes: address.trim().length > 0 ? address.trim() : null,
@@ -214,6 +229,9 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
       if (!parsedResponse.data.success || !res.ok) {
         toast.error(parsedResponse.data.success ? 'Checkout ditolak.' : parsedResponse.data.error)
+        if (res.status !== 409) {
+          idempotencyKeyRef.current = crypto.randomUUID()
+        }
         return
       }
 
@@ -233,6 +251,8 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       }
 
       clearCart()
+      idempotencyKeyRef.current = null
+      
       toast.success(
         paymentMethod === 'ONLINE'
           ? 'Pesanan dibuat. Lanjutkan pembayaran.'
@@ -548,6 +568,10 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 >
                   {isSubmitting ? (
                     'Memproses...'
+                  ) : !session ? (
+                    <>
+                      Login untuk Checkout
+                    </>
                   ) : (
                     <>
                       {paymentMethod === 'ONLINE' ? (

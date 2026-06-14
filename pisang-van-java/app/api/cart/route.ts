@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { prisma } from '@/lib/prisma'
-import { hasValidSameOriginHeaders, requireCheckoutActor } from '@/src/features/checkout/service'
+import { hasValidSameOriginHeaders, requireCheckoutActor } from '@/src/services/checkout.service'
 
 export const dynamic = 'force-dynamic'
 

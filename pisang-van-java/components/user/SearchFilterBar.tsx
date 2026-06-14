@@ -82,16 +82,23 @@ export default function SearchFilterBar({ totalItems }: SearchFilterBarProps) {
   }
 
   return (
-    <div className="sticky top-16 z-30 shadow-sm bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800">
+    <div
+      className="sticky top-16 z-30 shadow-sm"
+      style={{
+        background: 'var(--background-custom)',
+        borderBottom: '1px solid var(--border-custom)'
+      }}
+    >
       {/* ── Row 1: Search + item count ──────────────────────────────────────── */}
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 pt-4 pb-3 flex items-center gap-3">
         {/* Search input */}
         <div className="relative flex-1 max-w-sm">
           <svg
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-zinc-400 dark:text-zinc-500"
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            style={{ color: 'var(--text-custom)', opacity: 0.5 }}
           >
             <path
               strokeLinecap="round"
@@ -119,7 +126,10 @@ export default function SearchFilterBar({ totalItems }: SearchFilterBarProps) {
           )}
         </div>
 
-        <span className="text-xs shrink-0 font-medium tabular-nums text-zinc-500 dark:text-zinc-400">
+        <span
+          className="text-xs shrink-0 font-medium tabular-nums"
+          style={{ color: 'var(--text-custom)', opacity: 0.55 }}
+        >
           {totalItems} {t('menu_count_suffix')}
         </span>
       </div>
@@ -132,6 +142,7 @@ export default function SearchFilterBar({ totalItems }: SearchFilterBarProps) {
             <button
               key={tab.key}
               onClick={() => setBaseFilter(tab.key)}
+              aria-pressed={active}
               className={`flex-shrink-0 text-xs font-bold px-4 py-2 rounded-[4px] transition-all duration-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-amber-400 ${
                 active
                   ? 'bg-[#D4802A] text-white shadow-[0_4px_14px_rgba(212,128,42,0.35)]'
@@ -147,7 +158,8 @@ export default function SearchFilterBar({ totalItems }: SearchFilterBarProps) {
       {/* ── Row 3: Flavor Family Chips (drag-scrollable) ────────────────────── */}
       <div
         ref={chipRowRef}
-        className="max-w-[1200px] mx-auto px-4 sm:px-6 pb-4 pt-1 flex gap-2 overflow-x-auto scrollbar-none select-none cursor-grab"
+        className="max-w-[1200px] mx-auto px-4 sm:px-6 pb-4 pt-1 flex gap-2 overflow-x-auto scrollbar-none select-none"
+        style={{ cursor: 'grab' }}
         onMouseDown={onMouseDown}
         onMouseLeave={onMouseLeave}
         onMouseUp={onMouseUp}
@@ -161,6 +173,7 @@ export default function SearchFilterBar({ totalItems }: SearchFilterBarProps) {
             <button
               key={chip.key}
               onClick={() => !isDragging && setFlavorFilter(chip.key)}
+              aria-pressed={active}
               className={`flex-shrink-0 text-[11px] font-semibold px-3.5 py-1.5 rounded-[4px] transition-all duration-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
                 active
                   ? 'bg-amber-500/15 border-[1.5px] border-[#D4802A] text-[#D4802A]'

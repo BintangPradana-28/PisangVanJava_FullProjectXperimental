@@ -27,20 +27,18 @@ export default function AdminLoginPage() {
         username,
         password
       })
-      toast.dismiss('login-toast')
 
       if (res?.error) {
-        toast.error('Username atau password salah')
+        toast.error('Username atau password salah', { id: 'login-toast' })
       } else if (res?.ok) {
-        toast.success('Selamat datang!')
+        toast.success('Selamat datang!', { id: 'login-toast' })
         // Menggunakan hard redirect agar cookie NextAuth terbaca segar di Server Component
         setTimeout(() => {
           window.location.href = '/manage-menu'
         }, 800)
       }
     } catch {
-      toast.dismiss('login-toast')
-      toast.error('Koneksi bermasalah. Coba lagi.')
+      toast.error('Koneksi bermasalah. Coba lagi.', { id: 'login-toast' })
     } finally {
       setLoading(false)
     }

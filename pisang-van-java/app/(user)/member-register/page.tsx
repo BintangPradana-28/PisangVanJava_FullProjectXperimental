@@ -100,18 +100,15 @@ export default function MemberRegisterPage() {
 
       const result = await registerUser(formData)
 
-      toast.dismiss(tid)
-
       if (!result.success) {
-        toast.error(result.error || 'Terjadi kesalahan')
+        toast.error(result.error || 'Terjadi kesalahan', { id: tid })
         return
       }
 
-      toast.success(t('register_toast_success'))
+      toast.success(t('register_toast_success'), { id: tid })
       setTimeout(() => router.push('/member-login'), 1500)
     } catch {
-      toast.dismiss(tid)
-      toast.error(t('register_toast_error'))
+      toast.error(t('register_toast_error'), { id: tid })
     }
   }
 

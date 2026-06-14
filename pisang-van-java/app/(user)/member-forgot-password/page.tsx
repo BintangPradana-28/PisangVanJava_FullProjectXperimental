@@ -54,19 +54,17 @@ export default function MemberForgotPasswordPage() {
       formData.append('email', data.email)
 
       const result = await generateResetToken(formData)
-      toast.dismiss(tid)
 
       if (!result.success) {
-        toast.error(result.error || 'Terjadi kesalahan')
+        toast.error(result.error || 'Terjadi kesalahan', { id: tid })
         return
       }
 
-      toast.success(t('forgot_toast_success'))
+      toast.success(t('forgot_toast_success'), { id: tid })
       setSent(true)
       setCountdown(60) // Start 60 second timer
     } catch {
-      toast.dismiss(tid)
-      toast.error(t('forgot_toast_error'))
+      toast.error(t('forgot_toast_error'), { id: tid })
     }
   }
 

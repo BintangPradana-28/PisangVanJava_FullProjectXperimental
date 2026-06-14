@@ -91,18 +91,16 @@ export default function MemberLoginPage() {
         username: data.username,
         password: data.password
       })
-      toast.dismiss(tid)
 
       if (res?.error) {
         // NextAuth melempar pesan error string (termasuk validasi Rate Limit & Ambiguous Errors)
-        toast.error(res.error)
+        toast.error(res.error, { id: tid })
       } else {
-        toast.success(t('login_toast_success'), { duration: 3000 })
+        toast.success(t('login_toast_success'), { id: tid, duration: 3000 })
         setIsSubmitted(true)
       }
     } catch {
-      toast.dismiss(tid)
-      toast.error(t('login_toast_conn_error'))
+      toast.error(t('login_toast_conn_error'), { id: tid })
     }
   }
 

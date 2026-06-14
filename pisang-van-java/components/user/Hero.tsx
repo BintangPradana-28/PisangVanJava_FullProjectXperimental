@@ -63,8 +63,8 @@ export default function Hero({
   return (
     <section
       id="hero"
-      // PERBAIKAN: Mengunci background utama menjadi gelap
-      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#1a0f0a]"
+      // PERBAIKAN: Mengunci background utama menjadi gelap dan full width
+      className="relative w-full min-h-screen flex items-center justify-center overflow-hidden bg-[#1a0f0a]"
     >
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0" aria-hidden="true">

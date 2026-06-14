@@ -67,7 +67,7 @@ export default function Footer() {
   const year = new Date().getFullYear()
 
   return (
-    <footer className="bg-primary text-white pt-16 pb-8 border-t border-white/5">
+    <footer className="w-full bg-primary text-white pt-16 pb-8 border-t border-white/5">
       <div className="max-w-[1200px] mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
           {/* Brand area */}

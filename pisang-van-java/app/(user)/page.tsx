@@ -240,7 +240,7 @@ export default async function HomePage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-start w-full">
+    <main className="flex min-h-screen flex-col justify-start w-full">
       {/* H1 Tunggal Wajib untuk SEO & Aksesibilitas (Disembunyikan secara visual) */}
       <h1 className="sr-only">Pisang Van Java - Pisang Goreng Premium Jakarta</h1>
 

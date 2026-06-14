@@ -191,10 +191,11 @@ export default function QuickViewModal({
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px] animate-fade-in" />
         <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 flex flex-col w-full max-w-lg mx-auto h-[70vh] md:h-auto md:max-h-[85vh] md:top-0 md:bottom-0 md:my-auto md:!transform-none bg-white dark:bg-zinc-900 rounded-t-3xl md:rounded-[4px] overflow-hidden outline-none shadow-[0_-10px_40px_rgba(0,0,0,0.15)] md:animate-in md:fade-in md:zoom-in-95">
-          {/* Drag Handle — mobile bottom sheet indicator */}
-          <div className="md:hidden flex justify-center pt-3 pb-2 shrink-0 bg-white dark:bg-zinc-900 rounded-t-3xl">
-            <div className="w-12 h-1.5 rounded-[4px] bg-zinc-300 dark:bg-zinc-600" />
-          </div>
+          {/* RAG Source: vaul library (Drawer.Handle)
+              FIX: The previous implementation was a purely cosmetic div with no drag event
+              listeners. vaul's <Drawer.Handle /> wires the correct touch/pointer events for
+              actual bottom-sheet dragging on mobile. */}
+          <Drawer.Handle className="md:hidden mx-auto mt-3 mb-2 h-1.5 w-12 flex-shrink-0 rounded-full bg-zinc-300 dark:bg-zinc-600" />
 
           {/* Header Modal (Text Only - 60% viewport design) */}
           <div className="px-6 pb-4 pt-1 flex justify-between items-start border-b border-zinc-100 dark:border-zinc-800 shrink-0">

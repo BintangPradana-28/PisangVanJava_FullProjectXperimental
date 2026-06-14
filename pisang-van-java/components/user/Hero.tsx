@@ -37,7 +37,11 @@ export default function Hero({
   const title = t('hero_title')
   const subtitle = t('hero_desc')
   const badge = t('hero_badge')
-  const bgImage = banner?.imageUrl || '/kitchen.png?v=hero' // Fix 400 Bad Request caused by expired external aida-public images
+  // RAG Source: components/user/Hero.tsx, next.config.js (images.minimumCacheTTL)
+  // FIX: Removed ?v=hero query string — Next.js 16 requires `images.localPatterns` config
+  // to serve local images with query strings. The ?v= suffix is also redundant:
+  // next.config.js already sets minimumCacheTTL: 31536000 for all optimized images.
+  const bgImage = banner?.imageUrl || '/kitchen.png'
   const ctaLink = banner?.linkUrl || '/menu-spesial'
 
   // REMOVED LEAK 2: Manual preload(bgImage) removed because it forces a direct download of unoptimized external assets (bypassing /_next/image). Next.js <Image priority /> handles this automatically.
@@ -174,7 +178,7 @@ export default function Hero({
         <div className="hidden lg:flex justify-end">
           <div className="relative w-full aspect-[4/3] rounded-[12px] overflow-hidden shadow-sbx-card border-8 border-white/10 bg-black/50">
             <Image
-              src={banner?.imageUrl || '/kitchen.png?v=hero'}
+              src={banner?.imageUrl || '/kitchen.png'}
               alt="Visual Promosi"
               fill
               sizes="(max-width: 1024px) 1px, 450px"

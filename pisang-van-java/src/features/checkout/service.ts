@@ -437,7 +437,21 @@ export async function createCheckoutOrder(
   input: CreateOrderInput,
   actor: CheckoutActor
 ): Promise<CreateCheckoutOrderResult> {
-  const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+  // RAG Source: src/features/checkout/service.ts (transaction architecture)
+  // FIX: Resolve delivery fee BEFORE entering the transaction.
+  // SiteSetting is read-only config — querying it inside a transaction wastes
+  // one precious round-trip on the Supabase pooler (Vercel→Supabase latency ~100-300ms each).
+  // This reduces in-transaction queries by 1, directly addressing the 5000ms timeout breach.
+  const deliveryFee = await resolveDeliveryFeeOutsideTx(input.deliveryMethod)
+
+  // FIX: Increase interactive transaction timeout to 15000ms.
+  // The default 5000ms is insufficient when running against Supabase pooler
+  // from Vercel edge regions (typical latency: 100-300ms per query).
+  // With ~10 sequential queries inside the tx, worst case = 10 × 300ms = 3000ms+
+  // plus Prisma overhead, easily exceeding 5000ms.
+  // maxWait: 5000ms (how long to wait to acquire a db connection from the pool).
+  const result = await prisma.$transaction(
+    async (tx: Prisma.TransactionClient) => {
     const variantIds = Array.from(new Set(input.items.map((item) => item.variantId)))
     const toppingIds = Array.from(new Set(input.items.flatMap((item) => item.toppingIds)))
 
@@ -527,7 +541,7 @@ export async function createCheckoutOrder(
       })
     }
 
-    const deliveryFee = await resolveDeliveryFee(input.deliveryMethod, tx)
+    // Use pre-resolved deliveryFee (resolved outside transaction to save one round-trip)
     let discountAmount = 0
     let voucherApplication = null
     let pointsToUse = 0
@@ -692,7 +706,19 @@ export async function createCheckoutOrder(
       deliveryFee,
       preparedItems
     }
-  })
+  },
+  {
+    // FIX: Increased from default 5000ms to 15000ms.
+    // Rationale: Supabase pooler (Singapore/Frankfurt) → Vercel adds 100-300ms per query.
+    // This transaction executes ~9 sequential queries. Worst case: 9 × 300ms = 2700ms+
+    // plus serialization, Prisma overhead, and connection acquisition time.
+    // 15000ms provides a 5× safety margin while still guarding against runaway transactions.
+    timeout: 15000,
+    // maxWait: Maximum time to wait for a connection from the pool before failing.
+    // Keeps this at 5000ms to fail fast on connection pool exhaustion.
+    maxWait: 5000
+  }
+)
 
   // [CACHE INVALIDATION] Hapus Redis cache setelah transaksi sukses.
   // Jika gagal di tengah jalan, cart utuh. Jika sukses, Redis bersih.
@@ -1023,6 +1049,37 @@ async function resolveDeliveryFee(
   }
 
   const setting = await tx.siteSetting.findUnique({
+    where: { key: 'store_delivery_fee' },
+    select: { value: true }
+  })
+
+  if (setting === null) {
+    console.warn('[SECURITY] store_delivery_fee not found in SiteSetting, failing open to 0')
+    return 0
+  }
+
+  const deliveryFee = parseCurrencySetting(setting.value)
+  if (deliveryFee === null) {
+    console.warn('[SECURITY] invalid store_delivery_fee in SiteSetting, failing open to 0')
+    return 0
+  }
+
+  return deliveryFee
+}
+
+// RAG Source: src/features/checkout/service.ts (resolveDeliveryFee)
+// FIX: This variant uses the global prisma client (not a transaction client) so it can be
+// called BEFORE entering the $transaction block. SiteSetting is read-only configuration —
+// it is never written during checkout — so it is safe to read outside the atomic transaction.
+// This saves one sequential DB round-trip from inside the transaction critical path.
+async function resolveDeliveryFeeOutsideTx(
+  deliveryMethod: CreateOrderInput['deliveryMethod']
+): Promise<number> {
+  if (deliveryMethod === 'PICKUP') {
+    return 0
+  }
+
+  const setting = await prisma.siteSetting.findUnique({
     where: { key: 'store_delivery_fee' },
     select: { value: true }
   })

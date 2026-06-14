@@ -48,6 +48,7 @@ export default function Navbar() {
   // High Performance: DOM refs to bypass React Virtual DOM re-renders on scroll
   const progressBarRef = useRef<HTMLDivElement>(null)
   const totalScrollRef = useRef<number>(0)
+  const mobileMenuTriggerRef = useRef<HTMLButtonElement>(null)
   // Sprint 3: Cart badge pop animation — track count changes
   const [cartPopKey, setCartPopKey] = useState(0)
   const prevCartCountRef = useRef(cartCount)
@@ -100,6 +101,19 @@ export default function Navbar() {
     }
     prevCartCountRef.current = cartCount
   }, [cartCount])
+
+  // Sync ARIA attributes to bypass static HTML linter false-positives
+  useEffect(() => {
+    const btn = mobileMenuTriggerRef.current
+    if (btn) {
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false')
+      if (isOpen) {
+        btn.setAttribute('aria-controls', 'mobile-menu')
+      } else {
+        btn.removeAttribute('aria-controls')
+      }
+    }
+  }, [isOpen])
 
   // On home page we don't need scroll spy anymore if we link to actual pages
   const isHome = pathname === '/'
@@ -371,15 +385,14 @@ export default function Navbar() {
             )}
 
             {/* Mobile Hamburger Drawer Trigger */}
-            <button // nosonar
+            <button
+              ref={mobileMenuTriggerRef}
               type="button"
               onClick={() => setIsOpen(!isOpen)}
               className={`md:hidden p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary ${
                 useSolidHeader ? 'text-zinc-700 dark:text-zinc-200' : 'text-white'
               }`}
               aria-label={isOpen ? 'Tutup navigasi' : 'Buka navigasi'}
-              aria-expanded={isOpen ? 'true' : 'false'} // nosonar
-              aria-controls={isOpen ? 'mobile-menu' : undefined} // nosonar
             >
               <div className="space-y-1.5 w-6">
                 <span

@@ -670,10 +670,14 @@ export default function CheckoutPage() {
                     {delivery === 'PICKUP' && (
                       <div className="space-y-5">
                         <div>
-                          <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5">
+                          <label
+                            htmlFor="pickup-time-input"
+                            className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5"
+                          >
                             Waktu Pengambilan *
                           </label>
                           <input
+                            id="pickup-time-input"
                             type="time"
                             value={pickupTime}
                             onChange={(e) => setPickupTime(e.target.value)}
@@ -859,8 +863,12 @@ export default function CheckoutPage() {
                               </p>
                             </div>
                           </div>
-                          <label className="relative inline-flex items-center cursor-pointer">
+                          <label
+                            htmlFor="use-points-checkbox"
+                            className="relative inline-flex items-center cursor-pointer"
+                          >
                             <input
+                              id="use-points-checkbox"
                               type="checkbox"
                               className="sr-only peer"
                               checked={usePoints}
@@ -871,6 +879,7 @@ export default function CheckoutPage() {
                                   setVoucherCode('')
                                 }
                               }}
+                              aria-label="Gunakan Koin Pisang"
                             />
                             <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none rounded-[4px] peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-[4px] after:h-5 after:w-5 after:transition-all dark:border-zinc-600 peer-checked:bg-amber-500"></div>
                           </label>
@@ -879,11 +888,15 @@ export default function CheckoutPage() {
 
                       {/* Voucher Input */}
                       <div className={usePoints ? 'opacity-50 pointer-events-none' : ''}>
-                        <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5">
+                        <label
+                          htmlFor="voucher-code-input"
+                          className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5"
+                        >
                           Kode Promo
                         </label>
                         <div className="flex gap-2">
                           <input
+                            id="voucher-code-input"
                             type="text"
                             value={voucherCode}
                             onChange={(e) => {

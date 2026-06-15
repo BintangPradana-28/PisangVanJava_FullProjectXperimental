@@ -32,8 +32,10 @@ const profileSchema = z.object({
   name: z.string().min(1, 'Nama tidak boleh kosong'),
   phone: z
     .string()
-    .min(1, 'Nomor WhatsApp tidak boleh kosong')
-    .regex(/^(\+62|62|0)8[1-9][0-9]{6,11}$/, 'Nomor WhatsApp tidak valid.')
+    .optional()
+    .refine((val) => !val || /^(\+62|62|0)8[1-9][0-9]{6,11}$/.test(val), {
+      message: 'Nomor WhatsApp tidak valid.'
+    })
 })
 
 const passwordSchema = z
@@ -142,7 +144,7 @@ export default function ProfileDataDiriPage() {
     mutationFn: async (data: ProfileFormValues) => {
       const resData = await api<{ success: boolean; message?: string }>('/api/user/profile', {
         method: 'PUT',
-        body: { name: data.name, phone: data.phone }
+        body: { name: data.name, phone: data.phone ? data.phone : undefined }
       })
       if (!resData.success) throw new Error(resData.message || 'Gagal menyimpan profil')
       return data

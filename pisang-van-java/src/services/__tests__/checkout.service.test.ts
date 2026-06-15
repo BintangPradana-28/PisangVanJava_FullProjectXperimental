@@ -42,8 +42,8 @@ vi.mock('@/lib/prisma', () => {
   }
 })
 
-import { getPaymentOrderForActor } from '../checkout.service'
 import { prisma } from '@/lib/prisma'
+import { getPaymentOrderForActor } from '../checkout.service'
 
 describe('getPaymentOrderForActor', () => {
   it('should return null if order is not found', async () => {

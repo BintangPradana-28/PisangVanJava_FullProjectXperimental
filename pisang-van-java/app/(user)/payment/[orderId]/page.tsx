@@ -31,9 +31,6 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
   const resolvedSearchParams = await searchParams
 
   const actor = await requireCheckoutActor()
-  if (actor === null) {
-    redirect('/member-login')
-  }
 
   const parsedParams = paymentFormInputSchema.safeParse({
     orderId: resolvedParams.orderId

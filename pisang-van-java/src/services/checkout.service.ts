@@ -351,13 +351,43 @@ export async function createCheckoutOrder(
 
 export async function getPaymentOrderForActor(
   orderId: string,
-  actor: CheckoutActor
+  actor: CheckoutActor | null
 ): Promise<PaymentOrderView | null> {
-  return prisma.order.findFirst({
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: {
+      userId: true,
+      source: true
+    }
+  })
+
+  if (order === null) {
+    return null
+  }
+
+  if (order.source !== 'online') {
+    return null
+  }
+
+  // Authorization check (BOLA prevention):
+  // 1. If order has a userId (belongs to a registered member):
+  //    - The actor must not be null
+  //    - Either actor is the owner (actor.userId === order.userId) OR actor has a staff role (ADMIN, SUPER_ADMIN, KITCHEN, CASHIER)
+  // 2. If order has no userId (guest order):
+  //    - Anyone with the unguessable CUID `orderId` is allowed to access and pay for it.
+  if (order.userId !== null) {
+    if (actor === null) {
+      return null
+    }
+    const STAFF_ROLES = ['ADMIN', 'SUPER_ADMIN', 'KITCHEN', 'CASHIER']
+    if (order.userId !== actor.userId && !STAFF_ROLES.includes(actor.role)) {
+      return null
+    }
+  }
+
+  return prisma.order.findUnique({
     where: {
-      id: orderId,
-      userId: actor.userId,
-      source: 'online'
+      id: orderId
     },
     select: {
       id: true,

@@ -4,7 +4,6 @@
 // RAG Source: app/(user)/track-order/page.tsx (Supabase Realtime subscription)
 // RAG Source: app/(admin)/kitchen/KitchenClient.tsx (Sound chime & timestamp calculation)
 
-import { AnimatePresence, motion } from 'framer-motion'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
@@ -35,46 +34,34 @@ interface TrackOrderDetailClientProps {
   storePhone: string
 }
 
-const ORDER_STEPS = [
-  {
-    status: 'PENDING_PAYMENT',
-    label: 'Menunggu Pembayaran',
-    description: 'Menunggu proses verifikasi pembayaran Anda.'
-  },
-  { status: 'PAID', label: 'Dikonfirmasi', description: 'Pembayaran diterima & dikonfirmasi.' },
-  {
-    status: 'PROCESSING',
-    label: 'Sedang Dimasak',
-    description: 'Koki sedang memasak pesanan Anda di dapur.'
-  },
-  {
-    status: 'READY',
-    label: 'Siap Diambil/Antar',
-    description: 'Pesanan siap diambil atau sedang diantar oleh kurir.'
-  },
-  {
-    status: 'COMPLETED',
-    label: 'Selesai',
-    description: 'Pesanan selesai diterima. Selamat menikmati!'
+function getStatusIcon(status: string, deliveryMethod: string): string {
+  const isPickup = deliveryMethod === 'PICKUP'
+  if (status === 'READY') {
+    return isPickup ? '🛍️' : '🛵'
   }
-]
-
-const STATUS_ICONS: Record<string, string> = {
-  PENDING_PAYMENT: '⏳',
-  PAID: '💳',
-  PROCESSING: '🧑‍🍳',
-  READY: '🛵',
-  COMPLETED: '🎉',
-  CANCELED: '❌'
+  const icons: Record<string, string> = {
+    PENDING_PAYMENT: '⏳',
+    PROCESSING: '🧑‍🍳',
+    COMPLETED: '🎉',
+    CANCELED: '❌'
+  }
+  return icons[status] || '🍌'
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  PENDING_PAYMENT: 'Menunggu Pembayaran',
-  PAID: 'Pembayaran Dikonfirmasi',
-  PROCESSING: 'Sedang Dimasak',
-  READY: 'Siap Diambil/Diantar',
-  COMPLETED: 'Pesanan Selesai',
-  CANCELED: 'Pesanan Dibatalkan'
+function getStatusLabel(status: string, deliveryMethod: string): string {
+  const isPickup = deliveryMethod === 'PICKUP'
+  if (status === 'READY') {
+    return isPickup ? 'Siap Diambil' : 'Dalam Perjalanan / Siap Diantar'
+  }
+  if (status === 'COMPLETED') {
+    return isPickup ? 'Selesai (Diambil)' : 'Selesai (Diterima)'
+  }
+  const labels: Record<string, string> = {
+    PENDING_PAYMENT: 'Menunggu Pembayaran',
+    PROCESSING: 'Sedang Dimasak',
+    CANCELED: 'Pesanan Dibatalkan'
+  }
+  return labels[status] || status
 }
 
 // Play notification sound on client update (synthesized chime)
@@ -99,23 +86,18 @@ function playClientNotificationSound(): void {
 
 function formatTime(dateStr: string | null): string {
   if (!dateStr) return ''
-  return (
-    new Date(dateStr).toLocaleTimeString('id-ID', {
-      hour: '2-digit',
-      minute: '2-digit'
-    }) + ' WIB'
-  )
+  const formatted = new Date(dateStr).toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+  return `${formatted} WIB`
 }
 
 export default function TrackOrderDetailClient({ order, storePhone }: TrackOrderDetailClientProps) {
   const [currentStatus, setCurrentStatus] = useState<string>(order.status)
   const [timestamps, setTimestamps] = useState<Record<string, string | null>>({
     PENDING_PAYMENT: order.createdAt,
-    PAID: order.confirmedAt,
-    PROCESSING:
-      order.status === 'PROCESSING' || order.status === 'READY' || order.status === 'COMPLETED'
-        ? order.updatedAt
-        : null,
+    PROCESSING: order.confirmedAt || (order.status !== 'PENDING_PAYMENT' ? order.updatedAt : null),
     READY: order.status === 'READY' || order.status === 'COMPLETED' ? order.updatedAt : null,
     COMPLETED: order.status === 'COMPLETED' ? order.updatedAt : null
   })
@@ -149,7 +131,7 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
             setCurrentStatus(newRecord.status)
             playClientNotificationSound()
             toast.success(
-              `Pesanan Anda diperbarui: ${STATUS_LABELS[newRecord.status] || newRecord.status}`,
+              `Pesanan Anda diperbarui: ${getStatusLabel(newRecord.status, order.deliveryMethod)}`,
               {
                 icon: '🔄',
                 duration: 5000
@@ -160,12 +142,8 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
             setTimestamps((prev) => ({
               ...prev,
               [newRecord.status]: newRecord.updatedAt,
-              PAID:
-                newRecord.status !== 'PENDING_PAYMENT'
-                  ? newRecord.confirmedAt || newRecord.updatedAt
-                  : prev.PAID,
               PROCESSING: ['PROCESSING', 'READY', 'COMPLETED'].includes(newRecord.status)
-                ? newRecord.updatedAt
+                ? newRecord.confirmedAt || newRecord.updatedAt
                 : prev.PROCESSING,
               READY: ['READY', 'COMPLETED'].includes(newRecord.status)
                 ? newRecord.updatedAt
@@ -185,17 +163,90 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
       setConnectionStatus('disconnected')
       supabaseBrowserClient?.removeChannel(channel)
     }
-  }, [order.id])
+  }, [order.id, order.deliveryMethod])
 
-  const stepIdx = ORDER_STEPS.findIndex((s) => s.status === currentStatus)
+  // ── Fallback Polling ─────────────────────────────────────────────────────
+  useEffect(() => {
+    if (connectionStatus === 'connected') return
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/orders/track?orderId=${order.id}`)
+        if (!res.ok) return
+        const json = await res.json()
+        if (json.success && json.data) {
+          const fresh = json.data as {
+            status: string
+            confirmedAt: string | null
+            updatedAt: string
+          }
+          if (fresh.status !== currentStatus) {
+            setCurrentStatus(fresh.status)
+            playClientNotificationSound()
+            toast.success(
+              `Pesanan Anda diperbarui: ${getStatusLabel(fresh.status, order.deliveryMethod)}`,
+              {
+                icon: '🔄',
+                duration: 5000
+              }
+            )
+
+            // Update timestamps dynamically
+            setTimestamps((prev) => ({
+              ...prev,
+              [fresh.status]: fresh.updatedAt,
+              PROCESSING: ['PROCESSING', 'READY', 'COMPLETED'].includes(fresh.status)
+                ? fresh.confirmedAt || fresh.updatedAt
+                : prev.PROCESSING,
+              READY: ['READY', 'COMPLETED'].includes(fresh.status) ? fresh.updatedAt : prev.READY,
+              COMPLETED: fresh.status === 'COMPLETED' ? fresh.updatedAt : prev.COMPLETED
+            }))
+          }
+        }
+      } catch (e) {
+        console.warn('Fallback polling failed', e)
+      }
+    }, 10000) // Poll every 10 seconds
+
+    return () => clearInterval(pollInterval)
+  }, [connectionStatus, currentStatus, order.id, order.deliveryMethod])
+
+  const isPickup = order.deliveryMethod === 'PICKUP'
+  const dynamicOrderSteps = [
+    {
+      status: 'PENDING_PAYMENT',
+      label: 'Menunggu Pembayaran',
+      description: 'Menunggu proses verifikasi pembayaran Anda.'
+    },
+    {
+      status: 'PROCESSING',
+      label: 'Sedang Dimasak',
+      description: 'Koki sedang memasak pesanan spesial Anda di dapur.'
+    },
+    {
+      status: 'READY',
+      label: isPickup ? 'Siap Diambil' : 'Siap Diantar / Perjalanan',
+      description: isPickup
+        ? 'Pesanan Anda sudah siap! Silakan ambil di kedai kami.'
+        : 'Pesanan siap dan kurir sedang mengantarkan ke alamat Anda.'
+    },
+    {
+      status: 'COMPLETED',
+      label: 'Selesai',
+      description: isPickup
+        ? 'Pesanan selesai diambil. Terima kasih atas kunjungan Anda!'
+        : 'Pesanan selesai diantar dan diterima. Selamat menikmati!'
+    }
+  ]
+
+  const stepIdx = dynamicOrderSteps.findIndex((s) => s.status === currentStatus)
   const isCanceled = currentStatus === 'CANCELED'
   const heightClassMap: Record<number, string> = {
     [-1]: 'h-0',
     0: 'h-0',
-    1: 'h-[22.5%]',
-    2: 'h-[45%]',
-    3: 'h-[67.5%]',
-    4: 'h-[90%]'
+    1: 'h-[33.3%]',
+    2: 'h-[66.6%]',
+    3: 'h-full'
   }
 
   // Pre-filled WhatsApp link construction
@@ -232,7 +283,9 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="text-4xl shrink-0">{STATUS_ICONS[currentStatus] || '🍌'}</span>
+              <span className="text-4xl shrink-0">
+                {getStatusIcon(currentStatus, order.deliveryMethod)}
+              </span>
               <div>
                 <p className="text-xs text-zinc-400 font-bold uppercase tracking-wider">
                   STATUS SEKARANG
@@ -240,7 +293,7 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
                 <p
                   className={`text-base font-black ${isCanceled ? 'text-rose-500' : 'text-amber-600 dark:text-amber-400'}`}
                 >
-                  {STATUS_LABELS[currentStatus] || currentStatus}
+                  {getStatusLabel(currentStatus, order.deliveryMethod)}
                 </p>
               </div>
             </div>
@@ -292,7 +345,7 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
                 className={`absolute left-3.5 top-5 w-0.5 bg-amber-500 -translate-x-1/2 transition-all duration-700 ease-in-out ${heightClassMap[stepIdx] || 'h-0'}`}
               ></div>
 
-              {ORDER_STEPS.map((step, index) => {
+              {dynamicOrderSteps.map((step, index) => {
                 const isCompleted = index <= stepIdx
                 const isActive = index === stepIdx
                 const time = timestamps[step.status]

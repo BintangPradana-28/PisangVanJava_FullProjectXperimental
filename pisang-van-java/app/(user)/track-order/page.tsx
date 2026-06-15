@@ -11,18 +11,24 @@ import toast from 'react-hot-toast'
 import { z } from 'zod'
 import { useLanguage } from '@/context/LanguageContext'
 import { formatPrice } from '@/lib/utils'
+import { useCartStore } from '@/src/features/cart/stores/cart.store'
 import { api } from '@/src/lib/api'
 import { supabaseBrowserClient } from '@/src/lib/supabase-client'
-import { useCartStore } from '@/src/features/cart/stores/cart.store'
 
-const STATUS_STEPS = ['pending', 'paid', 'processing', 'ready', 'done']
-const STATUS_ICONS: Record<string, string> = {
-  pending: '⏳',
-  paid: '💳',
-  processing: '🧑‍🍳',
-  ready: '🍌',
-  done: '🎉',
-  cancelled: '❌'
+const STATUS_STEPS = ['PENDING_PAYMENT', 'PROCESSING', 'READY', 'COMPLETED']
+
+function getStatusIcon(status: string, deliveryMethod: string) {
+  const isPickup = deliveryMethod === 'PICKUP'
+  if (status === 'READY') {
+    return isPickup ? '🛍️' : '🛵'
+  }
+  const icons: Record<string, string> = {
+    PENDING_PAYMENT: '⏳',
+    PROCESSING: '🧑‍🍳',
+    COMPLETED: '🎉',
+    CANCELED: '❌'
+  }
+  return icons[status] || '🍌'
 }
 
 const orderItemSchema = z
@@ -57,6 +63,7 @@ const orderSchema = z
     status: z.string().min(1),
     totalPrice: z.number().finite().min(0),
     createdAt: z.string().min(1),
+    deliveryMethod: z.string().min(1),
     items: z.array(orderItemSchema)
   })
   .strict()
@@ -98,7 +105,6 @@ const menuResponseSchema = z
   })
   .strict()
 
-type OrderItem = z.infer<typeof orderItemSchema>
 type Order = z.infer<typeof orderSchema>
 
 type LiveProduct = z.infer<typeof liveProductSchema>
@@ -135,7 +141,7 @@ function ReorderButton({ order }: { order: Order }) {
           (p) => p.flavorName.toLowerCase() === variantName.toLowerCase()
         )
 
-        if (!live || !live.isAvailable) {
+        if (!live?.isAvailable) {
           skippedCount++
           continue
         }
@@ -178,6 +184,7 @@ function ReorderButton({ order }: { order: Order }) {
 
   return (
     <button
+      type="button"
       onClick={handleReorder}
       disabled={loading || order.status === 'CANCELED'}
       title={
@@ -191,6 +198,7 @@ function ReorderButton({ order }: { order: Order }) {
     >
       {loading ? (
         <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+          <title>Loading</title>
           <circle
             className="opacity-25"
             cx="12"
@@ -223,13 +231,20 @@ export default function TrackOrderPage() {
     'connecting' | 'connected' | 'disconnected'
   >('disconnected')
 
-  const STATUS_LABELS: Record<string, string> = {
-    pending: t('status_pending'),
-    paid: t('status_paid'),
-    processing: 'Sedang Diproses',
-    ready: t('status_ready'),
-    done: t('status_done'),
-    cancelled: t('status_cancelled')
+  const getStatusLabel = (status: string, deliveryMethod: string) => {
+    const isPickup = deliveryMethod === 'PICKUP'
+    if (status === 'READY') {
+      return isPickup ? 'Siap Diambil' : 'Siap Diantar / Perjalanan'
+    }
+    if (status === 'COMPLETED') {
+      return isPickup ? 'Selesai (Diambil)' : 'Selesai (Diterima)'
+    }
+    const labels: Record<string, string> = {
+      PENDING_PAYMENT: t('status_pending') || 'Menunggu Pembayaran',
+      PROCESSING: 'Sedang Dimasak',
+      CANCELED: t('status_cancelled') || 'Pesanan Dibatalkan'
+    }
+    return labels[status] || status
   }
 
   const {
@@ -273,6 +288,7 @@ export default function TrackOrderPage() {
   const displayError = errorLocal || (queryError ? queryError.message : '')
 
   // ── Supabase Realtime Subscription ───────────────────────────────────────────
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only re-subscribe when order list IDs change
   useEffect(() => {
     if (!orders || orders.length === 0 || !supabaseBrowserClient) return
 
@@ -291,8 +307,10 @@ export default function TrackOrderPage() {
               o.id === updatedOrder.id ? { ...o, status: updatedOrder.status } : o
             )
           })
+          const matchedOrder = orders.find((o) => o.id === updatedOrder.id)
+          const method = matchedOrder ? matchedOrder.deliveryMethod : 'DELIVERY'
           toast.success(
-            `Status pesanan diperbarui menjadi: ${STATUS_LABELS[updatedOrder.status] || updatedOrder.status}`,
+            `Status pesanan diperbarui menjadi: ${getStatusLabel(updatedOrder.status, method)}`,
             { icon: '🔄' }
           )
         }
@@ -308,6 +326,15 @@ export default function TrackOrderPage() {
       supabaseBrowserClient?.removeChannel(channel)
     }
   }, [orders?.map((o) => o.id).join(',')])
+
+  // ── Fallback Polling ─────────────────────────────────────────────────────
+  useEffect(() => {
+    if (connectionStatus === 'connected' || !orders || orders.length === 0) return
+    const interval = setInterval(() => {
+      refetch()
+    }, 10000) // Poll every 10 seconds
+    return () => clearInterval(interval)
+  }, [connectionStatus, orders, refetch])
 
   return (
     <section className="min-h-screen py-16 px-4" style={{ background: 'var(--background-custom)' }}>
@@ -336,6 +363,7 @@ export default function TrackOrderPage() {
               style={{ color: 'var(--text-custom)' }}
             />
             <button
+              type="button"
               onClick={handleSearch}
               disabled={loading}
               className="px-5 py-2.5 rounded-[4px] font-bold text-sm text-white disabled:opacity-60 transition-all active:scale-95"
@@ -383,6 +411,7 @@ export default function TrackOrderPage() {
                   </div>
                   {connectionStatus !== 'connected' && (
                     <button
+                      type="button"
                       onClick={handleSearch}
                       disabled={loading}
                       className="text-xs font-bold text-amber-600 hover:text-amber-700 disabled:opacity-50"
@@ -429,7 +458,9 @@ export default function TrackOrderPage() {
                             )}
                           </div>
                         </div>
-                        <span className="text-2xl">{STATUS_ICONS[order.status]}</span>
+                        <span className="text-2xl">
+                          {getStatusIcon(order.status, order.deliveryMethod)}
+                        </span>
                       </div>
 
                       {/* Progress bar */}
@@ -455,13 +486,25 @@ export default function TrackOrderPage() {
                       {/* Status label & ETA */}
                       <div className="mb-3">
                         <div className="text-sm font-semibold" style={{ color: '#D4802A' }}>
-                          {STATUS_LABELS[order.status]}
+                          {getStatusLabel(order.status, order.deliveryMethod)}
                         </div>
                         {(order.status === 'PROCESSING' ||
                           order.status === 'READY' ||
                           order.status === 'PENDING_PAYMENT') && (
                           <div className="text-xs font-medium text-amber-700 bg-amber-50 dark:bg-amber-950/20 px-2 py-1 rounded-md inline-flex items-center gap-1 mt-1.5 border border-amber-200/50">
-                            ⏱️ Estimasi tiba: 30-45 menit
+                            {order.deliveryMethod === 'PICKUP' ? (
+                              order.status === 'READY' ? (
+                                <span>🛍️ Pesanan siap diambil di kedai</span>
+                              ) : order.status === 'PROCESSING' ? (
+                                <span>⏱️ Estimasi siap: 15-20 menit</span>
+                              ) : (
+                                <span>⏳ Menunggu pembayaran</span>
+                              )
+                            ) : order.status === 'READY' ? (
+                              <span>🛵 Sedang diantarkan oleh kurir</span>
+                            ) : (
+                              <span>⏱️ Estimasi tiba: 30-45 menit</span>
+                            )}
                           </div>
                         )}
                       </div>

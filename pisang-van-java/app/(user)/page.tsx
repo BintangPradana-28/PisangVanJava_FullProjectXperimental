@@ -263,8 +263,14 @@ export default async function HomePage() {
       />
       <Hero banner={activeBanner} averageRating={averageRating} totalReviews={totalReviews} />
       <About />
+      <Gallery
+        products={products.slice(0, 6).map((p) => ({
+          id: p.id,
+          flavorName: p.flavorName,
+          imageUrl: p.imageUrl
+        }))}
+      />
       <MenuCards products={homeProducts} />
-      {/* Gallery bisa disembunyikan atau dipertahankan tergantung kebutuhan */}
       <LocationMap />
       <Footer />
     </main>

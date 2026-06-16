@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
 import Footer from '@/components/user/Footer'
+import Gallery from '@/components/user/Gallery'
 import { useLanguage } from '@/context/LanguageContext'
 import { useSettings } from '@/context/SettingsContext'
 
@@ -42,10 +43,7 @@ export default function TentangKamiPage() {
     { year: '2024', event: getSetting('about_mile5_event', t('about_mile5_event')) },
     {
       year: '2026',
-      event: getSetting(
-        'about_mile6_event',
-        'Ekspansi B2B & Modernisasi Dapur Pusat dengan standar Enterprise F&B.'
-      )
+      event: getSetting('about_mile6_event', t('about_mile6_event'))
     }
   ]
 
@@ -85,6 +83,13 @@ export default function TentangKamiPage() {
   const desc2 = getSetting('about_desc2', t('about_desc2'))
   const storyTitle = getSetting('about_story_title', t('about_story_title'))
   const storySubtitle = getSetting('about_story_subtitle', t('about_story_subtitle'))
+
+  const stats = [
+    { num: `${new Date().getFullYear() - 2018}+`, label: t('about_stat_experience') },
+    { num: '12+', label: t('about_stat_flavor') },
+    { num: '500+', label: t('about_stat_fried') },
+    { num: '100%', label: t('about_stat_hygiene') }
+  ]
 
   return (
     <div className="min-h-screen bg-[var(--background-custom)] text-primary dark:text-zinc-100">
@@ -168,6 +173,34 @@ export default function TentangKamiPage() {
                 {desc2}
               </p>
             </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Stats ── */}
+      <section
+        aria-label={t('about_value_badge')}
+        className="py-12 bg-cream-50 dark:bg-zinc-900 border-y border-outline-variant/20 dark:border-zinc-800"
+      >
+        <div className="max-w-[1200px] mx-auto px-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {stats.map(({ num, label }, i) => (
+              <motion.div
+                key={label}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.07, duration: 0.35, ease: 'easeOut' }}
+                className="rounded-[4px] p-6 text-center bg-white dark:bg-zinc-950 border border-cream-200 dark:border-zinc-800 hover:-translate-y-0.5 hover:shadow-sm transition-all duration-300"
+              >
+                <div className="font-serif text-3xl sm:text-4xl font-bold text-amber-brand mb-1">
+                  {num}
+                </div>
+                <div className="text-xs font-bold tracking-wider uppercase text-brown-600 dark:text-zinc-400">
+                  {label}
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -258,6 +291,8 @@ export default function TentangKamiPage() {
         </div>
       </section>
 
+      <Gallery compact />
+
       {/* ── Team ── */}
       <section className="py-20 bg-cream-50 dark:bg-zinc-950 border-t border-cream-200 dark:border-zinc-900">
         <div className="max-w-[1200px] mx-auto px-6">
@@ -320,24 +355,31 @@ export default function TentangKamiPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <div className="text-4xl mb-5">🍌</div>
+            <div className="text-4xl mb-5" aria-hidden="true">
+              🍌
+            </div>
             <h2 className="font-serif text-3xl sm:text-4xl font-bold mb-4">
-              Tertarik Bermitra Bersama Kami?
+              {t('about_b2b_cta_title')}
             </h2>
-            <p className="text-white/70 mb-8 leading-relaxed">
-              Kami melayani pesanan katering berskala besar untuk acara korporasi, pernikahan,
-              maupun pengajuan kerjasama waralaba B2B.
-            </p>
+            <p className="text-white/70 mb-8 leading-relaxed">{t('about_b2b_cta_desc')}</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href={`https://wa.me/${getSetting('nomor_wa', '6281312167554')}`}
-                className="px-8 py-3.5 rounded-[4px] font-bold text-sm transition-all active:scale-95 bg-amber-600 hover:bg-amber-500 text-white shadow-sm"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-8 py-3.5 rounded-[4px] font-bold text-sm transition-all duration-200 active:scale-95 bg-amber-600 hover:bg-amber-500 text-white shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-400/50"
               >
-                💼 Hubungi Kami untuk Kemitraan
+                💼 {t('about_b2b_cta_btn')}
               </a>
               <Link
+                href="/menu-spesial"
+                className="px-8 py-3.5 rounded-[4px] font-bold text-sm transition-all duration-200 active:scale-95 bg-white/10 hover:bg-white/15 border border-white/30 focus:outline-none focus-visible:ring-4 focus-visible:ring-white/30"
+              >
+                🍌 {t('about_cta_menu')}
+              </Link>
+              <Link
                 href="/lokasi-kontak"
-                className="px-8 py-3.5 rounded-[4px] font-bold text-sm transition-all active:scale-95 border border-white/30 hover:bg-white/10"
+                className="px-8 py-3.5 rounded-[4px] font-bold text-sm transition-all duration-200 active:scale-95 border border-white/30 hover:bg-white/10 focus:outline-none focus-visible:ring-4 focus-visible:ring-white/30"
               >
                 📍 {t('about_cta_find')}
               </Link>

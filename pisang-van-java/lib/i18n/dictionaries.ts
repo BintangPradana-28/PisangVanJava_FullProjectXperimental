@@ -25,7 +25,7 @@ export const dictionaries: Record<Locale, Translations> = {
     hero_no_rating: 'Belum ada penilaian',
     hero_location: 'Cilangkap, Jakarta Timur',
     about_badge: 'Tentang Kami',
-    about_title: 'Seni Menggoreng Pisang,Sempurna',
+    about_title: 'Seni Menggoreng Pisang, Sempurna',
     about_desc:
       'Pisang Goreng Van Java didirikan dengan misi membawa rasa warisan tradisional Jawa ke tingkat premium. Menggunakan bahan-bahan pisang pilihan terbaik yang dipanen langsung oleh petani lokal, berbalut adonan resep rahasia yang menghasilkan kerenyahan tahan lama.',
     about_desc1:
@@ -198,6 +198,18 @@ export const dictionaries: Record<Locale, Translations> = {
     about_team3_name: 'MD',
     about_team3_role: 'Kreator Varian',
     about_team3_desc: 'Bereksperimen dengan topping dan rasa baru setiap musim.',
+    about_mile6_event: 'Ekspansi B2B & modernisasi dapur pusat dengan standar enterprise F&B.',
+    about_b2b_cta_title: 'Tertarik Bermitra Bersama Kami?',
+    about_b2b_cta_desc:
+      'Kami melayani pesanan katering berskala besar untuk acara korporasi, pernikahan, maupun pengajuan kerjasama waralaba B2B.',
+    about_b2b_cta_btn: 'Hubungi Kami untuk Kemitraan',
+    gallery_badge: 'Galeri',
+    gallery_title: 'Portofolio',
+    gallery_title_accent: 'Rasa Van Java',
+    gallery_desc:
+      'Setiap varian topping kami digoreng segar — lihat koleksi favorit pelanggan kami.',
+    gallery_view_menu: 'Lihat Semua Menu',
+    gallery_view_detail: 'Lihat detail',
     menu_desc: '12+ varian topping premium. 3 tipe gorengan. Semua dibuat segar setiap hari.',
     menu_search_placeholder: 'Cari varian atau topping…',
     menu_count_suffix: 'produk',
@@ -460,7 +472,7 @@ export const dictionaries: Record<Locale, Translations> = {
     hero_no_rating: 'No ratings yet',
     hero_location: 'East Jakarta',
     about_badge: 'About Us',
-    about_title: 'The Art of Perfect,Fried Banana',
+    about_title: 'The Art of Perfect, Fried Banana',
     about_desc:
       'Pisang Goreng Van Java was founded with a mission to elevate traditional Javanese heritage flavors to a premium level. Using the finest selection of bananas harvested directly by local farmers, wrapped in a secret recipe batter for long-lasting crispiness.',
     about_desc1:
@@ -633,6 +645,18 @@ export const dictionaries: Record<Locale, Translations> = {
     about_team3_name: 'MD',
     about_team3_role: 'Variant Creator',
     about_team3_desc: 'Experiments with new toppings and flavors every season.',
+    about_mile6_event:
+      'B2B expansion and central kitchen modernization with enterprise F&B standards.',
+    about_b2b_cta_title: 'Interested in Partnering With Us?',
+    about_b2b_cta_desc:
+      'We serve large-scale catering for corporate events, weddings, and B2B franchise partnership inquiries.',
+    about_b2b_cta_btn: 'Contact Us for Partnership',
+    gallery_badge: 'Gallery',
+    gallery_title: 'Portfolio of',
+    gallery_title_accent: 'Van Java Flavors',
+    gallery_desc: 'Every topping variant is fried fresh — explore our customer favorites.',
+    gallery_view_menu: 'See Full Menu',
+    gallery_view_detail: 'View details',
     menu_desc: '12+ premium topping variants. 3 frying types. All made fresh daily.',
     menu_search_placeholder: 'Search variant or topping...',
     menu_count_suffix: 'products',

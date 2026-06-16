@@ -23,9 +23,11 @@
   },
   "type": "module",
   "dependencies": {
-    "midtrans-client": "^1.4.3"
+    "midtrans-client": "^1.4.3",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
-    "@types/midtrans-client": "^1.4.0"
+    "@types/midtrans-client": "^1.4.0",
+    "@types/web-push": "^3.6.4"
   }
 }

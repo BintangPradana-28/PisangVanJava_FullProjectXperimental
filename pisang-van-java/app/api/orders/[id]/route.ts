@@ -2,6 +2,8 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { logAudit } from '@/lib/audit'
 import { sendWhatsAppNotification } from '@/lib/notifications'
 import { prisma } from '@/lib/prisma'
+// RAG Source: lib/push.ts (new) — sendPushNotification + buildOrderStatusPushPayload
+import { buildOrderStatusPushPayload, sendPushNotification } from '@/lib/push'
 import { orderStatusInputSchema, paymentFormInputSchema } from '@/src/features/checkout/schemas'
 import { sendOrderStatusEmail } from '@/src/features/payment/email'
 import { hasValidSameOriginHeaders, requireCheckoutActor } from '@/src/services/checkout.service'
@@ -145,6 +147,9 @@ export async function PATCH(req: NextRequest, { params }: OrderRouteContext) {
         data: { status: parsedStatus.data },
         select: {
           id: true,
+          // ✅ SURGICAL ADDITION: userId needed to look up push subscription
+          // RAG Source: prisma/schema.prisma — Order.userId (nullable String)
+          userId: true,
           customerName: true,
           customerPhone: true,
           status: true
@@ -178,6 +183,20 @@ export async function PATCH(req: NextRequest, { params }: OrderRouteContext) {
         console.error('[EMAIL] Failed to send order status email', err)
       )
     }
+
+    // ── ✅ SURGICAL ADDITION: Web Push notification ──────────────────────────────
+    // Fire-and-forget — identical pattern to email above. Never blocks the response.
+    // Only sent for orders with a registered userId (guest orders have userId: null).
+    // RAG Source: lib/push.ts (buildOrderStatusPushPayload, sendPushNotification)
+    if (order.userId) {
+      const pushPayload = buildOrderStatusPushPayload(order.id, parsedStatus.data)
+      if (pushPayload) {
+        sendPushNotification(order.userId, pushPayload).catch((err) =>
+          console.error('[PUSH] Failed to send order status push notification', err)
+        )
+      }
+    }
+    // ────────────────────────────────────────────────────────────────────────────
 
     return NextResponse.json({
       success: true,

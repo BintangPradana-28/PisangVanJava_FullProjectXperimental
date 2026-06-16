@@ -1,5 +1,6 @@
 'use client'
 
+import { PushNotificationManager } from '@/components/push/PushNotificationManager'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -384,6 +385,7 @@ export default function ProfileDataDiriPage() {
                   {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Simpan Foto'}
                 </button>
               </div>
+              <PushNotificationManager />
             </div>
           </motion.div>
         )}

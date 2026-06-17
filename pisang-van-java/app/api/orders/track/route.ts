@@ -56,7 +56,12 @@ export async function GET(req: NextRequest) {
           confirmedAt: true,
           updatedAt: true,
           userId: true,
-          deliveryMethod: true
+          deliveryMethod: true,
+          courierName: true,
+          courierPhone: true,
+          etaMinutes: true,
+          tipAmount: true,
+          proofPhotoUrl: true
         }
       })
 
@@ -82,7 +87,12 @@ export async function GET(req: NextRequest) {
           status: order.status,
           confirmedAt: order.confirmedAt ? order.confirmedAt.toISOString() : null,
           updatedAt: order.updatedAt.toISOString(),
-          deliveryMethod: order.deliveryMethod
+          deliveryMethod: order.deliveryMethod,
+          courierName: order.courierName,
+          courierPhone: order.courierPhone,
+          etaMinutes: order.etaMinutes,
+          tipAmount: order.tipAmount,
+          proofPhotoUrl: order.proofPhotoUrl
         }
       })
     }

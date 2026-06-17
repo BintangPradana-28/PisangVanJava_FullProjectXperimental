@@ -11,16 +11,24 @@ export async function sendWhatsAppNotification(
   customerPhone: string,
   customerName: string,
   orderStatus: string,
-  orderId: string
+  orderId: string,
+  etaMinutes?: number | null,
+  courierName?: string | null
 ) {
   try {
     let message = ''
+    const statusLower = orderStatus.toLowerCase()
 
-    if (orderStatus === 'confirmed') {
+    if (statusLower === 'confirmed' || statusLower === 'processing') {
       message = `Halo Kak ${customerName}! 🍌\nPesanan Pisang Goreng Van Java Anda (ID: ${orderId.slice(-5).toUpperCase()}) telah Dikonfirmasi dan sedang diproses di dapur kami.`
-    } else if (orderStatus === 'ready') {
+    } else if (statusLower === 'ready') {
       message = `Yeay! 🥳\nPesanan Pisang Goreng Van Java Anda (ID: ${orderId.slice(-5).toUpperCase()}) sudah SIAP! Silakan diambil atau ditunggu kedatangan kurirnya ya Kak.`
-    } else if (orderStatus === 'cancelled') {
+    } else if (statusLower === 'out_for_delivery') {
+      const etaText = etaMinutes ? ` Estimasi tiba: ${etaMinutes} menit.` : ''
+      message = `Halo Kak ${customerName}! 🛵\nKurir${courierName ? ` ${courierName}` : ''} sedang menuju lokasi Anda!${etaText} Mohon bersiap menerima pesanan Pisang Goreng Van Java Anda (ID: ${orderId.slice(-5).toUpperCase()}).`
+    } else if (statusLower === 'delivered') {
+      message = `Halo Kak ${customerName}! 📦\nPesanan Pisang Goreng Van Java Anda (ID: ${orderId.slice(-5).toUpperCase()}) telah diantar. Terima kasih! Selamat menikmati!`
+    } else if (statusLower === 'cancelled' || statusLower === 'canceled') {
       message = `Mohon maaf Kak ${customerName} 🙏\nPesanan Anda (ID: ${orderId.slice(-5).toUpperCase()}) terpaksa kami batalkan. Hubungi admin untuk informasi lebih lanjut.`
     } else {
       return // Tidak ada notifikasi untuk status lain

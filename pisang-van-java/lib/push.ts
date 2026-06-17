@@ -169,6 +169,14 @@ export function buildOrderStatusPushPayload(
       title: '🎉 Pesanan Siap Diambil!',
       body: `Pesanan #${shortId} sudah siap! Segera ambil atau tunggu kurir kami.`,
     },
+    OUT_FOR_DELIVERY: {
+      title: '🛵 Kurir Sedang Mengantar!',
+      body: `Pesanan #${shortId} sedang dalam perjalanan ke alamat Anda.`,
+    },
+    DELIVERED: {
+      title: '📦 Pesanan Telah Sampai!',
+      body: `Pesanan #${shortId} sudah diantar. Selamat menikmati!`,
+    },
     COMPLETED: {
       title: '✅ Pesanan Selesai',
       body: `Terima kasih! Pesanan #${shortId} selesai. Jangan lupa kasih ulasan ya! ⭐`,

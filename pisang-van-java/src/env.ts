@@ -27,7 +27,7 @@ export const env = createEnv({
     // Generate with: npx web-push generate-vapid-keys
     VAPID_PUBLIC_KEY: z.string().optional(),
     VAPID_PRIVATE_KEY: z.string().optional(),
-    VAPID_EMAIL: z.string().email().optional()
+    VAPID_EMAIL: z.string().optional()
   },
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().optional(),

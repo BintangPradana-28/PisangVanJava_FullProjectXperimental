@@ -22,6 +22,16 @@ interface TrackOrderDetailClientProps {
     deliveryMethod: string
     source: string
     notes: string | null
+    courierName: string | null
+    courierPhone: string | null
+    courierPhoneMasked: string | null
+    etaMinutes: number | null
+    tipAmount: number
+    proofPhotoUrl: string | null
+    address: {
+      fullAddress: string
+      notes: string | null
+    } | null
     items: Array<{
       id: string
       baseType: string
@@ -34,14 +44,23 @@ interface TrackOrderDetailClientProps {
   storePhone: string
 }
 
+function maskPhone(phone: string | null): string | null {
+  if (!phone) return null
+  const clean = phone.trim()
+  if (clean.length < 8) return '****'
+  return clean.slice(0, 4) + '****' + clean.slice(-4)
+}
+
 function getStatusIcon(status: string, deliveryMethod: string): string {
   const isPickup = deliveryMethod === 'PICKUP'
   if (status === 'READY') {
-    return isPickup ? '🛍️' : '🛵'
+    return isPickup ? '🛍️' : '📦'
   }
   const icons: Record<string, string> = {
     PENDING_PAYMENT: '⏳',
     PROCESSING: '🧑‍🍳',
+    OUT_FOR_DELIVERY: '🛵',
+    DELIVERED: '📦',
     COMPLETED: '🎉',
     CANCELED: '❌'
   }
@@ -51,7 +70,7 @@ function getStatusIcon(status: string, deliveryMethod: string): string {
 function getStatusLabel(status: string, deliveryMethod: string): string {
   const isPickup = deliveryMethod === 'PICKUP'
   if (status === 'READY') {
-    return isPickup ? 'Siap Diambil' : 'Dalam Perjalanan / Siap Diantar'
+    return isPickup ? 'Siap Diambil' : 'Siap Diantar'
   }
   if (status === 'COMPLETED') {
     return isPickup ? 'Selesai (Diambil)' : 'Selesai (Diterima)'
@@ -59,6 +78,8 @@ function getStatusLabel(status: string, deliveryMethod: string): string {
   const labels: Record<string, string> = {
     PENDING_PAYMENT: 'Menunggu Pembayaran',
     PROCESSING: 'Sedang Dimasak',
+    OUT_FOR_DELIVERY: 'Kurir Sedang Mengantar',
+    DELIVERED: 'Tiba di Lokasi',
     CANCELED: 'Pesanan Dibatalkan'
   }
   return labels[status] || status
@@ -95,17 +116,70 @@ function formatTime(dateStr: string | null): string {
 
 export default function TrackOrderDetailClient({ order, storePhone }: TrackOrderDetailClientProps) {
   const [currentStatus, setCurrentStatus] = useState<string>(order.status)
+  
+  // Local states for live tracking info updates
+  const [courierName, setCourierName] = useState<string | null>(order.courierName)
+  const [courierPhone, setCourierPhone] = useState<string | null>(order.courierPhone)
+  const [courierPhoneMasked, setCourierPhoneMasked] = useState<string | null>(order.courierPhoneMasked)
+  const [etaMinutes, setEtaMinutes] = useState<number | null>(order.etaMinutes)
+  const [tipAmount, setTipAmount] = useState<number>(order.tipAmount)
+  const [proofPhotoUrl, setProofPhotoUrl] = useState<string | null>(order.proofPhotoUrl)
+
   const [timestamps, setTimestamps] = useState<Record<string, string | null>>({
     PENDING_PAYMENT: order.createdAt,
     PROCESSING: order.confirmedAt || (order.status !== 'PENDING_PAYMENT' ? order.updatedAt : null),
-    READY: order.status === 'READY' || order.status === 'COMPLETED' ? order.updatedAt : null,
+    READY: ['READY', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(order.status) ? order.updatedAt : null,
+    OUT_FOR_DELIVERY: ['OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(order.status) ? order.updatedAt : null,
+    DELIVERED: ['DELIVERED', 'COMPLETED'].includes(order.status) ? order.updatedAt : null,
     COMPLETED: order.status === 'COMPLETED' ? order.updatedAt : null
   })
   const [connectionStatus, setConnectionStatus] = useState<
     'connecting' | 'connected' | 'disconnected'
   >('disconnected')
 
-  // Real-time status sync via Supabase Browser client
+  // Live ETA Countdown state
+  const [timeLeft, setTimeLeft] = useState<string | null>(null)
+  const [progressPercent, setProgressPercent] = useState<number>(100)
+
+  // Tipping UI state
+  const [customTip, setCustomTip] = useState<string>('')
+  const [isSubmittingTip, setIsSubmittingTip] = useState<boolean>(false)
+
+  // ── 1. ETA Countdown Timer Logic ─────────────────────────────────────────
+  useEffect(() => {
+    if (currentStatus !== 'OUT_FOR_DELIVERY' || !etaMinutes || !timestamps.OUT_FOR_DELIVERY) {
+      setTimeLeft(null)
+      return
+    }
+
+    const startTime = new Date(timestamps.OUT_FOR_DELIVERY).getTime()
+    const durationMs = etaMinutes * 60 * 1000
+    const endTime = startTime + durationMs
+
+    const updateTimer = () => {
+      const now = Date.now()
+      const remaining = endTime - now
+
+      if (remaining <= 0) {
+        setTimeLeft('Kurir segera sampai!')
+        setProgressPercent(0)
+        return
+      }
+
+      const totalSeconds = Math.floor(remaining / 1000)
+      const minutes = Math.floor(totalSeconds / 60)
+      const seconds = totalSeconds % 60
+      setTimeLeft(`${minutes}m ${seconds}s`)
+      setProgressPercent(Math.max(0, Math.min(100, (remaining / durationMs) * 100)))
+    }
+
+    updateTimer()
+    const timer = setInterval(updateTimer, 1000)
+
+    return () => clearInterval(timer)
+  }, [currentStatus, etaMinutes, timestamps.OUT_FOR_DELIVERY])
+
+  // ── 2. Real-time Status Sync via Supabase ─────────────────────────────────
   useEffect(() => {
     if (!supabaseBrowserClient) return
 
@@ -126,6 +200,11 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
             status: string
             confirmedAt?: string
             updatedAt: string
+            courierName?: string | null
+            courierPhone?: string | null
+            etaMinutes?: number | null
+            tipAmount?: number
+            proofPhotoUrl?: string | null
           }
           if (newRecord?.status) {
             setCurrentStatus(newRecord.status)
@@ -138,16 +217,32 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
               }
             )
 
+            // Update live fields
+            if (newRecord.courierName !== undefined) setCourierName(newRecord.courierName)
+            if (newRecord.courierPhone !== undefined) {
+              setCourierPhone(newRecord.courierPhone)
+              setCourierPhoneMasked(maskPhone(newRecord.courierPhone))
+            }
+            if (newRecord.etaMinutes !== undefined) setEtaMinutes(newRecord.etaMinutes)
+            if (newRecord.tipAmount !== undefined) setTipAmount(newRecord.tipAmount ?? 0)
+            if (newRecord.proofPhotoUrl !== undefined) setProofPhotoUrl(newRecord.proofPhotoUrl)
+
             // Update timestamps dynamically on live event
             setTimestamps((prev) => ({
               ...prev,
               [newRecord.status]: newRecord.updatedAt,
-              PROCESSING: ['PROCESSING', 'READY', 'COMPLETED'].includes(newRecord.status)
+              PROCESSING: ['PROCESSING', 'READY', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(newRecord.status)
                 ? newRecord.confirmedAt || newRecord.updatedAt
                 : prev.PROCESSING,
-              READY: ['READY', 'COMPLETED'].includes(newRecord.status)
+              READY: ['READY', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(newRecord.status)
                 ? newRecord.updatedAt
                 : prev.READY,
+              OUT_FOR_DELIVERY: ['OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(newRecord.status)
+                ? newRecord.updatedAt
+                : prev.OUT_FOR_DELIVERY,
+              DELIVERED: ['DELIVERED', 'COMPLETED'].includes(newRecord.status)
+                ? newRecord.updatedAt
+                : prev.DELIVERED,
               COMPLETED: newRecord.status === 'COMPLETED' ? newRecord.updatedAt : prev.COMPLETED
             }))
           }
@@ -165,7 +260,7 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
     }
   }, [order.id, order.deliveryMethod])
 
-  // ── Fallback Polling ─────────────────────────────────────────────────────
+  // ── 3. Fallback Polling ───────────────────────────────────────────────────
   useEffect(() => {
     if (connectionStatus === 'connected') return
 
@@ -179,7 +274,20 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
             status: string
             confirmedAt: string | null
             updatedAt: string
+            courierName: string | null
+            courierPhone: string | null
+            etaMinutes: number | null
+            tipAmount: number
+            proofPhotoUrl: string | null
           }
+
+          setCourierName(fresh.courierName)
+          setCourierPhone(fresh.courierPhone)
+          setCourierPhoneMasked(maskPhone(fresh.courierPhone))
+          setEtaMinutes(fresh.etaMinutes)
+          setTipAmount(fresh.tipAmount)
+          setProofPhotoUrl(fresh.proofPhotoUrl)
+
           if (fresh.status !== currentStatus) {
             setCurrentStatus(fresh.status)
             playClientNotificationSound()
@@ -195,10 +303,18 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
             setTimestamps((prev) => ({
               ...prev,
               [fresh.status]: fresh.updatedAt,
-              PROCESSING: ['PROCESSING', 'READY', 'COMPLETED'].includes(fresh.status)
+              PROCESSING: ['PROCESSING', 'READY', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(fresh.status)
                 ? fresh.confirmedAt || fresh.updatedAt
                 : prev.PROCESSING,
-              READY: ['READY', 'COMPLETED'].includes(fresh.status) ? fresh.updatedAt : prev.READY,
+              READY: ['READY', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(fresh.status)
+                ? fresh.updatedAt
+                : prev.READY,
+              OUT_FOR_DELIVERY: ['OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(fresh.status)
+                ? fresh.updatedAt
+                : prev.OUT_FOR_DELIVERY,
+              DELIVERED: ['DELIVERED', 'COMPLETED'].includes(fresh.status)
+                ? fresh.updatedAt
+                : prev.DELIVERED,
               COMPLETED: fresh.status === 'COMPLETED' ? fresh.updatedAt : prev.COMPLETED
             }))
           }
@@ -211,43 +327,103 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
     return () => clearInterval(pollInterval)
   }, [connectionStatus, currentStatus, order.id, order.deliveryMethod])
 
-  const isPickup = order.deliveryMethod === 'PICKUP'
-  const dynamicOrderSteps = [
-    {
-      status: 'PENDING_PAYMENT',
-      label: 'Menunggu Pembayaran',
-      description: 'Menunggu proses verifikasi pembayaran Anda.'
-    },
-    {
-      status: 'PROCESSING',
-      label: 'Sedang Dimasak',
-      description: 'Koki sedang memasak pesanan spesial Anda di dapur.'
-    },
-    {
-      status: 'READY',
-      label: isPickup ? 'Siap Diambil' : 'Siap Diantar / Perjalanan',
-      description: isPickup
-        ? 'Pesanan Anda sudah siap! Silakan ambil di kedai kami.'
-        : 'Pesanan siap dan kurir sedang mengantarkan ke alamat Anda.'
-    },
-    {
-      status: 'COMPLETED',
-      label: 'Selesai',
-      description: isPickup
-        ? 'Pesanan selesai diambil. Terima kasih atas kunjungan Anda!'
-        : 'Pesanan selesai diantar dan diterima. Selamat menikmati!'
+  // ── 4. Tipping Handler ───────────────────────────────────────────────────
+  const handleAddTip = async (amount: number) => {
+    if (amount < 1000 || amount > 1000000) {
+      toast.error('Tip minimal Rp 1.000 dan maksimal Rp 1.000.000')
+      return
     }
-  ]
+
+    setIsSubmittingTip(true)
+    try {
+      const res = await fetch(`/api/orders/${order.id}/tip`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ amount })
+      })
+
+      const json = await res.json()
+      if (json.success) {
+        setTipAmount((prev) => prev + amount)
+        toast.success(`Terima kasih! Tip sebesar ${formatPrice(amount)} berhasil diberikan ke kurir.`)
+        setCustomTip('')
+      } else {
+        toast.error(json.error || 'Gagal mengirimkan tip.')
+      }
+    } catch {
+      toast.error('Gagal menghubungi server.')
+    } finally {
+      setIsSubmittingTip(false)
+    }
+  }
+
+  const isPickup = order.deliveryMethod === 'PICKUP'
+  
+  // Stepper steps depends on delivery method
+  const dynamicOrderSteps = isPickup
+    ? [
+        {
+          status: 'PENDING_PAYMENT',
+          label: 'Menunggu Pembayaran',
+          description: 'Menunggu proses verifikasi pembayaran Anda.'
+        },
+        {
+          status: 'PROCESSING',
+          label: 'Sedang Dimasak',
+          description: 'Koki sedang memasak pesanan spesial Anda di dapur.'
+        },
+        {
+          status: 'READY',
+          label: 'Siap Diambil',
+          description: 'Pesanan Anda sudah siap! Silakan ambil di kedai kami.'
+        },
+        {
+          status: 'COMPLETED',
+          label: 'Selesai',
+          description: 'Pesanan selesai diambil. Terima kasih atas kunjungan Anda!'
+        }
+      ]
+    : [
+        {
+          status: 'PENDING_PAYMENT',
+          label: 'Menunggu Pembayaran',
+          description: 'Menunggu proses verifikasi pembayaran Anda.'
+        },
+        {
+          status: 'PROCESSING',
+          label: 'Sedang Dimasak',
+          description: 'Koki sedang memasak pesanan spesial Anda di dapur.'
+        },
+        {
+          status: 'READY',
+          label: 'Makanan Siap',
+          description: 'Pesanan selesai dimasak dan siap diserahkan ke kurir.'
+        },
+        {
+          status: 'OUT_FOR_DELIVERY',
+          label: 'Sedang Diantar',
+          description: 'Kurir sedang dalam perjalanan menuju lokasi Anda.'
+        },
+        {
+          status: 'DELIVERED',
+          label: 'Tiba di Lokasi',
+          description: 'Pesanan telah sampai di lokasi tujuan Anda.'
+        },
+        {
+          status: 'COMPLETED',
+          label: 'Selesai',
+          description: 'Pesanan selesai diantar dan diterima. Selamat menikmati!'
+        }
+      ]
 
   const stepIdx = dynamicOrderSteps.findIndex((s) => s.status === currentStatus)
   const isCanceled = currentStatus === 'CANCELED'
-  const heightClassMap: Record<number, string> = {
-    [-1]: 'h-0',
-    0: 'h-0',
-    1: 'h-[33.3%]',
-    2: 'h-[66.6%]',
-    3: 'h-full'
-  }
+  
+  // Calculate vertical connector progress line height dynamically
+  const percent = stepIdx <= 0 ? 0 : Math.min(100, Math.floor((stepIdx / (dynamicOrderSteps.length - 1)) * 100))
+  const heightStyle = { height: `${percent}%` }
 
   // Pre-filled WhatsApp link construction
   const maskedId = order.id.slice(-5).toUpperCase()
@@ -256,7 +432,7 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
   const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waMessage)}`
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 py-12 px-4 md:py-20">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 py-12 px-4 md:py-20 animate-fade-in">
       <Toaster position="top-center" />
       <div className="max-w-xl mx-auto space-y-6">
         {/* Main Status Header Card */}
@@ -317,6 +493,133 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
           </div>
         </div>
 
+        {/* Courier Info Card */}
+        {!isPickup && (currentStatus === 'OUT_FOR_DELIVERY' || currentStatus === 'DELIVERED' || currentStatus === 'COMPLETED') && courierName && (
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 p-6 shadow-sm space-y-4">
+            <h2 className="text-xs font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2 border-b border-zinc-100 dark:border-zinc-800 pb-2.5">
+              🛵 INFORMASI KURIR
+            </h2>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
+                  {courierName}
+                </p>
+                {courierPhoneMasked && (
+                  <p className="text-xs text-zinc-400 font-medium mt-0.5">
+                    No. Telp: {courierPhoneMasked}
+                  </p>
+                )}
+              </div>
+              {courierPhone && (
+                <a
+                  href={`https://wa.me/${courierPhone.replace(/\D/g, '').replace(/^0/, '62')}?text=${encodeURIComponent(`Halo ${courierName}, saya pelanggan dari pesanan #${maskedId}.`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all active:scale-[0.98] flex items-center gap-1.5 shadow-sm"
+                >
+                  <span>💬 HUBUNGI KURIR</span>
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ETA Countdown Card */}
+        {currentStatus === 'OUT_FOR_DELIVERY' && timeLeft && (
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-6 shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-amber-600 dark:text-amber-400 font-black uppercase tracking-wider">
+                  🛵 ESTIMASI WAKTU TIBA (ETA)
+                </p>
+                <p className="text-lg font-black text-zinc-800 dark:text-zinc-200 mt-1">
+                  {timeLeft}
+                </p>
+              </div>
+              <span className="text-3xl animate-bounce">🛵</span>
+            </div>
+            {/* Progress Bar */}
+            <div className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-amber-500 h-2 rounded-full transition-all duration-1000 ease-out"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Proof of Delivery Card */}
+        {!isPickup && proofPhotoUrl && (
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 p-6 shadow-sm space-y-4">
+            <h2 className="text-xs font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2 border-b border-zinc-100 dark:border-zinc-800 pb-2.5">
+              📸 BUKTI PENGIRIMAN
+            </h2>
+            <div className="border border-zinc-100 dark:border-zinc-800 rounded-xl overflow-hidden shadow-inner">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={proofPhotoUrl}
+                alt="Bukti Pengiriman"
+                className="w-full h-auto object-cover max-h-96"
+              />
+            </div>
+            <p className="text-xs text-zinc-400 font-medium text-center italic">
+              Pesanan telah berhasil diantar ke alamat Anda.
+            </p>
+          </div>
+        )}
+
+        {/* Tipping Card */}
+        {(currentStatus === 'DELIVERED' || currentStatus === 'COMPLETED') && (
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 p-6 shadow-sm space-y-4">
+            <h2 className="text-xs font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2 border-b border-zinc-100 dark:border-zinc-800 pb-2.5">
+              ☕ BERIKAN TIP UNTUK KURIR
+            </h2>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+              Kinerja kurir sangat membantu kami. Anda dapat memberikan tip tambahan langsung (cashless) yang akan 100% disalurkan ke kurir.
+            </p>
+
+            {tipAmount > 0 && (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl p-4 text-center font-bold text-sm">
+                Tip yang sudah diberikan: {formatPrice(tipAmount)} 🎉
+              </div>
+            )}
+
+            <div className="grid grid-cols-3 gap-2">
+              {[2000, 5000, 10000].map((amt) => (
+                <button
+                  key={amt}
+                  disabled={isSubmittingTip}
+                  onClick={() => handleAddTip(amt)}
+                  className="py-2.5 px-3 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-200/60 dark:border-zinc-700 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-all disabled:opacity-50"
+                >
+                  +{formatPrice(amt)}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-2">
+              <input
+                type="number"
+                placeholder="Jumlah kustom..."
+                value={customTip}
+                disabled={isSubmittingTip}
+                onChange={(e) => setCustomTip(e.target.value)}
+                className="flex-1 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700 rounded-xl px-3 text-xs font-bold text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              />
+              <button
+                disabled={isSubmittingTip || !customTip}
+                onClick={() => {
+                  const amt = parseInt(customTip, 10)
+                  if (!isNaN(amt)) handleAddTip(amt)
+                }}
+                className="py-2.5 px-4 bg-amber-500 hover:bg-amber-400 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50"
+              >
+                KIRIM
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Stepper progress timeline */}
         <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 p-6 shadow-sm">
           {isCanceled ? (
@@ -342,7 +645,8 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
               {/* Stepper Connecting Line */}
               <div className="absolute left-3.5 top-5 bottom-5 w-0.5 bg-zinc-100 dark:bg-zinc-800 -translate-x-1/2" />
               <div
-                className={`absolute left-3.5 top-5 w-0.5 bg-amber-500 -translate-x-1/2 transition-all duration-700 ease-in-out ${heightClassMap[stepIdx] || 'h-0'}`}
+                className="absolute left-3.5 top-5 w-0.5 bg-amber-500 -translate-x-1/2 transition-all duration-700 ease-in-out"
+                style={heightStyle}
               ></div>
 
               {dynamicOrderSteps.map((step, index) => {
@@ -414,6 +718,23 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
                 </span>
               </div>
             ))}
+
+            {/* Delivery Address */}
+            {order.address && (
+              <div className="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-750 p-4 rounded-xl space-y-1.5 mt-2">
+                <p className="text-xs font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                  📍 ALAMAT PENGIRIMAN
+                </p>
+                <p className="text-sm font-bold text-zinc-850 dark:text-zinc-150 leading-relaxed">
+                  {order.address.fullAddress}
+                </p>
+                {order.address.notes && (
+                  <p className="text-xs text-zinc-400 font-medium italic">
+                    Patokan: {order.address.notes}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Notes */}
             {order.notes && (

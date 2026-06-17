@@ -27,6 +27,14 @@ function maskName(name: string): string {
     .join(' ')
 }
 
+// Mask phone: "+628123456789" -> "+62812****6789"
+function maskPhone(phone: string | null): string | null {
+  if (!phone) return null
+  const clean = phone.trim()
+  if (clean.length < 8) return '****'
+  return clean.slice(0, 4) + '****' + clean.slice(-4)
+}
+
 export default async function TrackOrderDetailPage({
   params
 }: {
@@ -48,6 +56,17 @@ export default async function TrackOrderDetailPage({
       confirmedAt: true,
       updatedAt: true,
       notes: true,
+      courierName: true,
+      courierPhone: true,
+      etaMinutes: true,
+      tipAmount: true,
+      proofPhotoUrl: true,
+      address: {
+        select: {
+          fullAddress: true,
+          notes: true
+        }
+      },
       items: {
         select: {
           id: true,
@@ -92,6 +111,16 @@ export default async function TrackOrderDetailPage({
     deliveryMethod: order.deliveryMethod,
     source: order.source,
     notes: order.notes,
+    courierName: order.courierName,
+    courierPhone: order.courierPhone,
+    courierPhoneMasked: maskPhone(order.courierPhone),
+    etaMinutes: order.etaMinutes,
+    tipAmount: order.tipAmount,
+    proofPhotoUrl: order.proofPhotoUrl,
+    address: order.address ? {
+      fullAddress: order.address.fullAddress,
+      notes: order.address.notes
+    } : null,
     items: order.items.map(
       (item: {
         id: string

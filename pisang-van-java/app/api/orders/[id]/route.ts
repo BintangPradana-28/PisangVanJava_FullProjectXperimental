@@ -1,10 +1,16 @@
 import { type NextRequest, NextResponse } from 'next/server'
+import { OrderStatus } from '@prisma/client'
 import { logAudit } from '@/lib/audit'
 import { sendWhatsAppNotification } from '@/lib/notifications'
 import { prisma } from '@/lib/prisma'
 // RAG Source: lib/push.ts (new) — sendPushNotification + buildOrderStatusPushPayload
 import { buildOrderStatusPushPayload, sendPushNotification } from '@/lib/push'
-import { orderStatusInputSchema, paymentFormInputSchema } from '@/src/features/checkout/schemas'
+import {
+  orderStatusInputSchema,
+  paymentFormInputSchema,
+  ALLOWED_STATUS_TRANSITIONS,
+  deliveryUpdateSchema
+} from '@/src/features/checkout/schemas'
 import { sendOrderStatusEmail } from '@/src/features/payment/email'
 import { hasValidSameOriginHeaders, requireCheckoutActor } from '@/src/services/checkout.service'
 
@@ -76,18 +82,79 @@ export async function PATCH(req: NextRequest, { params }: OrderRouteContext) {
     return NextResponse.json({ success: false, error: 'Invalid request' }, { status: 400 })
   }
 
-  const statusCandidate = 'status' in payload ? payload.status : undefined
-  const parsedStatus = updateOrderStatusSchema.safeParse(statusCandidate)
-  if (!parsedStatus.success) {
-    return NextResponse.json({ success: false, error: 'Invalid status' }, { status: 400 })
+  const parsedBody = deliveryUpdateSchema.safeParse(payload)
+  if (!parsedBody.success) {
+    return NextResponse.json({ success: false, error: 'Invalid fields', details: parsedBody.error.format() }, { status: 400 })
   }
 
+  const orderId = parsedParams.data.orderId
+
   try {
+    const currentOrder = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: {
+        status: true,
+        deliveryMethod: true,
+        courierName: true,
+        courierPhone: true,
+        etaMinutes: true,
+        proofPhotoUrl: true
+      }
+    })
+
+    if (!currentOrder) {
+      return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 })
+    }
+
+    const { status, courierPhone, etaMinutes, proofPhotoUrl, tipAmount } = parsedBody.data
+
+    // Status transition validation
+    if (status && status !== currentOrder.status) {
+      const allowedTransitions = ALLOWED_STATUS_TRANSITIONS[currentOrder.status as OrderStatus] || []
+      if (!allowedTransitions.includes(status as OrderStatus)) {
+        return NextResponse.json({
+          success: false,
+          error: `Invalid status transition from ${currentOrder.status} to ${status}`
+        }, { status: 400 })
+      }
+
+      // Delivery-only status restrictions
+      if ((status === 'OUT_FOR_DELIVERY' || status === 'DELIVERED') && currentOrder.deliveryMethod !== 'DELIVERY') {
+        return NextResponse.json({
+          success: false,
+          error: 'Cannot set delivery status for non-delivery order'
+        }, { status: 400 })
+      }
+    }
+
+    // Delivery status requirements validation
+    const targetStatus = status || currentOrder.status
+    if (targetStatus === 'OUT_FOR_DELIVERY') {
+      const activePhone = courierPhone !== undefined ? courierPhone : currentOrder.courierPhone
+      const activeEta = etaMinutes !== undefined ? etaMinutes : currentOrder.etaMinutes
+      if (!activePhone || activeEta === null || activeEta === undefined) {
+        return NextResponse.json({
+          success: false,
+          error: 'courierPhone and etaMinutes are required when order is OUT_FOR_DELIVERY'
+        }, { status: 400 })
+      }
+    }
+
+    if (targetStatus === 'DELIVERED') {
+      const activeProof = proofPhotoUrl !== undefined ? proofPhotoUrl : currentOrder.proofPhotoUrl
+      if (!activeProof) {
+        return NextResponse.json({
+          success: false,
+          error: 'proofPhotoUrl is required when order is DELIVERED'
+        }, { status: 400 })
+      }
+    }
+
     const order = await prisma.$transaction(async (tx: any) => {
       // If transitioning to cancelled, we must restore stock exactly once.
-      if (parsedStatus.data === 'CANCELED') {
+      if (status === 'CANCELED') {
         const orderWithItems = await tx.order.findUnique({
-          where: { id: parsedParams.data.orderId },
+          where: { id: orderId },
           include: { items: true }
         })
 
@@ -102,9 +169,9 @@ export async function PATCH(req: NextRequest, { params }: OrderRouteContext) {
       }
 
       // If transitioning to COMPLETED, process referral bonus
-      if (parsedStatus.data === 'COMPLETED') {
+      if (status === 'COMPLETED') {
         const orderInfo = await tx.order.findUnique({
-          where: { id: parsedParams.data.orderId },
+          where: { id: orderId },
           select: { userId: true, status: true }
         })
 
@@ -142,61 +209,71 @@ export async function PATCH(req: NextRequest, { params }: OrderRouteContext) {
         }
       }
 
+      const updateData: Record<string, any> = {}
+      if (status) updateData.status = status
+      if (courierPhone !== undefined) updateData.courierPhone = courierPhone
+      if (etaMinutes !== undefined) updateData.etaMinutes = etaMinutes
+      if (proofPhotoUrl !== undefined) updateData.proofPhotoUrl = proofPhotoUrl
+      if (tipAmount !== undefined) updateData.tipAmount = tipAmount
+
       return tx.order.update({
-        where: { id: parsedParams.data.orderId },
-        data: { status: parsedStatus.data },
+        where: { id: orderId },
+        data: updateData,
         select: {
           id: true,
-          // ✅ SURGICAL ADDITION: userId needed to look up push subscription
-          // RAG Source: prisma/schema.prisma — Order.userId (nullable String)
           userId: true,
           customerName: true,
           customerPhone: true,
-          status: true
+          status: true,
+          courierName: true,
+          courierPhone: true,
+          etaMinutes: true
         }
       })
     })
 
-    await logAudit('UPDATE_ORDER_STATUS', 'Order', order.id, { newStatus: parsedStatus.data })
+    await logAudit('UPDATE_ORDER_STATUS', 'Order', order.id, { newStatus: order.status, fieldsUpdated: Object.keys(parsedBody.data) })
 
     if (
-      parsedStatus.data === 'PROCESSING' ||
-      parsedStatus.data === 'READY' ||
-      parsedStatus.data === 'CANCELED'
+      order.status === 'PROCESSING' ||
+      order.status === 'READY' ||
+      order.status === 'OUT_FOR_DELIVERY' ||
+      order.status === 'DELIVERED' ||
+      order.status === 'CANCELED'
     ) {
       await sendWhatsAppNotification(
         order.customerPhone,
         order.customerName,
-        parsedStatus.data,
-        order.id
+        order.status,
+        order.id,
+        order.etaMinutes,
+        order.courierName
       )
     }
 
     // Send email notification about status change (asynchronously)
     if (
-      parsedStatus.data === 'PROCESSING' ||
-      parsedStatus.data === 'READY' ||
-      parsedStatus.data === 'COMPLETED' ||
-      parsedStatus.data === 'CANCELED'
+      order.status === 'PROCESSING' ||
+      order.status === 'READY' ||
+      order.status === 'OUT_FOR_DELIVERY' ||
+      order.status === 'DELIVERED' ||
+      order.status === 'COMPLETED' ||
+      order.status === 'CANCELED'
     ) {
-      sendOrderStatusEmail(order.id, parsedStatus.data).catch((err) =>
+      sendOrderStatusEmail(order.id, order.status).catch((err) =>
         console.error('[EMAIL] Failed to send order status email', err)
       )
     }
 
-    // ── ✅ SURGICAL ADDITION: Web Push notification ──────────────────────────────
-    // Fire-and-forget — identical pattern to email above. Never blocks the response.
-    // Only sent for orders with a registered userId (guest orders have userId: null).
-    // RAG Source: lib/push.ts (buildOrderStatusPushPayload, sendPushNotification)
+    // Web Push notification
     if (order.userId) {
-      const pushPayload = buildOrderStatusPushPayload(order.id, parsedStatus.data)
+      const pushPayload = buildOrderStatusPushPayload(order.id, order.status)
       if (pushPayload) {
         sendPushNotification(order.userId, pushPayload).catch((err) =>
           console.error('[PUSH] Failed to send order status push notification', err)
         )
       }
     }
-    // ────────────────────────────────────────────────────────────────────────────
 
     return NextResponse.json({
       success: true,

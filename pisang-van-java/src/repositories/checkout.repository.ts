@@ -238,6 +238,10 @@ export async function executeCheckoutTransaction(
           discountAmount,
           deliveryMethod: input.deliveryMethod,
           deliveryFee,
+          courierName: input.courierCode
+            ? input.courierCode.charAt(0).toUpperCase() + input.courierCode.slice(1)
+            : null,
+          addressId: input.addressId ?? null,
           items: {
             create: preparedItems.map((item) => ({
               variantId: item.variantId,

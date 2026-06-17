@@ -14,6 +14,8 @@ export const ORDER_STATUS_VALUES = [
   'PENDING_PAYMENT',
   'PROCESSING',
   'READY',
+  'OUT_FOR_DELIVERY',
+  'DELIVERED',
   'COMPLETED',
   'CANCELED'
 ] as const
@@ -91,6 +93,7 @@ export const createOrderInputSchema = z
       .nullable(),
     courierCode: z.string().trim().max(50).optional().nullable(),
     courierService: z.string().trim().max(50).optional().nullable(),
+    addressId: z.string().min(8).max(64).optional().nullable(),
     items: z.array(checkoutItemInputSchema).min(1).max(40)
   })
   .strict()
@@ -131,6 +134,26 @@ export const paymentFormInputSchema = z
   .strict()
 
 export const orderStatusInputSchema = z.enum(ORDER_STATUS_VALUES)
+
+export const ALLOWED_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  PENDING_PAYMENT: ['PROCESSING', 'CANCELED'],
+  PROCESSING: ['READY', 'CANCELED'],
+  READY: ['OUT_FOR_DELIVERY', 'COMPLETED', 'CANCELED'],
+  OUT_FOR_DELIVERY: ['DELIVERED', 'CANCELED'],
+  DELIVERED: ['COMPLETED', 'CANCELED'],
+  COMPLETED: [],
+  CANCELED: []
+}
+
+export const deliveryUpdateSchema = z
+  .object({
+    status: z.enum(ORDER_STATUS_VALUES).optional(),
+    courierPhone: z.string().trim().max(20).optional().nullable(),
+    etaMinutes: z.number().int().min(0).max(1440).optional().nullable(),
+    proofPhotoUrl: z.string().url().max(500).optional().nullable(),
+    tipAmount: z.number().finite().min(0).max(10_000_000).optional()
+  })
+  .strict()
 
 export type CheckoutRole = z.infer<typeof checkoutRoleSchema>
 export type BaseType = z.infer<typeof checkoutItemInputSchema>['baseType']

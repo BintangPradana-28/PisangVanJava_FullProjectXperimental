@@ -123,6 +123,8 @@ export async function sendOrderStatusEmail(orderId: string, status: string): Pro
     const statusLabels: Record<string, string> = {
       PROCESSING: 'Sedang Diproses 🍳',
       READY: 'Siap Diambil/Dikirim 🎉',
+      OUT_FOR_DELIVERY: 'Dalam Pengiriman 🛵',
+      DELIVERED: 'Telah Diterima 📦',
       COMPLETED: 'Selesai 🍌',
       CANCELED: 'Dibatalkan ❌'
     }

@@ -5,6 +5,13 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useLanguage } from '@/context/LanguageContext'
 
+// Tiny 16x16 preview generated from public/kitchen.png — paints instantly while
+// the full hero image streams in, instead of a blank flash on slow connections.
+// Still a reasonable fallback when a CMS banner image is active instead, since
+// the hero already sits on a dark background with a heavy gradient overlay on top.
+const HERO_BG_BLUR_DATA_URL =
+  'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAQABADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDNRVjCKG43bkIAB6etWb+Ut+8DHLqMk1RW8WQfZ1RcdR7n+lNvbhifKZfLVOAofPNZJM0dj//Z'
+
 const ShoppingBagIcon = () => (
   <svg
     className="w-5 h-5"
@@ -64,7 +71,10 @@ export default function Hero({
     <section
       id="hero"
       // PERBAIKAN: Mengunci background utama menjadi gelap dan full width
-      className="relative w-full min-h-screen flex items-center justify-center overflow-hidden bg-[#1a0f0a]"
+      // PERF: Tinggi dikurangi di mobile/tablet (85vh, bukan 100vh) — memperkecil
+      // area LCP image yang harus dirender di koneksi lambat, dan membawa section
+      // berikutnya sedikit lebih dekat ke atas tanpa mengubah tampilan desktop.
+      className="relative w-full min-h-[85vh] lg:min-h-screen flex items-center justify-center overflow-hidden bg-[#1a0f0a]"
     >
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0" aria-hidden="true">
@@ -74,8 +84,13 @@ export default function Hero({
           fill
           priority
           fetchPriority="high"
+          placeholder="blur"
+          blurDataURL={HERO_BG_BLUR_DATA_URL}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 1200px"
-          quality={70}
+          // PERF: quality diturunkan dari 70 — gambar ini berada di belakang
+          // opacity-40 + gradient gelap berlapis, jadi detail kompresi nyaris
+          // tak terlihat, sementara ukuran file turun cukup besar untuk LCP.
+          quality={45}
           className="object-cover opacity-40"
         />
         {/* PERBAIKAN: Gradient hitam pekat yang dikunci mati (tidak terpengaruh tema) */}

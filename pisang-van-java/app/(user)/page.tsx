@@ -245,10 +245,10 @@ export default async function HomePage() {
     aggregateRating:
       totalReviews >= 5
         ? {
-            '@type': 'AggregateRating',
-            ratingValue: averageRating,
-            reviewCount: totalReviews
-          }
+          '@type': 'AggregateRating',
+          ratingValue: averageRating,
+          reviewCount: totalReviews
+        }
         : undefined
   }
 
@@ -262,6 +262,12 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Hero banner={activeBanner} averageRating={averageRating} totalReviews={totalReviews} />
+      {/* PERF/CRO: MenuCards dipindah ke sini, langsung setelah Hero — menu yang
+          bisa dipesan sebelumnya berada di urutan ke-4 (setelah About+Gallery),
+          memaksa scroll panjang sebelum pengunjung lihat produk. MenuCards juga
+          sudah di-import statis (bukan next/dynamic seperti About/Gallery di
+          bawah), jadi urutan render ini konsisten dengan prioritas loading-nya. */}
+      <MenuCards products={homeProducts} />
       <About />
       <Gallery
         products={products.slice(0, 6).map((p) => ({
@@ -270,7 +276,6 @@ export default async function HomePage() {
           imageUrl: p.imageUrl
         }))}
       />
-      <MenuCards products={homeProducts} />
       <LocationMap />
       <Footer />
     </main>

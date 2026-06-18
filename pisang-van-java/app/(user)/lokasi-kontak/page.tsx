@@ -30,16 +30,6 @@ const WhatsAppIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
-const GoFoodIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-    <circle cx="12" cy="12" r="10" />
-    <path
-      fill="white"
-      d="M8 12.5c0-2.2 1.8-4 4-4s4 1.8 4 4v.5h-2.5v-.5c0-.8-.7-1.5-1.5-1.5s-1.5.7-1.5 1.5v3c0 .8.7 1.5 1.5 1.5h1.5v-1.5H12v-1.5h3.5v3c0 .8-.7 1.5-1.5 1.5H12c-2.2 0-4-1.8-4-4v-2.5z"
-    />
-  </svg>
-)
-
 // ── Data ─────────────────────────────────────────────────────────────────────
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -219,7 +209,10 @@ export default function LokasiKontakPage() {
 
               <form onSubmit={handleWA} className="space-y-4">
                 <div>
-                  <label className="block text-[11px] font-bold tracking-widest uppercase mb-1.5 text-amber-700 dark:text-amber-500">
+                  <label
+                    htmlFor="contact-name"
+                    className="block text-[11px] font-bold tracking-widest uppercase mb-1.5 text-amber-700 dark:text-amber-500"
+                  >
                     {t('kontak_label_name')}
                   </label>
                   <input
@@ -232,7 +225,10 @@ export default function LokasiKontakPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold tracking-widest uppercase mb-1.5 text-amber-700 dark:text-amber-500">
+                  <label
+                    htmlFor="contact-message"
+                    className="block text-[11px] font-bold tracking-widest uppercase mb-1.5 text-amber-700 dark:text-amber-500"
+                  >
                     {t('kontak_label_message')}
                   </label>
                   <textarea
@@ -273,6 +269,7 @@ export default function LokasiKontakPage() {
                         fill="none"
                         viewBox="0 0 24 24"
                       >
+                        <title>Loading</title>
                         <circle
                           className="opacity-30"
                           cx="12"
@@ -305,7 +302,7 @@ export default function LokasiKontakPage() {
                 {t('kontak_follow_us')}
               </p>
               <div className="flex flex-wrap gap-3">
-                {socials.map(({ label, handle, icon: Icon, href, bg, textColor, soon }) => (
+                {socials.map(({ label, icon: Icon, href, textColor, soon }) => (
                   <a
                     key={label}
                     href={href}
@@ -406,7 +403,7 @@ export default function LokasiKontakPage() {
           <div className="space-y-3">
             {faqs.map(({ q, a }, i) => (
               <motion.div
-                key={i}
+                key={q}
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -414,6 +411,10 @@ export default function LokasiKontakPage() {
                 className="rounded-[4px] overflow-hidden bg-white dark:bg-zinc-900 border border-cream-200/80 dark:border-zinc-800 shadow-sm"
               >
                 <button
+                  type="button"
+                  id={`faq-btn-${i}`}
+                  aria-expanded={openFaq === i}
+                  aria-controls={`faq-answer-${i}`}
                   className="w-full flex items-center justify-between px-6 py-4 text-left font-semibold text-sm transition-colors text-zinc-800 dark:text-zinc-200 hover:bg-cream-50/50 dark:hover:bg-zinc-800/50"
                   onClick={() => setFaq(openFaq === i ? null : i)}
                 >
@@ -428,6 +429,9 @@ export default function LokasiKontakPage() {
                   {openFaq === i && (
                     <motion.div
                       key="answer"
+                      id={`faq-answer-${i}`}
+                      role="region"
+                      aria-labelledby={`faq-btn-${i}`}
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
@@ -461,10 +465,12 @@ export default function LokasiKontakPage() {
             <p className="text-white/70 mb-6">{t('kontak_cta_desc')}</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
+                type="button"
                 onClick={() => {
-                  document.getElementById('contact-name')?.focus()
+                  const element = document.getElementById('contact-name')
+                  element?.focus()
                   window.scrollTo({
-                    top: document.getElementById('contact-name')?.offsetTop! - 200,
+                    top: (element?.offsetTop ?? 0) - 200,
                     behavior: 'smooth'
                   })
                 }}

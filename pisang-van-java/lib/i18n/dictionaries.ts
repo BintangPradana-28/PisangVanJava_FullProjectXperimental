@@ -24,6 +24,7 @@ export const dictionaries: Record<Locale, Translations> = {
     hero_cta: 'Pesan Sekarang',
     hero_no_rating: 'Belum ada penilaian',
     hero_location: 'Cilangkap, Jakarta Timur',
+    hero_scroll_down: 'Gulir Ke Bawah',
     about_badge: 'Tentang Kami',
     about_title: 'Seni Menggoreng Pisang, Sempurna',
     about_desc:
@@ -471,6 +472,7 @@ export const dictionaries: Record<Locale, Translations> = {
     hero_cta: 'Order Now',
     hero_no_rating: 'No ratings yet',
     hero_location: 'East Jakarta',
+    hero_scroll_down: 'Scroll Down',
     about_badge: 'About Us',
     about_title: 'The Art of Perfect, Fried Banana',
     about_desc:

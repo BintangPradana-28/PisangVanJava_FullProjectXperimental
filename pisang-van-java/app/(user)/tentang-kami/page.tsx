@@ -363,14 +363,12 @@ export default function TentangKamiPage() {
             </h2>
             <p className="text-white/70 mb-8 leading-relaxed">{t('about_b2b_cta_desc')}</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
-                href={`https://wa.me/${getSetting('nomor_wa', '6281312167554')}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/reseller"
                 className="px-8 py-3.5 rounded-[4px] font-bold text-sm transition-all duration-200 active:scale-95 bg-amber-600 hover:bg-amber-500 text-white shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-400/50"
               >
                 💼 {t('about_b2b_cta_btn')}
-              </a>
+              </Link>
               <Link
                 href="/menu-spesial"
                 className="px-8 py-3.5 rounded-[4px] font-bold text-sm transition-all duration-200 active:scale-95 bg-white/10 hover:bg-white/15 border border-white/30 focus:outline-none focus-visible:ring-4 focus-visible:ring-white/30"

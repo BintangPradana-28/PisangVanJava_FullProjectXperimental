@@ -235,7 +235,7 @@ export default function KeranjangPage() {
             </div>
 
             {/* Summary + CTA */}
-            <div className="bg-white dark:bg-zinc-900 rounded-[4px] border border-zinc-100 dark:border-zinc-800 shadow-sm p-6 sticky bottom-4">
+            <div className="bg-white dark:bg-zinc-900 rounded-[4px] border border-zinc-100 dark:border-zinc-800 shadow-sm p-6 mt-8">
               <div className="flex justify-between items-center mb-4">
                 <span className="text-sm text-zinc-500">
                   {t('cart_subtotal_label')} ({cartCount} {t('cart_item_unit')})

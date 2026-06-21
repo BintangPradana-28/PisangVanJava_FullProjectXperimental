@@ -53,9 +53,12 @@ export default function SearchFilterBar({ totalItems }: SearchFilterBarProps) {
   const [baseFilter, setBaseFilter] = useState(searchParams.get('filter') ?? 'all')
   const [flavorFilter, setFlavorFilter] = useState(searchParams.get('flavor') ?? 'all')
   const [sortBy, setSortBy] = useState(searchParams.get('sort') ?? 'default')
-  const [showAvailable, setShowAvailable] = useState(searchParams.get('available') === 'true')
   const [isDragging, setIsDragging] = useState(false)
   const dragStart = useRef<{ x: number; scrollLeft: number }>({ x: 0, scrollLeft: 0 })
+  // Mobile-only: tabs/chips collapse behind the filter icon button (mirrors the
+  // reference's search+filter pairing). Desktop always shows them — there's room.
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const activeFilterCount = (baseFilter !== 'all' ? 1 : 0) + (flavorFilter !== 'all' ? 1 : 0)
 
   // ── Debounced URL sync ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -65,11 +68,10 @@ export default function SearchFilterBar({ totalItems }: SearchFilterBarProps) {
       if (baseFilter !== 'all') params.set('filter', baseFilter)
       if (flavorFilter !== 'all') params.set('flavor', flavorFilter)
       if (sortBy !== 'default') params.set('sort', sortBy)
-      if (showAvailable) params.set('available', 'true')
       router.push(`?${params.toString()}`, { scroll: false })
     }, 400)
     return () => clearTimeout(timer)
-  }, [search, baseFilter, flavorFilter, sortBy, showAvailable, router])
+  }, [search, baseFilter, flavorFilter, sortBy, router])
 
   // ── Mouse drag-to-scroll for flavor chip row (desktop UX) ───────────────────
   const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -97,17 +99,16 @@ export default function SearchFilterBar({ totalItems }: SearchFilterBarProps) {
 
   return (
     <div className="sticky top-16 z-30 shadow-sm bg-[var(--background-custom)] border-b border-[var(--border-custom)]">
-      {/* ── Row 1: Search + item count ──────────────────────────────────────── */}
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 pt-4 pb-3 flex items-center gap-3">
-        {/* Search input */}
+      {/* ── Row 1: Search pill + Filter toggle + Sort ───────────────────────── */}
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 pt-4 pb-3 flex items-center gap-2.5">
+        {/* Search input — rounded-full pill, echoes reference's search bar */}
         <div className="relative flex-1 max-w-sm">
           <svg
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-[var(--text-custom)] opacity-55"
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-[var(--text-custom)] opacity-50"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
           >
-            <title>Cari</title>
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -121,13 +122,12 @@ export default function SearchFilterBar({ totalItems }: SearchFilterBarProps) {
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('menu_search_placeholder')}
             aria-label="Cari varian menu"
-            className="w-full pl-10 pr-4 py-2.5 text-sm rounded-[4px] outline-none transition-all bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100"
+            className="w-full pl-11 pr-4 py-3 text-sm rounded-full outline-none transition-all bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 focus-visible:ring-2 focus-visible:ring-amber-400"
           />
           {search && (
             <button
-              type="button"
               onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 transition-colors"
               aria-label="Hapus pencarian"
             >
               ✕
@@ -135,13 +135,40 @@ export default function SearchFilterBar({ totalItems }: SearchFilterBarProps) {
           )}
         </div>
 
+        {/* Filter toggle — circular icon button (reference's "sliders" icon),
+            controls tabs/chips visibility on mobile only; badge shows active count */}
+        <button
+          type="button"
+          onClick={() => setIsFilterOpen((v) => !v)}
+          aria-expanded={isFilterOpen}
+          aria-label="Buka filter"
+          className={`md:hidden relative shrink-0 w-11 h-11 rounded-full flex items-center justify-center transition-all active:scale-95 border ${isFilterOpen || activeFilterCount > 0
+              ? 'bg-[#D4802A] border-[#D4802A] text-white'
+              : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300'
+            }`}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 4h18M6 8h12M9 12h6M11 16h2"
+            />
+          </svg>
+          {activeFilterCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-900 text-white text-[9px] font-bold flex items-center justify-center border border-white dark:border-zinc-950">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+
         {/* Sort dropdown — native <select> for built-in keyboard/screen-reader support */}
-        <div className="relative shrink-0">
+        <div className="relative shrink-0 hidden sm:block">
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             aria-label="Urutkan menu"
-            className="appearance-none text-xs font-semibold pl-3 pr-7 py-2.5 rounded-[4px] outline-none transition-all bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400"
+            className="appearance-none text-xs font-semibold pl-3.5 pr-7 py-3 rounded-full outline-none transition-all bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400"
           >
             {SORT_OPTIONS.map((opt) => (
               <option key={opt.key} value={opt.key}>
@@ -150,83 +177,99 @@ export default function SearchFilterBar({ totalItems }: SearchFilterBarProps) {
             ))}
           </select>
           <svg
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none text-zinc-400"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none text-zinc-400"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
           >
-            <title>Panah</title>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </div>
 
-        {/* Available only checkbox */}
-        <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold select-none text-zinc-750 dark:text-zinc-350 shrink-0">
-          <input
-            type="checkbox"
-            checked={showAvailable}
-            onChange={(e) => setShowAvailable(e.target.checked)}
-            className="rounded-[4px] w-3.5 h-3.5 border-zinc-350 text-amber-500 focus:ring-amber-500 dark:bg-zinc-900 dark:border-zinc-850 focus:outline-none"
-          />
-          <span>{t('menu_filter_available')}</span>
-        </label>
-
-        <span className="text-xs shrink-0 font-medium tabular-nums text-[var(--text-custom)] opacity-55">
+        <span className="text-xs shrink-0 font-medium tabular-nums text-[var(--text-custom)] opacity-55 hidden sm:inline">
           {totalItems} {t('menu_count_suffix')}
         </span>
       </div>
 
-      {/* ── Row 2: Base Type Tabs (Sticky, pill-style) ──────────────────────── */}
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 pb-4 flex gap-2 overflow-x-auto scrollbar-none">
-        {BASE_TABS.map((tab) => {
-          const active = baseFilter === tab.key
-          return (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setBaseFilter(tab.key)}
-              {...{ 'aria-pressed': active }}
-              className={`flex-shrink-0 text-xs font-bold px-4 py-2 rounded-[4px] transition-all duration-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-amber-400 ${
-                active
-                  ? 'bg-[#D4802A] text-white shadow-[0_4px_14px_rgba(212,128,42,0.35)]'
-                  : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300'
-              }`}
-            >
-              {tab.label}
-            </button>
-          )
-        })}
+      {/* ── Row 1b: Sort + count for mobile (search row above is cramped) ──── */}
+      <div className="sm:hidden max-w-[1200px] mx-auto px-4 pb-3 flex items-center justify-between gap-2.5">
+        <div className="relative shrink-0">
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            aria-label="Urutkan menu"
+            className="appearance-none text-xs font-semibold pl-3.5 pr-7 py-2 rounded-full outline-none transition-all bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.key} value={opt.key}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <svg
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none text-zinc-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+        <span className="text-xs font-medium tabular-nums text-[var(--text-custom)] opacity-55">
+          {totalItems} {t('menu_count_suffix')}
+        </span>
       </div>
 
-      {/* ── Row 3: Flavor Family Chips (drag-scrollable) ────────────────────── */}
-      {/* biome-ignore lint/a11y/useSemanticElements: swipeable chip row acts as a scrollable menu */}
-      <div
-        ref={chipRowRef}
-        className="max-w-[1200px] mx-auto px-4 sm:px-6 pb-4 pt-1 flex gap-2 overflow-x-auto scrollbar-none select-none cursor-grab"
-        onMouseDown={onMouseDown}
-        onMouseLeave={onMouseLeave}
-        onMouseUp={onMouseUp}
-        onMouseMove={onMouseMove}
-        role="group"
-        aria-label="Filter berdasarkan rasa"
-      >
-        {FLAVOR_CHIPS.map((chip) => {
-          const active = flavorFilter === chip.key
-          return (
-            <button
-              key={chip.key}
-              onClick={() => !isDragging && setFlavorFilter(chip.key)}
-              {...{ 'aria-pressed': active }}
-              className={`flex-shrink-0 text-[11px] font-semibold px-3.5 py-1.5 rounded-[4px] transition-all duration-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
-                active
+      {/* ── Row 2 & 3: Tabs + Chips — collapsed on mobile until filter toggle is tapped, always visible on desktop ── */}
+      <div className={`${isFilterOpen ? 'block' : 'hidden'} md:block`}>
+        {/* Row 2: Base Type Tabs (pill-style) */}
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 pb-4 flex gap-2 overflow-x-auto scrollbar-none">
+          {BASE_TABS.map((tab) => {
+            const active = baseFilter === tab.key
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setBaseFilter(tab.key)}
+                {...{ 'aria-pressed': active }}
+                className={`flex-shrink-0 text-xs font-bold px-4 py-2 rounded-full transition-all duration-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-amber-400 ${active
+                  ? 'bg-[#D4802A] text-white shadow-[0_4px_14px_rgba(212,128,42,0.35)]'
+                  : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300'
+                  }`}
+              >
+                {tab.label}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Row 3: Flavor Family Chips (drag-scrollable, pill-style) */}
+        <div
+          ref={chipRowRef}
+          className="max-w-[1200px] mx-auto px-4 sm:px-6 pb-4 pt-1 flex gap-2 overflow-x-auto scrollbar-none select-none cursor-grab"
+          onMouseDown={onMouseDown}
+          onMouseLeave={onMouseLeave}
+          onMouseUp={onMouseUp}
+          onMouseMove={onMouseMove}
+          role="group"
+          aria-label="Filter berdasarkan rasa"
+        >
+          {FLAVOR_CHIPS.map((chip) => {
+            const active = flavorFilter === chip.key
+            return (
+              <button
+                key={chip.key}
+                onClick={() => !isDragging && setFlavorFilter(chip.key)}
+                {...{ 'aria-pressed': active }}
+                className={`flex-shrink-0 text-[11px] font-semibold px-3.5 py-1.5 rounded-full transition-all duration-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${active
                   ? 'bg-amber-500/15 border-[1.5px] border-[#D4802A] text-[#D4802A]'
                   : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 opacity-75'
-              }`}
-            >
-              {chip.label}
-            </button>
-          )
-        })}
+                  }`}
+              >
+                {chip.label}
+              </button>
+            )
+          })}
+        </div>
       </div>
     </div>
   )

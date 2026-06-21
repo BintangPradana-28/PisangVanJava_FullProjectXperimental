@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import type React from 'react'
@@ -18,6 +19,11 @@ interface QuickViewModalProps {
   product: ProductType | null
   allProducts?: ProductType[]
   onClose: () => void
+  // Optional: lets the parent (MenuGrid) wire in its existing favorites state/handler
+  // instead of this modal duplicating that logic. Heart button only renders when both
+  // are provided, so omitting them is safe — no half-working affordance.
+  isFavorite?: boolean
+  onToggleFavorite?: (e: React.MouseEvent, variantId: string) => void
 }
 
 interface Topping {
@@ -30,10 +36,42 @@ interface Topping {
 
 const AVAILABLE_TYPES = ['Kembung', 'Lumpia', 'Krispy']
 
+// Same fallback-image + description-key logic as components/user/MenuGrid.tsx —
+// kept local (not extracted to a shared util) since formatPrice below already
+// follows this exact duplication precedent in this codebase; both are small,
+// pure, presentation-only helpers, not domain/business logic.
+const getFallbackImage = (name: string) => {
+  const n = name.toLowerCase()
+  if (n.includes('matcha')) return '/images/flavors/matcha.png'
+  if (n.includes('taro')) return '/images/flavors/taro.png'
+  if (n.includes('blueberry') || n.includes('bluberi')) return '/images/flavors/blueberry.png'
+  if (n.includes('strawberry') || n.includes('stroberi')) return '/images/flavors/strawberry.png'
+  return '/kitchen.png'
+}
+
+const getFlavorDescriptionKey = (flavorName: string): string | null => {
+  const lower = flavorName.toLowerCase()
+  if (lower.includes('cokelat') || lower.includes('coklat')) return 'menu_desc_cokelat'
+  if (lower.includes('matcha')) return 'menu_desc_matcha'
+  if (lower.includes('strawberry') || lower.includes('stroberi')) return 'menu_desc_strawberry'
+  if (lower.includes('blueberry') || lower.includes('bluberi')) return 'menu_desc_blueberry'
+  if (lower.includes('taro')) return 'menu_desc_taro'
+  if (lower.includes('tiramisu')) return 'menu_desc_tiramisu'
+  if (lower.includes('keju')) return 'menu_desc_keju'
+  if (lower.includes('susu')) return 'menu_desc_susu'
+  if (lower.includes('original')) return 'menu_desc_original'
+  if (lower.includes('milky')) return 'menu_desc_milky'
+  return null
+}
+
+const TYPE_EMOJI: Record<string, string> = { Kembung: '🥟', Lumpia: '🌯', Krispy: '🥨' }
+
 export default function QuickViewModal({
   product,
   allProducts = [],
-  onClose
+  onClose,
+  isFavorite = false,
+  onToggleFavorite
 }: QuickViewModalProps) {
   const addToCart = useCartStore((s) => s.addItem)
   const { t } = useLanguage()
@@ -103,6 +141,12 @@ export default function QuickViewModal({
   }, [selectedFlavor, allProducts])
 
   if (!product) return null
+
+  // The currently-displayed product (live-selected flavor, falls back to the
+  // originally-clicked card) — used by both pricing logic below and the new
+  // image-hero/stat-row section.
+  const displayProduct = matchedProduct || product
+  const heroImage = displayProduct.imageUrl || getFallbackImage(displayProduct.flavorName)
 
   // Logika Harga
   const getProductPrice = (p: ProductType | null, type: string) => {
@@ -206,45 +250,137 @@ export default function QuickViewModal({
     >
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px] animate-fade-in" />
-        <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 flex flex-col w-full max-w-lg mx-auto h-[70vh] md:h-auto md:max-h-[85vh] md:top-0 md:bottom-0 md:my-auto md:!transform-none bg-white dark:bg-zinc-900 rounded-t-3xl md:rounded-[4px] overflow-hidden outline-none shadow-[0_-10px_40px_rgba(0,0,0,0.15)] md:animate-in md:fade-in md:zoom-in-95">
+        <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 flex flex-col w-full max-w-lg mx-auto h-[88vh] md:h-auto md:max-h-[90vh] md:top-0 md:bottom-0 md:my-auto md:!transform-none bg-white dark:bg-zinc-900 rounded-t-3xl md:rounded-[4px] overflow-hidden outline-none shadow-[0_-10px_40px_rgba(0,0,0,0.15)] md:animate-in md:fade-in md:zoom-in-95">
           {/* RAG Source: vaul library (Drawer.Handle)
               FIX: The previous implementation was a purely cosmetic div with no drag event
               listeners. vaul's <Drawer.Handle /> wires the correct touch/pointer events for
               actual bottom-sheet dragging on mobile. */}
-          <Drawer.Handle className="md:hidden mx-auto mt-3 mb-2 h-1.5 w-12 flex-shrink-0 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+          <Drawer.Handle className="md:hidden absolute left-1/2 -translate-x-1/2 top-2 z-20 h-1.5 w-12 flex-shrink-0 rounded-full bg-white/70" />
 
-          {/* Header Modal (Text Only - 60% viewport design) */}
-          <div className="px-6 pb-4 pt-1 flex justify-between items-start border-b border-zinc-100 dark:border-zinc-800 shrink-0">
-            <div>
-              <Drawer.Title className="font-serif font-bold text-xl text-zinc-900 dark:text-zinc-100 leading-tight mb-1">
-                {dynamicTitle}
-              </Drawer.Title>
-              <Drawer.Description className="sr-only">
-                Sesuaikan opsi untuk {dynamicTitle}
-              </Drawer.Description>
-              <div className="flex flex-wrap items-center gap-3">
-                <p className="text-[#D4802A] font-bold text-lg">{formatPrice(basePrice)}</p>
-                {matchedProduct && matchedProduct.stock <= 5 && matchedProduct.stock > 0 && (
-                  <div className="flex items-center gap-1.5 animate-shake infinite [animation-duration:1.5s]">
-                    <span className="w-2 h-2 rounded-[4px] bg-amber-500 animate-pulse"></span>
-                    <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                      ⚠️ Stok Terbatas: Sisa {matchedProduct.stock} porsi!
-                    </span>
-                  </div>
-                )}
+          {/* Header: image hero + overlay icon buttons (back/favorite) + name + stat row */}
+          <div className="shrink-0">
+            <div className="relative w-full aspect-[4/3] bg-zinc-100 dark:bg-zinc-800">
+              <Image
+                src={heroImage}
+                alt={displayProduct.flavorName}
+                fill
+                sizes="(max-width: 640px) 512px, 512px"
+                quality={75}
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/10" />
+
+              <button
+                onClick={onClose}
+                className="absolute top-4 left-4 z-10 w-10 h-10 rounded-full flex items-center justify-center bg-white/85 backdrop-blur-md shadow-sm hover:scale-105 active:scale-95 transition-all text-zinc-700"
+                aria-label="Tutup, kembali ke menu"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+
+              {onToggleFavorite && (
+                <button
+                  onClick={(e) => onToggleFavorite(e, displayProduct.id)}
+                  className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center bg-white/85 backdrop-blur-md shadow-sm hover:scale-105 active:scale-95 transition-all"
+                  aria-label="Toggle Favorite"
+                >
+                  <svg
+                    className={`w-5 h-5 transition-colors ${isFavorite ? 'text-red-500 fill-current' : 'text-zinc-600'}`}
+                    fill={isFavorite ? 'currentColor' : 'none'}
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={isFavorite ? 0 : 2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            <Drawer.Description className="sr-only">
+              Sesuaikan opsi untuk {dynamicTitle}
+            </Drawer.Description>
+            <Drawer.Title className="font-serif font-bold text-2xl text-center text-zinc-900 dark:text-zinc-100 pt-4 px-6">
+              {selectedFlavor || product.flavorName}
+            </Drawer.Title>
+
+            {matchedProduct && matchedProduct.stock <= 5 && matchedProduct.stock > 0 && (
+              <div className="flex items-center justify-center gap-1.5 mt-1.5 animate-shake infinite [animation-duration:1.5s]">
+                <span className="w-2 h-2 rounded-[4px] bg-amber-500 animate-pulse" />
+                <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
+                  ⚠️ Stok Terbatas: Sisa {matchedProduct.stock} porsi!
+                </span>
+              </div>
+            )}
+
+            {/* Stat row — real data only. Reference shows calories/prep-time/weight,
+                none of which exist in our schema; substituted with soldCount, stock,
+                rating, and the live-selected type instead of fabricating numbers. */}
+            <div className="flex items-center justify-center gap-5 px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="text-base">🔥</span>
+                <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                  {displayProduct.soldCount && displayProduct.soldCount >= 1000
+                    ? `${(displayProduct.soldCount / 1000).toFixed(1)}k+`
+                    : (displayProduct.soldCount ?? 0)}
+                </span>
+                <span className="text-[10px] text-zinc-400">Terjual</span>
+              </div>
+              <div className="w-px h-8 bg-zinc-200 dark:bg-zinc-700" />
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="text-base">📦</span>
+                <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                  {displayProduct.stock}
+                </span>
+                <span className="text-[10px] text-zinc-400">Sisa Stok</span>
+              </div>
+              <div className="w-px h-8 bg-zinc-200 dark:bg-zinc-700" />
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="text-base">⭐</span>
+                <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                  {displayProduct.rating ? displayProduct.rating : 'Baru'}
+                </span>
+                <span className="text-[10px] text-zinc-400">
+                  {displayProduct.reviewCount ? `${displayProduct.reviewCount} Ulasan` : 'Rating'}
+                </span>
+              </div>
+              <div className="w-px h-8 bg-zinc-200 dark:bg-zinc-700" />
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="text-base">{TYPE_EMOJI[selectedType] ?? '🍌'}</span>
+                <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                  {selectedType || '—'}
+                </span>
+                <span className="text-[10px] text-zinc-400">Tipe Dipilih</span>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-[4px] bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-600 dark:text-zinc-300 flex items-center justify-center transition-colors focus:outline-none shrink-0 ml-4 mt-1"
-              aria-label="Tutup modal"
-            >
-              ✕
-            </button>
           </div>
 
           {/* Body (Bisa di-Scroll) */}
           <div className="flex-1 overflow-y-auto p-6 bg-zinc-50 dark:bg-zinc-900/50 overscroll-contain [-webkit-overflow-scrolling:touch]">
+            {/* Description — reuses the exact same copy source as the menu grid card,
+                so the text customers see here matches what they saw before opening */}
+            <div className="mb-8">
+              <h4 className="font-bold text-zinc-800 dark:text-zinc-100 text-lg mb-2">Deskripsi</h4>
+              <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+                {displayProduct.deskripsi_topping ||
+                  (() => {
+                    const key = getFlavorDescriptionKey(displayProduct.flavorName)
+                    return key ? t(key) : t('menu_default_desc')
+                  })()}
+              </p>
+            </div>
+
             {/* Section Tipe (Grid 3 kolom) */}
             <div className="mb-8">
               <div className="flex justify-between items-end mb-3">
@@ -259,11 +395,10 @@ export default function QuickViewModal({
                     <button
                       key={type}
                       onClick={() => setSelectedType(type)}
-                      className={`py-2.5 px-2 rounded-[4px] border-2 text-sm font-bold transition-all ${
-                        isSelected
+                      className={`py-2.5 px-2 rounded-[4px] border-2 text-sm font-bold transition-all ${isSelected
                           ? 'border-[#D4802A] bg-[#D4802A]/10 text-[#D4802A]'
                           : 'border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300'
-                      }`}
+                        }`}
                     >
                       {type}
                     </button>
@@ -286,11 +421,10 @@ export default function QuickViewModal({
                     return (
                       <label
                         key={topping.id}
-                        className={`flex flex-col p-3.5 min-h-[44px] min-w-[44px] border-2 rounded-[4px] cursor-pointer transition-all select-none active:scale-[0.97] ${
-                          isSelected
+                        className={`flex flex-col p-3.5 min-h-[44px] min-w-[44px] border-2 rounded-[4px] cursor-pointer transition-all select-none active:scale-[0.97] ${isSelected
                             ? 'border-[#D4802A] bg-[#D4802A]/5'
                             : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center gap-2.5 mb-1">
                           <input
@@ -331,11 +465,10 @@ export default function QuickViewModal({
                           return (
                             <label
                               key={topping.id}
-                              className={`flex flex-col p-3.5 min-h-[44px] min-w-[44px] border-2 rounded-[4px] cursor-pointer transition-all select-none active:scale-[0.97] ${
-                                isSelected
+                              className={`flex flex-col p-3.5 min-h-[44px] min-w-[44px] border-2 rounded-[4px] cursor-pointer transition-all select-none active:scale-[0.97] ${isSelected
                                   ? 'border-[#D4802A] bg-[#D4802A]/5'
                                   : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
-                              }`}
+                                }`}
                             >
                               <div className="flex items-center gap-2.5 mb-1">
                                 <input
@@ -383,11 +516,10 @@ export default function QuickViewModal({
                           setNotes((prev) => (prev ? `${prev} [${tag}]` : `[${tag}]`).trim())
                         }
                       }}
-                      className={`px-3 py-1.5 rounded-[4px] text-xs font-bold border transition-colors ${
-                        isSelected
+                      className={`px-3 py-1.5 rounded-[4px] text-xs font-bold border transition-colors ${isSelected
                           ? 'bg-[#D4802A]/10 text-[#D4802A] border-[#D4802A]'
                           : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-[#D4802A]/50'
-                      }`}
+                        }`}
                     >
                       {isSelected ? '✓ ' : '+ '}
                       {tag}
@@ -438,11 +570,10 @@ export default function QuickViewModal({
             <button
               onClick={(e) => handleAddToCart(e)}
               disabled={!isFormValid || !isStoreOpen}
-              className={`flex-1 py-3.5 px-4 rounded-[4px] font-bold text-sm transition-all duration-200 shadow-md flex items-center justify-center gap-2 ${
-                isFormValid && isStoreOpen
+              className={`flex-1 py-3.5 px-4 rounded-[4px] font-bold text-sm transition-all duration-200 shadow-md flex items-center justify-center gap-2 ${isFormValid && isStoreOpen
                   ? 'bg-[#D4802A] hover:bg-[#b56d24] text-white active:scale-95 shadow-[#D4802A]/30'
                   : 'bg-zinc-300 dark:bg-zinc-800 text-zinc-500 cursor-not-allowed shadow-none'
-              }`}
+                }`}
             >
               {!isStoreOpen ? (
                 <>Toko Sedang Tutup</>

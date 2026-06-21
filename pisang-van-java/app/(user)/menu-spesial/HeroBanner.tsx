@@ -17,38 +17,30 @@ export default function HeroBanner() {
   }, [t])
 
   return (
-    <section className="pt-28 pb-10 relative overflow-hidden">
-      <div className="absolute inset-0 bg-hero-pattern opacity-40 pointer-events-none" />
+    <section className="relative overflow-hidden pt-24 pb-16 sm:pt-28 sm:pb-20 text-white bg-gradient-to-br from-[#3D1C02] via-[#4a2408] to-[#5a2e0a]">
+      {/* Decorative warmth — soft amber glow, echoes the radial blob used on the outlet CTA */}
       <div
-        className="absolute -top-20 -right-20 w-80 h-80 rounded-[4px] opacity-10 pointer-events-none"
-        style={{ background: 'radial-gradient(circle,#D4802A,transparent)' }}
+        className="absolute -top-24 -right-16 w-96 h-96 rounded-full opacity-20 pointer-events-none blur-2xl"
+        style={{ background: 'radial-gradient(circle,#D4802A,transparent 70%)' }}
       />
-      <div className="max-w-[1200px] mx-auto px-6 relative z-10 text-center">
+      <div className="absolute inset-0 bg-hero-pattern opacity-[0.06] pointer-events-none" />
+
+      <div className="max-w-[1200px] mx-auto px-6 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
+          className="max-w-2xl"
         >
-          <span
-            className="inline-block text-xs font-bold tracking-[0.22em] uppercase px-4 py-1.5 rounded-[4px] mb-4"
-            style={{ background: 'rgba(212,128,42,0.12)', color: '#D4802A' }}
-          >
+          <span className="inline-block text-xs font-bold tracking-[0.22em] uppercase px-4 py-1.5 rounded-full mb-5 bg-white/10 text-amber-200 border border-white/15 backdrop-blur-sm">
             {t('nav_menu')}
           </span>
-          <h1
-            className="font-serif text-5xl sm:text-6xl font-bold leading-[1.1] mb-3"
-            style={{ color: 'var(--text-custom)' }}
-          >
+          <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.08] mb-4">
             {menuTitleParts.before}
-            <span className="italic font-normal" style={{ color: '#D4802A' }}>
-              Van Java
-            </span>
+            <span className="italic font-normal text-amber-300">Van Java</span>
             {menuTitleParts.after}
           </h1>
-          <p
-            className="text-base leading-relaxed max-w-xl mx-auto"
-            style={{ color: 'var(--text-custom)' }}
-          >
+          <p className="text-base sm:text-lg leading-relaxed text-white/70 max-w-lg">
             {t('menu_desc')}
           </p>
         </motion.div>

@@ -190,11 +190,11 @@ function ReorderButton({ order }: { order: Order }) {
       title={
         order.status === 'CANCELED' ? 'Pesanan dibatalkan' : 'Tambahkan semua item ke keranjang'
       }
-      className="flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-[4px] transition-all duration-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-      style={{
-        background: order.status === 'CANCELED' ? 'var(--surface-custom)' : '#D4802A',
-        color: order.status === 'CANCELED' ? 'var(--text-custom)' : 'white'
-      }}
+      className={`flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-[4px] transition-all duration-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
+        order.status === 'CANCELED'
+          ? 'bg-[var(--surface-custom)] text-[var(--text-custom)]'
+          : 'bg-[#D4802A] text-white'
+      }`}
     >
       {loading ? (
         <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -337,17 +337,15 @@ export default function TrackOrderPage() {
   }, [connectionStatus, orders, refetch])
 
   return (
-    <section className="min-h-screen py-16 px-4" style={{ background: 'var(--background-custom)' }}>
+    <section className="min-h-screen py-16 px-4 bg-[var(--background-custom)]">
       <div className="max-w-lg mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">📦</div>
-          <h1 className="font-serif text-3xl font-bold" style={{ color: 'var(--text-custom)' }}>
+          <h1 className="font-serif text-3xl font-bold text-[var(--text-custom)]">
             {t('track_title')}
           </h1>
-          <p className="text-sm mt-2" style={{ color: 'var(--text-custom)', opacity: 0.6 }}>
-            {t('track_desc')}
-          </p>
+          <p className="text-sm mt-2 text-[var(--text-custom)] opacity-60">{t('track_desc')}</p>
         </div>
 
         {/* Search box */}
@@ -359,15 +357,13 @@ export default function TrackOrderPage() {
               onChange={(e) => setPhone(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               placeholder={t('track_placeholder')}
-              className="flex-1 px-4 py-2.5 rounded-[4px] border border-zinc-200 dark:border-zinc-800 bg-transparent text-sm outline-none focus:ring-2 focus:ring-amber-400 transition-all"
-              style={{ color: 'var(--text-custom)' }}
+              className="flex-1 px-4 py-2.5 rounded-[4px] border border-zinc-200 dark:border-zinc-800 bg-transparent text-sm outline-none focus:ring-2 focus:ring-amber-400 transition-all text-[var(--text-custom)]"
             />
             <button
               type="button"
               onClick={handleSearch}
               disabled={loading}
-              className="px-5 py-2.5 rounded-[4px] font-bold text-sm text-white disabled:opacity-60 transition-all active:scale-95"
-              style={{ background: '#D4802A' }}
+              className="px-5 py-2.5 rounded-[4px] font-bold text-sm text-white disabled:opacity-60 transition-all active:scale-95 bg-[#D4802A]"
             >
               {loading ? '...' : t('track_btn_check')}
             </button>
@@ -423,10 +419,7 @@ export default function TrackOrderPage() {
               )}
 
               {orders.length === 0 ? (
-                <div
-                  className="text-center py-12"
-                  style={{ color: 'var(--text-custom)', opacity: 0.5 }}
-                >
+                <div className="text-center py-12 text-[var(--text-custom)] opacity-50">
                   <div className="text-4xl mb-2">🔍</div>
                   <p>{t('track_empty')}</p>
                 </div>
@@ -442,16 +435,10 @@ export default function TrackOrderPage() {
                       {/* Order header */}
                       <div className="flex justify-between items-start mb-4">
                         <div>
-                          <div
-                            className="font-semibold text-sm"
-                            style={{ color: 'var(--text-custom)' }}
-                          >
+                          <div className="font-semibold text-sm text-[var(--text-custom)]">
                             {order.customerName}
                           </div>
-                          <div
-                            className="text-xs mt-0.5"
-                            style={{ color: 'var(--text-custom)', opacity: 0.5 }}
-                          >
+                          <div className="text-xs mt-0.5 text-[var(--text-custom)] opacity-50">
                             {new Date(order.createdAt).toLocaleDateString(
                               locale === 'id' ? 'id-ID' : 'en-US',
                               { day: 'numeric', month: 'long', year: 'numeric' }
@@ -485,7 +472,7 @@ export default function TrackOrderPage() {
 
                       {/* Status label & ETA */}
                       <div className="mb-3">
-                        <div className="text-sm font-semibold" style={{ color: '#D4802A' }}>
+                        <div className="text-sm font-semibold text-[#D4802A]">
                           {getStatusLabel(order.status, order.deliveryMethod)}
                         </div>
                         {(order.status === 'PROCESSING' ||
@@ -513,7 +500,7 @@ export default function TrackOrderPage() {
                       <div className="space-y-1.5 border-t border-zinc-100 dark:border-zinc-800 pt-3">
                         {order.items.map((item) => (
                           <div key={item.id} className="flex justify-between text-sm">
-                            <span style={{ color: 'var(--text-custom)', opacity: 0.8 }}>
+                            <span className="text-[var(--text-custom)] opacity-80">
                               {item.variant.flavorName ?? item.variant.nama_varian} ({item.baseType}
                               )
                               {item.toppings && item.toppings.length > 0 && (
@@ -527,14 +514,14 @@ export default function TrackOrderPage() {
                               )}{' '}
                               ×{item.quantity}
                             </span>
-                            <span className="font-medium" style={{ color: 'var(--text-custom)' }}>
+                            <span className="font-medium text-[var(--text-custom)]">
                               {formatPrice(item.subtotal)}
                             </span>
                           </div>
                         ))}
                         <div className="flex justify-between font-bold pt-2 border-t border-zinc-100 dark:border-zinc-800">
-                          <span style={{ color: 'var(--text-custom)' }}>{t('track_total')}</span>
-                          <span style={{ color: '#D4802A' }}>{formatPrice(order.totalPrice)}</span>
+                          <span className="text-[var(--text-custom)]">{t('track_total')}</span>
+                          <span className="text-[#D4802A]">{formatPrice(order.totalPrice)}</span>
                         </div>
                       </div>
 

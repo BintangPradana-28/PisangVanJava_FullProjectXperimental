@@ -48,7 +48,7 @@ function maskPhone(phone: string | null): string | null {
   if (!phone) return null
   const clean = phone.trim()
   if (clean.length < 8) return '****'
-  return clean.slice(0, 4) + '****' + clean.slice(-4)
+  return `${clean.slice(0, 4)}****${clean.slice(-4)}`
 }
 
 function getStatusIcon(status: string, deliveryMethod: string): string {
@@ -116,11 +116,13 @@ function formatTime(dateStr: string | null): string {
 
 export default function TrackOrderDetailClient({ order, storePhone }: TrackOrderDetailClientProps) {
   const [currentStatus, setCurrentStatus] = useState<string>(order.status)
-  
+
   // Local states for live tracking info updates
   const [courierName, setCourierName] = useState<string | null>(order.courierName)
   const [courierPhone, setCourierPhone] = useState<string | null>(order.courierPhone)
-  const [courierPhoneMasked, setCourierPhoneMasked] = useState<string | null>(order.courierPhoneMasked)
+  const [courierPhoneMasked, setCourierPhoneMasked] = useState<string | null>(
+    order.courierPhoneMasked
+  )
   const [etaMinutes, setEtaMinutes] = useState<number | null>(order.etaMinutes)
   const [tipAmount, setTipAmount] = useState<number>(order.tipAmount)
   const [proofPhotoUrl, setProofPhotoUrl] = useState<string | null>(order.proofPhotoUrl)
@@ -128,8 +130,12 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
   const [timestamps, setTimestamps] = useState<Record<string, string | null>>({
     PENDING_PAYMENT: order.createdAt,
     PROCESSING: order.confirmedAt || (order.status !== 'PENDING_PAYMENT' ? order.updatedAt : null),
-    READY: ['READY', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(order.status) ? order.updatedAt : null,
-    OUT_FOR_DELIVERY: ['OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(order.status) ? order.updatedAt : null,
+    READY: ['READY', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(order.status)
+      ? order.updatedAt
+      : null,
+    OUT_FOR_DELIVERY: ['OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(order.status)
+      ? order.updatedAt
+      : null,
     DELIVERED: ['DELIVERED', 'COMPLETED'].includes(order.status) ? order.updatedAt : null,
     COMPLETED: order.status === 'COMPLETED' ? order.updatedAt : null
   })
@@ -231,13 +237,23 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
             setTimestamps((prev) => ({
               ...prev,
               [newRecord.status]: newRecord.updatedAt,
-              PROCESSING: ['PROCESSING', 'READY', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(newRecord.status)
+              PROCESSING: [
+                'PROCESSING',
+                'READY',
+                'OUT_FOR_DELIVERY',
+                'DELIVERED',
+                'COMPLETED'
+              ].includes(newRecord.status)
                 ? newRecord.confirmedAt || newRecord.updatedAt
                 : prev.PROCESSING,
-              READY: ['READY', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(newRecord.status)
+              READY: ['READY', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(
+                newRecord.status
+              )
                 ? newRecord.updatedAt
                 : prev.READY,
-              OUT_FOR_DELIVERY: ['OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(newRecord.status)
+              OUT_FOR_DELIVERY: ['OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(
+                newRecord.status
+              )
                 ? newRecord.updatedAt
                 : prev.OUT_FOR_DELIVERY,
               DELIVERED: ['DELIVERED', 'COMPLETED'].includes(newRecord.status)
@@ -303,13 +319,21 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
             setTimestamps((prev) => ({
               ...prev,
               [fresh.status]: fresh.updatedAt,
-              PROCESSING: ['PROCESSING', 'READY', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(fresh.status)
+              PROCESSING: [
+                'PROCESSING',
+                'READY',
+                'OUT_FOR_DELIVERY',
+                'DELIVERED',
+                'COMPLETED'
+              ].includes(fresh.status)
                 ? fresh.confirmedAt || fresh.updatedAt
                 : prev.PROCESSING,
               READY: ['READY', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(fresh.status)
                 ? fresh.updatedAt
                 : prev.READY,
-              OUT_FOR_DELIVERY: ['OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(fresh.status)
+              OUT_FOR_DELIVERY: ['OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(
+                fresh.status
+              )
                 ? fresh.updatedAt
                 : prev.OUT_FOR_DELIVERY,
               DELIVERED: ['DELIVERED', 'COMPLETED'].includes(fresh.status)
@@ -347,7 +371,9 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
       const json = await res.json()
       if (json.success) {
         setTipAmount((prev) => prev + amount)
-        toast.success(`Terima kasih! Tip sebesar ${formatPrice(amount)} berhasil diberikan ke kurir.`)
+        toast.success(
+          `Terima kasih! Tip sebesar ${formatPrice(amount)} berhasil diberikan ke kurir.`
+        )
         setCustomTip('')
       } else {
         toast.error(json.error || 'Gagal mengirimkan tip.')
@@ -360,7 +386,7 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
   }
 
   const isPickup = order.deliveryMethod === 'PICKUP'
-  
+
   // Stepper steps depends on delivery method
   const dynamicOrderSteps = isPickup
     ? [
@@ -420,10 +446,10 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
 
   const stepIdx = dynamicOrderSteps.findIndex((s) => s.status === currentStatus)
   const isCanceled = currentStatus === 'CANCELED'
-  
+
   // Calculate vertical connector progress line height dynamically
-  const percent = stepIdx <= 0 ? 0 : Math.min(100, Math.floor((stepIdx / (dynamicOrderSteps.length - 1)) * 100))
-  const heightStyle = { height: `${percent}%` }
+  const percent =
+    stepIdx <= 0 ? 0 : Math.min(100, Math.floor((stepIdx / (dynamicOrderSteps.length - 1)) * 100))
 
   // Pre-filled WhatsApp link construction
   const maskedId = order.id.slice(-5).toUpperCase()
@@ -494,35 +520,39 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
         </div>
 
         {/* Courier Info Card */}
-        {!isPickup && (currentStatus === 'OUT_FOR_DELIVERY' || currentStatus === 'DELIVERED' || currentStatus === 'COMPLETED') && courierName && (
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 p-6 shadow-sm space-y-4">
-            <h2 className="text-xs font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2 border-b border-zinc-100 dark:border-zinc-800 pb-2.5">
-              🛵 INFORMASI KURIR
-            </h2>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
-                  {courierName}
-                </p>
-                {courierPhoneMasked && (
-                  <p className="text-xs text-zinc-400 font-medium mt-0.5">
-                    No. Telp: {courierPhoneMasked}
+        {!isPickup &&
+          (currentStatus === 'OUT_FOR_DELIVERY' ||
+            currentStatus === 'DELIVERED' ||
+            currentStatus === 'COMPLETED') &&
+          courierName && (
+            <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 p-6 shadow-sm space-y-4">
+              <h2 className="text-xs font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2 border-b border-zinc-100 dark:border-zinc-800 pb-2.5">
+                🛵 INFORMASI KURIR
+              </h2>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
+                    {courierName}
                   </p>
+                  {courierPhoneMasked && (
+                    <p className="text-xs text-zinc-400 font-medium mt-0.5">
+                      No. Telp: {courierPhoneMasked}
+                    </p>
+                  )}
+                </div>
+                {courierPhone && (
+                  <a
+                    href={`https://wa.me/${courierPhone.replace(/\D/g, '').replace(/^0/, '62')}?text=${encodeURIComponent(`Halo ${courierName}, saya pelanggan dari pesanan #${maskedId}.`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all active:scale-[0.98] flex items-center gap-1.5 shadow-sm"
+                  >
+                    <span>💬 HUBUNGI KURIR</span>
+                  </a>
                 )}
               </div>
-              {courierPhone && (
-                <a
-                  href={`https://wa.me/${courierPhone.replace(/\D/g, '').replace(/^0/, '62')}?text=${encodeURIComponent(`Halo ${courierName}, saya pelanggan dari pesanan #${maskedId}.`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all active:scale-[0.98] flex items-center gap-1.5 shadow-sm"
-                >
-                  <span>💬 HUBUNGI KURIR</span>
-                </a>
-              )}
             </div>
-          </div>
-        )}
+          )}
 
         {/* ETA Countdown Card */}
         {currentStatus === 'OUT_FOR_DELIVERY' && timeLeft && (
@@ -539,10 +569,14 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
               <span className="text-3xl animate-bounce">🛵</span>
             </div>
             {/* Progress Bar */}
-            <div className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-2 overflow-hidden relative">
+              <style>{`
+                .order-progress-bar-fill-${maskedId} {
+                  width: ${progressPercent}%;
+                }
+              `}</style>
               <div
-                className="bg-amber-500 h-2 rounded-full transition-all duration-1000 ease-out"
-                style={{ width: `${progressPercent}%` }}
+                className={`order-progress-bar-fill-${maskedId} bg-amber-500 h-2 rounded-full transition-all duration-1000 ease-out`}
               />
             </div>
           </div>
@@ -556,6 +590,7 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
             </h2>
             <div className="border border-zinc-100 dark:border-zinc-800 rounded-xl overflow-hidden shadow-inner">
               {/* eslint-disable-next-line @next/next/no-img-element */}
+              {/* biome-ignore lint/performance/noImgElement: External proof photo from dynamic URL */}
               <img
                 src={proofPhotoUrl}
                 alt="Bukti Pengiriman"
@@ -575,7 +610,8 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
               ☕ BERIKAN TIP UNTUK KURIR
             </h2>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-              Kinerja kurir sangat membantu kami. Anda dapat memberikan tip tambahan langsung (cashless) yang akan 100% disalurkan ke kurir.
+              Kinerja kurir sangat membantu kami. Anda dapat memberikan tip tambahan langsung
+              (cashless) yang akan 100% disalurkan ke kurir.
             </p>
 
             {tipAmount > 0 && (
@@ -587,6 +623,7 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
             <div className="grid grid-cols-3 gap-2">
               {[2000, 5000, 10000].map((amt) => (
                 <button
+                  type="button"
                   key={amt}
                   disabled={isSubmittingTip}
                   onClick={() => handleAddTip(amt)}
@@ -607,10 +644,11 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
                 className="flex-1 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700 rounded-xl px-3 text-xs font-bold text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-amber-500"
               />
               <button
+                type="button"
                 disabled={isSubmittingTip || !customTip}
                 onClick={() => {
                   const amt = parseInt(customTip, 10)
-                  if (!isNaN(amt)) handleAddTip(amt)
+                  if (!Number.isNaN(amt)) handleAddTip(amt)
                 }}
                 className="py-2.5 px-4 bg-amber-500 hover:bg-amber-400 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50"
               >
@@ -644,9 +682,13 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
             <div className="relative pl-6 space-y-8 py-2">
               {/* Stepper Connecting Line */}
               <div className="absolute left-3.5 top-5 bottom-5 w-0.5 bg-zinc-100 dark:bg-zinc-800 -translate-x-1/2" />
+              <style>{`
+                .stepper-progress-fill-${maskedId} {
+                  height: ${percent}%;
+                }
+              `}</style>
               <div
-                className="absolute left-3.5 top-5 w-0.5 bg-amber-500 -translate-x-1/2 transition-all duration-700 ease-in-out"
-                style={heightStyle}
+                className={`stepper-progress-fill-${maskedId} absolute left-3.5 top-5 w-0.5 bg-amber-500 -translate-x-1/2 transition-all duration-700 ease-in-out`}
               ></div>
 
               {dynamicOrderSteps.map((step, index) => {

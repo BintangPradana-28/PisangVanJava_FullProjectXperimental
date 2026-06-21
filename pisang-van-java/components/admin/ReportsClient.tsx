@@ -501,7 +501,6 @@ function ExportPDFButton({
     setLoading(true)
     try {
       const { jsPDF } = await import('jspdf')
-      // @ts-expect-error
       const { default: autoTable } = await import('jspdf-autotable')
 
       const doc = new jsPDF()

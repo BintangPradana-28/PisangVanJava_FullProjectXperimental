@@ -140,12 +140,13 @@ export default function SearchFilterBar({ totalItems }: SearchFilterBarProps) {
         <button
           type="button"
           onClick={() => setIsFilterOpen((v) => !v)}
-          aria-expanded={isFilterOpen}
+          {...{ 'aria-expanded': isFilterOpen }}
           aria-label="Buka filter"
-          className={`md:hidden relative shrink-0 w-11 h-11 rounded-full flex items-center justify-center transition-all active:scale-95 border ${isFilterOpen || activeFilterCount > 0
+          className={`md:hidden relative shrink-0 w-11 h-11 rounded-full flex items-center justify-center transition-all active:scale-95 border ${
+            isFilterOpen || activeFilterCount > 0
               ? 'bg-[#D4802A] border-[#D4802A] text-white'
               : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300'
-            }`}
+          }`}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
@@ -231,10 +232,11 @@ export default function SearchFilterBar({ totalItems }: SearchFilterBarProps) {
                 key={tab.key}
                 onClick={() => setBaseFilter(tab.key)}
                 {...{ 'aria-pressed': active }}
-                className={`flex-shrink-0 text-xs font-bold px-4 py-2 rounded-full transition-all duration-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-amber-400 ${active
-                  ? 'bg-[#D4802A] text-white shadow-[0_4px_14px_rgba(212,128,42,0.35)]'
-                  : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300'
-                  }`}
+                className={`flex-shrink-0 text-xs font-bold px-4 py-2 rounded-full transition-all duration-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-amber-400 ${
+                  active
+                    ? 'bg-[#D4802A] text-white shadow-[0_4px_14px_rgba(212,128,42,0.35)]'
+                    : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300'
+                }`}
               >
                 {tab.label}
               </button>
@@ -260,10 +262,11 @@ export default function SearchFilterBar({ totalItems }: SearchFilterBarProps) {
                 key={chip.key}
                 onClick={() => !isDragging && setFlavorFilter(chip.key)}
                 {...{ 'aria-pressed': active }}
-                className={`flex-shrink-0 text-[11px] font-semibold px-3.5 py-1.5 rounded-full transition-all duration-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${active
-                  ? 'bg-amber-500/15 border-[1.5px] border-[#D4802A] text-[#D4802A]'
-                  : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 opacity-75'
-                  }`}
+                className={`flex-shrink-0 text-[11px] font-semibold px-3.5 py-1.5 rounded-full transition-all duration-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+                  active
+                    ? 'bg-amber-500/15 border-[1.5px] border-[#D4802A] text-[#D4802A]'
+                    : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 opacity-75'
+                }`}
               >
                 {chip.label}
               </button>

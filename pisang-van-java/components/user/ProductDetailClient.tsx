@@ -63,6 +63,7 @@ const getFallbackImage = (name: string) => {
   if (n.includes('strawberry') || n.includes('stroberi')) return '/images/flavors/strawberry.png'
   if (n.includes('cokelat') || n.includes('coklat')) return '/images/flavors/chocolate.png'
   if (n.includes('keju')) return '/images/flavors/cheese.png'
+  if (n.includes('vanilla') || n.includes('vanila')) return '/images/flavors/vanilla.png'
   return '/kitchen.png'
 }
 

@@ -45,7 +45,7 @@ const getCachedMenuRaw = unstable_cache(
     // Zero Trust & Flawless DB: Mengambil produk yang belum dihapus (Soft Delete)
     const dbProducts = await prisma.menuVariant.findMany({
       where: { isDeleted: false, isActive: true },
-      orderBy: { createdAt: 'desc' }
+      orderBy: [{ soldCount: 'desc' }, { createdAt: 'desc' }]
     })
 
     // THE CISO FIX: Aggregation Queries Instead of Massive Joins
@@ -289,10 +289,10 @@ export default async function HomePage() {
     aggregateRating:
       totalReviews >= 5
         ? {
-          '@type': 'AggregateRating',
-          ratingValue: averageRating,
-          reviewCount: totalReviews
-        }
+            '@type': 'AggregateRating',
+            ratingValue: averageRating,
+            reviewCount: totalReviews
+          }
         : undefined
   }
 
@@ -303,6 +303,7 @@ export default async function HomePage() {
 
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD schema requires raw HTML injection
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Hero banner={activeBanner} averageRating={averageRating} totalReviews={totalReviews} />

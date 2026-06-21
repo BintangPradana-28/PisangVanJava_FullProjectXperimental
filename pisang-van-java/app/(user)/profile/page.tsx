@@ -1,6 +1,5 @@
 'use client'
 
-import { PushNotificationManager } from '@/components/push/PushNotificationManager'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -24,6 +23,7 @@ import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { z } from 'zod'
 import { requestEmailOTP, verifyAndChangeEmail } from '@/app/actions/emailChange'
+import { PushNotificationManager } from '@/components/push/PushNotificationManager'
 import { useLanguage } from '@/context/LanguageContext'
 import { api } from '@/src/lib/api'
 import getCroppedImg from '@/src/lib/cropImage'
@@ -181,7 +181,7 @@ export default function ProfileDataDiriPage() {
     }
   }
 
-  const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {
+  const onCropComplete = useCallback((_croppedArea: any, croppedAreaPixels: any) => {
     setCroppedAreaPixels(croppedAreaPixels)
   }, [])
 
@@ -415,7 +415,6 @@ export default function ProfileDataDiriPage() {
                     src={avatarUrl || session?.user?.image || ''}
                     alt="Avatar"
                     fill
-                    sizes="112px"
                     className="object-cover"
                   />
                 ) : (
@@ -467,10 +466,14 @@ export default function ProfileDataDiriPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">
+              <label
+                htmlFor="profile-name"
+                className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2"
+              >
                 {t('profile_name_label')}
               </label>
               <input
+                id="profile-name"
                 type="text"
                 {...registerProfile('name')}
                 className="w-full p-3.5 rounded-[4px] border border-zinc-200 dark:border-zinc-800 bg-transparent focus:ring-2 focus:ring-[#D4802A]/50 outline-none transition-all"
@@ -482,10 +485,14 @@ export default function ProfileDataDiriPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">
+              <label
+                htmlFor="profile-phone"
+                className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2"
+              >
                 {t('profile_phone_label')}
               </label>
               <input
+                id="profile-phone"
                 type="tel"
                 {...registerProfile('phone')}
                 className="w-full p-3.5 rounded-[4px] border border-zinc-200 dark:border-zinc-800 bg-transparent focus:ring-2 focus:ring-[#D4802A]/50 outline-none transition-all"
@@ -521,4 +528,312 @@ export default function ProfileDataDiriPage() {
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-xl fon
+              <h2 className="text-xl font-bold font-serif text-zinc-900 dark:text-zinc-100">
+                {t('profile_oauth_title')}
+              </h2>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                {t('profile_oauth_subtitle')}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-blue-50 dark:bg-blue-900/10 p-6 rounded-[4px] border border-blue-100 dark:border-blue-900/50 flex flex-col md:flex-row items-center gap-6">
+            <div className="w-16 h-16 bg-white dark:bg-zinc-800 rounded-[4px] shadow-sm flex items-center justify-center shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-8 h-8">
+                <title>Google Logo</title>
+                <path
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  fill="#4285F4"
+                />
+                <path
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  fill="#34A853"
+                />
+                <path
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  fill="#FBBC05"
+                />
+                <path
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  fill="#EA4335"
+                />
+                <path d="M1 1h22v22H1z" fill="none" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-1">
+                Terhubung dengan Google
+              </h3>
+              <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed max-w-xl">
+                {t('profile_oauth_desc').replace('{email}', session?.user?.email || '')}
+              </p>
+            </div>
+          </div>
+        </section>
+      ) : (
+        <>
+          {/* GANTI EMAIL SECTION (ZERO-TRUST OTP) */}
+          <section className="bg-white dark:bg-zinc-900 rounded-[4px] p-6 md:p-8 shadow-sm border border-zinc-200/50 dark:border-zinc-800/80">
+            <div className="flex items-center gap-4 mb-6 pb-6 border-b border-zinc-100 dark:border-zinc-800">
+              <div className="w-12 h-12 rounded-[4px] bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center">
+                <Mail className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold font-serif text-zinc-900 dark:text-zinc-100">
+                  {t('profile_email_title')}
+                </h2>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  {t('profile_email_subtitle')}
+                </p>
+              </div>
+            </div>
+
+            <div className="max-w-lg space-y-5">
+              {emailMode === 'idle' && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                  <div>
+                    <label
+                      htmlFor="current-email-input"
+                      className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2"
+                    >
+                      {t('profile_email_current')}
+                    </label>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <input
+                        id="current-email-input"
+                        type="email"
+                        value={session?.user?.email || ''}
+                        disabled
+                        placeholder="Current Email"
+                        title="Current Email"
+                        aria-label="Current Email"
+                        className="flex-1 p-3.5 rounded-[4px] border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 cursor-not-allowed outline-none w-full"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRequestEmailOTP}
+                        disabled={isEmailLoading}
+                        className="w-full sm:w-auto px-6 py-3.5 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-bold rounded-[4px] transition-all disabled:opacity-50 whitespace-nowrap flex items-center justify-center"
+                      >
+                        {isEmailLoading ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          t('profile_email_change_btn')
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {emailMode === 'otp' && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="space-y-4 bg-blue-50 dark:bg-blue-900/10 p-5 rounded-[4px] border border-blue-100 dark:border-blue-900/50"
+                >
+                  <div className="flex gap-3 text-blue-700 dark:text-blue-400 mb-2">
+                    <ShieldCheck className="w-5 h-5 shrink-0" />
+                    <p
+                      className="text-sm"
+                      // biome-ignore lint/security/noDangerouslySetInnerHtml: safe static template content
+                      dangerouslySetInnerHTML={{
+                        __html: t('profile_email_otp_sent').replace(
+                          '{email}',
+                          `<strong>${session?.user?.email}</strong>`
+                        )
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={otpValue}
+                      onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ''))}
+                      className="w-full text-center tracking-[0.5em] font-mono text-2xl p-4 rounded-[4px] border border-blue-200 dark:border-blue-800 bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                      placeholder="------"
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setEmailMode('idle')}
+                      className="flex-1 p-3 text-zinc-600 dark:text-zinc-400 font-bold hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-[4px] transition-colors"
+                    >
+                      {t('address_cancel_btn')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEmailMode('newEmail')}
+                      disabled={otpValue.length !== 6}
+                      className="flex-1 p-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-[4px] transition-all disabled:opacity-50"
+                    >
+                      {t('profile_email_otp_verify_btn')}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {emailMode === 'newEmail' && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="space-y-4"
+                >
+                  <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-2">
+                    <CheckCircle2 className="w-5 h-5" />
+                    <p className="text-sm font-bold">{t('profile_email_otp_verified')}</p>
+                  </div>
+                  <form
+                    onSubmit={handleEmailSubmit(handleVerifyAndChangeEmail)}
+                    className="space-y-4"
+                  >
+                    <div>
+                      <label
+                        htmlFor="new-email-input"
+                        className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2"
+                      >
+                        {t('profile_email_new_label')}
+                      </label>
+                      <input
+                        id="new-email-input"
+                        type="email"
+                        {...registerEmail('newEmail')}
+                        className="w-full p-3.5 rounded-[4px] border border-zinc-200 dark:border-zinc-800 bg-transparent focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        placeholder={t('profile_email_new_placeholder')}
+                        title={t('profile_email_new_label')}
+                        aria-label={t('profile_email_new_label')}
+                      />
+                      {emailErrors.newEmail && (
+                        <p className="text-xs text-red-500 mt-1.5">
+                          {emailErrors.newEmail.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setEmailMode('idle')}
+                        className="flex-1 p-3 text-zinc-600 dark:text-zinc-400 font-bold hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-[4px] transition-colors"
+                      >
+                        {t('address_cancel_btn')}
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isEmailLoading || !isEmailValid}
+                        className="flex-1 p-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-[4px] transition-all disabled:opacity-50 flex justify-center"
+                      >
+                        {isEmailLoading ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          t('profile_email_save_btn')
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </motion.div>
+              )}
+            </div>
+          </section>
+
+          {/* GANTI PASSWORD SECTION */}
+          <section className="bg-white dark:bg-zinc-900 rounded-[4px] p-6 md:p-8 shadow-sm border border-zinc-200/50 dark:border-zinc-800/80">
+            <div className="flex items-center gap-4 mb-6 pb-6 border-b border-zinc-100 dark:border-zinc-800">
+              <div className="w-12 h-12 rounded-[4px] bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center">
+                <KeyRound className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold font-serif text-zinc-900 dark:text-zinc-100">
+                  {t('profile_password_title')}
+                </h2>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  {t('profile_password_subtitle')}
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="space-y-5 max-w-lg">
+              <div>
+                <label
+                  htmlFor="currentPassword"
+                  className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2"
+                >
+                  {t('profile_password_current')}
+                </label>
+                <input
+                  id="currentPassword"
+                  type="password"
+                  {...registerPassword('currentPassword')}
+                  className="w-full p-3.5 rounded-[4px] border border-zinc-200 dark:border-zinc-800 bg-transparent focus:ring-2 focus:ring-[#D4802A]/50 outline-none transition-all"
+                  placeholder={t('profile_password_current_placeholder')}
+                />
+                {passwordErrors.currentPassword && (
+                  <p className="text-xs text-red-500 mt-1.5">
+                    {passwordErrors.currentPassword.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="newPassword"
+                  className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2"
+                >
+                  {t('profile_password_new')}
+                </label>
+                <input
+                  id="newPassword"
+                  type="password"
+                  {...registerPassword('newPassword')}
+                  className="w-full p-3.5 rounded-[4px] border border-zinc-200 dark:border-zinc-800 bg-transparent focus:ring-2 focus:ring-[#D4802A]/50 outline-none transition-all"
+                  placeholder={t('profile_password_new_placeholder')}
+                />
+                {passwordErrors.newPassword && (
+                  <p className="text-xs text-red-500 mt-1.5">
+                    {passwordErrors.newPassword.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2"
+                >
+                  {t('profile_password_confirm')}
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  {...registerPassword('confirmPassword')}
+                  className="w-full p-3.5 rounded-[4px] border border-zinc-200 dark:border-zinc-800 bg-transparent focus:ring-2 focus:ring-[#D4802A]/50 outline-none transition-all"
+                  placeholder={t('profile_password_confirm_placeholder')}
+                />
+                {passwordErrors.confirmPassword && (
+                  <p className="text-xs text-red-500 mt-1.5">
+                    {passwordErrors.confirmPassword.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="pt-4 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={passwordMutation.isPending || !isPasswordValid}
+                  className="bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-bold py-3 px-8 rounded-[4px] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {passwordMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    t('profile_password_save_btn')
+                  )}
+                </button>
+              </div>
+            </form>
+          </section>
+        </>
+      )}
+    </motion.div>
+  )
+}

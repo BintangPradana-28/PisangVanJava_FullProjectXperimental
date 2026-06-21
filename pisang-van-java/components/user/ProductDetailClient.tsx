@@ -319,12 +319,13 @@ export default function ProductDetailClient({
                       type="button"
                       disabled={!isTypeAvailable}
                       onClick={() => setSelectedType(type)}
-                      className={`py-3 px-2 rounded-[4px] border-2 text-sm font-bold transition-all flex flex-col items-center gap-0.5 ${isSelected
+                      className={`py-3 px-2 rounded-[4px] border-2 text-sm font-bold transition-all flex flex-col items-center gap-0.5 ${
+                        isSelected
                           ? 'border-amber-brand bg-amber-brand/10 text-amber-brand'
                           : isTypeAvailable
                             ? 'border-zinc-200 dark:border-zinc-850 text-zinc-650 dark:text-zinc-400 hover:border-zinc-300'
                             : 'border-zinc-100 dark:border-zinc-900 text-zinc-400 dark:text-zinc-600 bg-zinc-100/50 dark:bg-zinc-900/30 cursor-not-allowed'
-                        }`}
+                      }`}
                     >
                       <span>{type}</span>
                       {isTypeAvailable && (
@@ -350,10 +351,11 @@ export default function ProductDetailClient({
                     return (
                       <label
                         key={topping.id}
-                        className={`flex items-center justify-between p-3.5 border-2 rounded-[4px] cursor-pointer transition-all select-none active:scale-[0.99] ${isSelected
+                        className={`flex items-center justify-between p-3.5 border-2 rounded-[4px] cursor-pointer transition-all select-none active:scale-[0.99] ${
+                          isSelected
                             ? 'border-amber-brand bg-amber-brand/5'
                             : 'border-zinc-200 dark:border-zinc-850 hover:bg-zinc-100/50 dark:hover:bg-zinc-850/50'
-                          }`}
+                        }`}
                       >
                         <div className="flex items-center gap-3">
                           <input
@@ -391,10 +393,11 @@ export default function ProductDetailClient({
                           return (
                             <label
                               key={topping.id}
-                              className={`flex flex-col justify-between p-3 border-2 rounded-[4px] cursor-pointer transition-all select-none active:scale-[0.99] ${isSelected
+                              className={`flex flex-col justify-between p-3 border-2 rounded-[4px] cursor-pointer transition-all select-none active:scale-[0.99] ${
+                                isSelected
                                   ? 'border-amber-brand bg-amber-brand/5'
                                   : 'border-zinc-200 dark:border-zinc-850 hover:bg-zinc-100/50 dark:hover:bg-zinc-850/50'
-                                }`}
+                              }`}
                             >
                               <div className="flex items-center gap-2.5 mb-1.5">
                                 <input
@@ -437,10 +440,11 @@ export default function ProductDetailClient({
                           setNotes((prev) => (prev ? `${prev} [${tag}]` : `[${tag}]`).trim())
                         }
                       }}
-                      className={`px-3 py-1.5 rounded-[4px] text-xs font-bold border transition-colors ${isSelected
+                      className={`px-3 py-1.5 rounded-[4px] text-xs font-bold border transition-colors ${
+                        isSelected
                           ? 'bg-amber-brand/10 text-amber-brand border-amber-brand'
                           : 'bg-white dark:bg-zinc-850 text-zinc-650 dark:text-zinc-450 border-zinc-200 dark:border-zinc-800 hover:border-amber-brand/50'
-                        }`}
+                      }`}
                     >
                       {isSelected ? '✓ ' : '+ '}
                       {tag}
@@ -459,4 +463,164 @@ export default function ProductDetailClient({
             {/* Quantity and Actions */}
             <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
               {/* Quantity */}
-              <div className="flex items-center gap-3 bg-zinc-100 dark:bg-zin
+              <div className="flex items-center gap-3 bg-zinc-100 dark:bg-zinc-800 rounded-[4px] p-1 border border-zinc-200 dark:border-zinc-750">
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  className="w-10 h-10 rounded-[4px] bg-white dark:bg-zinc-700 shadow-sm flex items-center justify-center font-bold text-zinc-600 dark:text-zinc-300 hover:text-amber-brand transition-colors active:scale-95"
+                >
+                  -
+                </button>
+                <motion.span
+                  key={quantity}
+                  initial={{ scaleY: 1.35, scaleX: 0.75 }}
+                  animate={{ scaleY: 1, scaleX: 1 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+                  className="w-6 text-center font-bold text-zinc-800 dark:text-zinc-100 text-lg inline-block"
+                >
+                  {quantity}
+                </motion.span>
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => q + 1)}
+                  className="w-10 h-10 rounded-[4px] bg-white dark:bg-zinc-700 shadow-sm flex items-center justify-center font-bold text-zinc-600 dark:text-zinc-300 hover:text-amber-brand transition-colors active:scale-95"
+                >
+                  +
+                </button>
+              </div>
+
+              {/* Add to Cart button */}
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={!selectedType || !isStoreOpen || !available}
+                className={`flex-1 w-full py-4 px-6 rounded-[4px] font-bold text-sm transition-all duration-200 shadow-md flex items-center justify-center gap-2 ${
+                  selectedType && isStoreOpen && available
+                    ? 'bg-amber-brand hover:bg-amber-brand/90 text-white active:scale-95 shadow-amber-brand/20'
+                    : 'bg-zinc-300 dark:bg-zinc-800 text-zinc-500 cursor-not-allowed shadow-none'
+                }`}
+              >
+                <ShoppingBag className="w-4 h-4" />
+                {!isStoreOpen ? (
+                  <>Toko Sedang Tutup</>
+                ) : !available ? (
+                  <>Habis Terjual</>
+                ) : (
+                  <>Tambah ke Keranjang • {formatPrice(totalPrice)}</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Reviews Section */}
+      <div className="border-t border-zinc-200 dark:border-zinc-800 pt-16 mb-16">
+        <h2 className="font-serif text-3xl font-bold text-zinc-900 dark:text-zinc-150 mb-8">
+          Ulasan Pelanggan ({reviews.length})
+        </h2>
+        {reviews.length === 0 ? (
+          <div className="rounded-[4px] p-8 text-center bg-cream-50/50 dark:bg-zinc-900/30 border border-zinc-200/50 dark:border-zinc-800">
+            <Info className="w-8 h-8 text-zinc-400 mx-auto mb-3" />
+            <p className="text-zinc-500 text-sm">
+              Varian ini belum memiliki ulasan dari pembeli. Jadilah yang pertama memberikan ulasan!
+            </p>
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 gap-6">
+            {reviews.map((review) => (
+              <div
+                key={review.id}
+                className="rounded-[4px] p-5 bg-white dark:bg-zinc-900 border border-zinc-250/60 dark:border-zinc-800 shadow-sm space-y-3"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-bold text-sm text-zinc-800 dark:text-zinc-200 truncate max-w-[150px]">
+                      {review.user.name}
+                    </h4>
+                    <span className="text-[10px] text-zinc-500">
+                      {new Date(review.createdAt).toLocaleDateString('id-ID', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        // biome-ignore lint/suspicious/noArrayIndexKey: Static array for stars rendering
+                        key={i}
+                        className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-zinc-200 dark:text-zinc-700'}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+                {review.isVerifiedBuyer && (
+                  <span className="inline-flex text-[9px] font-semibold text-green-600 bg-green-500/10 px-1.5 py-0.5 rounded-[4px]">
+                    Verified Buyer
+                  </span>
+                )}
+                {review.comment && (
+                  <p className="text-sm leading-relaxed text-zinc-650 dark:text-zinc-400 font-sans">
+                    {review.comment}
+                  </p>
+                )}
+                {review.imageUrl && (
+                  <div className="relative w-20 h-20 rounded-[4px] overflow-hidden border border-zinc-200 dark:border-zinc-800 mt-2">
+                    <Image src={review.imageUrl} alt="Foto Ulasan" fill className="object-cover" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Recommendations Section */}
+      {otherProducts.length > 0 && (
+        <div className="border-t border-zinc-200 dark:border-zinc-800 pt-16">
+          <h2 className="font-serif text-3xl font-bold text-zinc-900 dark:text-zinc-150 mb-8 text-center sm:text-left">
+            Rekomendasi Varian Lain
+          </h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {otherProducts.map((p) => {
+              const image = p.imageUrl || getFallbackImage(p.flavorName)
+              return (
+                <Link
+                  key={p.id}
+                  href={`/menu-spesial/${p.id}`}
+                  className="rounded-[4px] overflow-hidden bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col group"
+                >
+                  <div className="relative aspect-[16/9] w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+                    <Image
+                      src={image}
+                      alt={p.flavorName}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="p-4 flex flex-col flex-grow justify-between gap-3">
+                    <h3 className="font-serif font-bold text-lg text-zinc-950 dark:text-zinc-100 truncate group-hover:text-[#D4802A] transition-colors">
+                      {p.flavorName}
+                    </h3>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-zinc-500 font-medium">Mulai dari</span>
+                      <span className="font-bold text-sm text-[#D4802A]">
+                        {formatPrice(
+                          Math.min(
+                            ...[p.priceKembung, p.priceLumpia, p.priceKrispy].filter((pr) => pr > 0)
+                          )
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

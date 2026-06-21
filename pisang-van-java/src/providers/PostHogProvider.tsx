@@ -27,12 +27,15 @@ function initPostHog() {
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    if ('requestIdleCallback' in window) {
-      const id = window.requestIdleCallback(initPostHog, { timeout: 4000 })
-      return () => window.cancelIdleCallback(id)
+    if (typeof window !== 'undefined') {
+      const win = window as any
+      if (win.requestIdleCallback) {
+        const id = win.requestIdleCallback(initPostHog, { timeout: 4000 })
+        return () => win.cancelIdleCallback(id)
+      }
+      const id = window.setTimeout(initPostHog, 1)
+      return () => window.clearTimeout(id)
     }
-    const id = window.setTimeout(initPostHog, 1)
-    return () => window.clearTimeout(id)
   }, [])
 
   return <CSPostHogProvider client={posthog}>{children}</CSPostHogProvider>

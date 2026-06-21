@@ -453,7 +453,7 @@ export default function LokasiKontakPage() {
                 <button
                   type="button"
                   id={`faq-btn-${i}`}
-                  aria-expanded={openFaq === i}
+                  {...{ 'aria-expanded': openFaq === i }}
                   aria-controls={`faq-answer-${i}`}
                   className="w-full flex items-center justify-between px-6 py-4 text-left font-semibold text-sm transition-colors text-zinc-800 dark:text-zinc-200 hover:bg-cream-50/50 dark:hover:bg-zinc-800/50"
                   onClick={() => setFaq(openFaq === i ? null : i)}

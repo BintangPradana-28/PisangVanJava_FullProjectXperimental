@@ -108,6 +108,13 @@ export default function MenuGrid({ products }: { products: ProductType[] }) {
   const storeMode = getSetting('store_status', 'AUTO')
   const { isOpen: isStoreOpen } = checkStoreOpen(jamOperasional, storeMode)
   const [selected, setSelected] = useState<ProductType | null>(null)
+  const [visibleCount, setVisibleCount] = useState(9)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset pagination when the filtered products list changes
+  useEffect(() => {
+    setVisibleCount(9)
+  }, [products])
 
   const { data: session } = useSession()
   const [favorites, setFavorites] = useState<string[]>([])
@@ -177,194 +184,259 @@ export default function MenuGrid({ products }: { products: ProductType[] }) {
             </button>
           </div>
         ) : (
-          <AnimatePresence mode="popLayout">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
-              {products.map((product, i) => {
-                const img = product.imageUrl || getFallbackImage(product.flavorName)
-                const available = product.isAvailable && product.stock > 0
-                const isFav = favorites.includes(product.id)
+          <>
+            <AnimatePresence mode="popLayout">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+                {products.slice(0, visibleCount).map((product, i) => {
+                  const img = product.imageUrl || getFallbackImage(product.flavorName)
+                  const available = product.isAvailable && product.stock > 0
+                  const isFav = favorites.includes(product.id)
 
-                return (
-                  <motion.div
-                    key={product.id}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.4, delay: i * 0.04 }}
-                    className={`relative rounded-[4px] overflow-hidden flex flex-col group transition-all duration-300 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 ${available ? 'hover:shadow-sm hover:-translate-y-1' : 'opacity-80 grayscale-[50%]'}`}
-                  >
-                    {/* Favorite Button */}
-                    <button
-                      type="button"
-                      onClick={(e) => toggleFavorite(e, product.id)}
-                      className="absolute top-4 right-4 z-20 w-10 h-10 rounded-[4px] flex items-center justify-center transition-all bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md shadow-sm hover:scale-110 active:scale-95 border border-zinc-200/50 dark:border-zinc-800"
-                      aria-label="Toggle Favorite"
+                  return (
+                    <motion.div
+                      key={product.id}
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.4, delay: i * 0.04 }}
+                      className={`relative rounded-[4px] overflow-hidden flex flex-col group transition-all duration-300 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 ${available ? 'hover:shadow-sm hover:-translate-y-1' : 'opacity-80 grayscale-[50%]'}`}
                     >
-                      <svg
-                        className={`w-5 h-5 transition-colors ${isFav ? 'text-red-500 fill-current' : 'text-zinc-500'}`}
-                        fill={isFav ? 'currentColor' : 'none'}
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={isFav ? 0 : 2}
+                      {/* Favorite Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => toggleFavorite(e, product.id)}
+                        className="absolute top-4 right-4 z-20 w-10 h-10 rounded-[4px] flex items-center justify-center transition-all bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md shadow-sm hover:scale-110 active:scale-95 border border-zinc-200/50 dark:border-zinc-800"
+                        aria-label="Toggle Favorite"
                       >
-                        <title>Favorite</title>
+                        <svg
+                          className={`w-5 h-5 transition-colors ${isFav ? 'text-red-500 fill-current' : 'text-zinc-500'}`}
+                          fill={isFav ? 'currentColor' : 'none'}
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={isFav ? 0 : 2}
+                        >
+                          <title>Favorite</title>
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                          />
+                        </svg>
+                      </button>
+
+                      {/* Image */}
+                      <Link
+                        href={`/menu-spesial/${product.id}`}
+                        className="focus:outline-none block overflow-hidden"
+                      >
+                        <ProductImage
+                          src={img}
+                          alt={product.flavorName}
+                          available={available}
+                          priority={i < 3}
+                        />
+                      </Link>
+
+                      {/* Content */}
+                      <div className="p-6 flex flex-col items-center text-center flex-grow">
+                        <Link
+                          href={`/menu-spesial/${product.id}`}
+                          className="focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-[4px] block mb-1"
+                        >
+                          <h3
+                            className={`font-serif text-2xl font-bold transition-colors ${available ? 'text-zinc-900 dark:text-zinc-100 hover:text-amber-brand' : 'text-zinc-500'}`}
+                          >
+                            {product.flavorName}
+                          </h3>
+                        </Link>
+
+                        {/* Tag Badges — set by admin, shown regardless of stock status */}
+                        {product.tags && product.tags.length > 0 && (
+                          <div className="flex items-center justify-center gap-1.5 flex-wrap mb-1.5">
+                            {product.tags.slice(0, 3).map((tag) => (
+                              <span
+                                key={tag}
+                                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-[4px] bg-amber-500/15 border border-[#D4802A]/40 text-[#D4802A]"
+                              >
+                                <span aria-hidden="true">{TAG_ICONS[tag] ?? '🏷️'}</span>
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Stock Indicator */}
+                        <div className="flex items-center gap-1.5 mb-2 mt-1">
+                          {product.stock > 5 ? (
+                            <>
+                              <span className="w-2 h-2 rounded-[4px] bg-green-500"></span>
+                              <span className="text-xs font-semibold text-green-600 dark:text-green-400 tracking-wide">
+                                Tersedia: <span className="font-bold">{product.stock}</span> porsi
+                              </span>
+                            </>
+                          ) : product.stock > 0 ? (
+                            <>
+                              <span className="w-2.5 h-2.5 rounded-[4px] bg-amber-500 animate-pulse"></span>
+                              <span className="text-xs font-bold text-amber-600 dark:text-amber-400 tracking-wide animate-shake infinite [animation-duration:1.5s]">
+                                ⚠️ Stok Terbatas:{' '}
+                                <span className="font-extrabold">{product.stock}</span> porsi!
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="w-2 h-2 rounded-[4px] bg-red-500"></span>
+                              <span className="text-xs font-semibold text-red-600 dark:text-red-400 tracking-wide">
+                                Habis Terjual
+                              </span>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Rating & Sales UI */}
+                        <div className="flex items-center gap-3 mb-3">
+                          <Link
+                            href="/ulasan"
+                            className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-[#D4802A] transition-colors cursor-pointer active:scale-95"
+                          >
+                            <span className="text-amber-400">⭐</span>
+                            <span className="font-semibold text-zinc-700 dark:text-zinc-300">
+                              {product.rating ? product.rating : 'Baru'}
+                            </span>
+                            {product.reviewCount ? (
+                              <span className="text-xs">({product.reviewCount})</span>
+                            ) : null}
+                          </Link>
+
+                          {product.soldCount !== undefined && product.soldCount > 0 && (
+                            <div className="flex items-center gap-1 text-xs font-medium text-zinc-500 bg-zinc-100 dark:bg-zinc-800/50 px-2 py-0.5 rounded-[4px]">
+                              {product.soldCount > 50 && (
+                                <span className="text-orange-500">🔥</span>
+                              )}
+                              <span>
+                                {product.soldCount >= 1000
+                                  ? `${(product.soldCount / 1000).toFixed(1)}k+`
+                                  : product.soldCount}{' '}
+                                Terjual
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <p className="text-sm leading-relaxed mb-6 flex-grow text-zinc-800 dark:text-zinc-300">
+                          {product.deskripsi_topping ||
+                            (() => {
+                              const key = getFlavorDescriptionKey(product.flavorName)
+                              return key ? t(key) : t('menu_default_desc')
+                            })()}
+                        </p>
+                        <div className="w-full border-t border-zinc-200 dark:border-zinc-800 pt-6 pb-8 flex flex-col items-center gap-3 mt-auto">
+                          <div className="text-center">
+                            <div className="text-[10px] uppercase tracking-wider font-semibold mb-0.5 text-zinc-500 dark:text-zinc-400">
+                              {session?.user.role === 'RESELLER'
+                                ? 'Harga Grosir (Mulai)'
+                                : t('menu_price_label')}
+                            </div>
+                            <div
+                              className={`font-sans text-lg font-bold ${available ? 'text-[#D4802A]' : 'text-zinc-500'}`}
+                            >
+                              {session?.user.role === 'RESELLER' && product.wholesaleKembung > 0 ? (
+                                <div className="flex flex-col items-center leading-tight">
+                                  <span className="text-xs line-through text-zinc-400 font-normal">
+                                    {formatPrice(product.priceKembung)}
+                                  </span>
+                                  <span>{formatPrice(product.wholesaleKembung)}</span>
+                                </div>
+                              ) : (
+                                formatPrice(product.priceKembung)
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => available && isStoreOpen && setSelected(product)}
+                            disabled={!available || !isStoreOpen}
+                            className={
+                              available && isStoreOpen
+                                ? 'bg-[#D4802A] text-white font-bold text-sm px-8 py-3 rounded-[4px] shadow-md transition-all duration-200 active:scale-95 hover:shadow-sm'
+                                : 'bg-zinc-300 text-zinc-500 cursor-not-allowed font-bold text-sm px-8 py-3 rounded-[4px] flex items-center justify-center gap-1.5 opacity-70'
+                            }
+                          >
+                            {!isStoreOpen
+                              ? 'Toko Tutup'
+                              : available
+                                ? t('menu_btn_order')
+                                : 'Habis Terjual'}
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
+            </AnimatePresence>
+            {products.length > visibleCount && (
+              <div className="flex justify-center mt-12">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLoadingMore(true)
+                    setTimeout(() => {
+                      setVisibleCount((prev) => prev + 9)
+                      setIsLoadingMore(false)
+                    }, 400)
+                  }}
+                  disabled={isLoadingMore}
+                  className="px-8 py-3.5 rounded-[4px] font-bold text-sm bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-amber-brand dark:hover:text-amber-brand hover:border-amber-brand/40 dark:hover:border-amber-brand/40 shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center gap-2"
+                >
+                  {isLoadingMore ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-amber-brand"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <title>Loading</title>
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      {t('menu_loading_more')}
+                    </>
+                  ) : (
+                    <>
+                      <span>{t('menu_load_more')}</span>
+                      <svg
+                        className="w-4 h-4 text-zinc-500 group-hover:text-amber-brand"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <title>Chevron Down</title>
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                          strokeWidth="2.5"
+                          d="M19 9l-7 7-7-7"
                         />
                       </svg>
-                    </button>
-
-                    {/* Image */}
-                    <Link
-                      href={`/menu-spesial/${product.id}`}
-                      className="focus:outline-none block overflow-hidden"
-                    >
-                      <ProductImage
-                        src={img}
-                        alt={product.flavorName}
-                        available={available}
-                        priority={i < 3}
-                      />
-                    </Link>
-
-                    {/* Content */}
-                    <div className="p-6 flex flex-col items-center text-center flex-grow">
-                      <Link
-                        href={`/menu-spesial/${product.id}`}
-                        className="focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-[4px] block mb-1"
-                      >
-                        <h3
-                          className={`font-serif text-2xl font-bold transition-colors ${available ? 'text-zinc-900 dark:text-zinc-100 hover:text-amber-brand' : 'text-zinc-500'}`}
-                        >
-                          {product.flavorName}
-                        </h3>
-                      </Link>
-
-                      {/* Tag Badges — set by admin, shown regardless of stock status */}
-                      {product.tags && product.tags.length > 0 && (
-                        <div className="flex items-center justify-center gap-1.5 flex-wrap mb-1.5">
-                          {product.tags.slice(0, 3).map((tag) => (
-                            <span
-                              key={tag}
-                              className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-[4px] bg-amber-500/15 border border-[#D4802A]/40 text-[#D4802A]"
-                            >
-                              <span aria-hidden="true">{TAG_ICONS[tag] ?? '🏷️'}</span>
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Stock Indicator */}
-                      <div className="flex items-center gap-1.5 mb-2 mt-1">
-                        {product.stock > 5 ? (
-                          <>
-                            <span className="w-2 h-2 rounded-[4px] bg-green-500"></span>
-                            <span className="text-xs font-semibold text-green-600 dark:text-green-400 tracking-wide">
-                              Tersedia: <span className="font-bold">{product.stock}</span> porsi
-                            </span>
-                          </>
-                        ) : product.stock > 0 ? (
-                          <>
-                            <span className="w-2.5 h-2.5 rounded-[4px] bg-amber-500 animate-pulse"></span>
-                            <span className="text-xs font-bold text-amber-600 dark:text-amber-400 tracking-wide animate-shake infinite [animation-duration:1.5s]">
-                              ⚠️ Stok Terbatas:{' '}
-                              <span className="font-extrabold">{product.stock}</span> porsi!
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="w-2 h-2 rounded-[4px] bg-red-500"></span>
-                            <span className="text-xs font-semibold text-red-600 dark:text-red-400 tracking-wide">
-                              Habis Terjual
-                            </span>
-                          </>
-                        )}
-                      </div>
-
-                      {/* Rating & Sales UI */}
-                      <div className="flex items-center gap-3 mb-3">
-                        <Link
-                          href="/ulasan"
-                          className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-[#D4802A] transition-colors cursor-pointer active:scale-95"
-                        >
-                          <span className="text-amber-400">⭐</span>
-                          <span className="font-semibold text-zinc-700 dark:text-zinc-300">
-                            {product.rating ? product.rating : 'Baru'}
-                          </span>
-                          {product.reviewCount ? (
-                            <span className="text-xs">({product.reviewCount})</span>
-                          ) : null}
-                        </Link>
-
-                        {product.soldCount !== undefined && product.soldCount > 0 && (
-                          <div className="flex items-center gap-1 text-xs font-medium text-zinc-500 bg-zinc-100 dark:bg-zinc-800/50 px-2 py-0.5 rounded-[4px]">
-                            {product.soldCount > 50 && <span className="text-orange-500">🔥</span>}
-                            <span>
-                              {product.soldCount >= 1000
-                                ? `${(product.soldCount / 1000).toFixed(1)}k+`
-                                : product.soldCount}{' '}
-                              Terjual
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <p className="text-sm leading-relaxed mb-6 flex-grow text-zinc-800 dark:text-zinc-300">
-                        {product.deskripsi_topping ||
-                          (() => {
-                            const key = getFlavorDescriptionKey(product.flavorName)
-                            return key ? t(key) : t('menu_default_desc')
-                          })()}
-                      </p>
-                      <div className="w-full border-t border-zinc-200 dark:border-zinc-800 pt-6 pb-8 flex flex-col items-center gap-3 mt-auto">
-                        <div className="text-center">
-                          <div className="text-[10px] uppercase tracking-wider font-semibold mb-0.5 text-zinc-500 dark:text-zinc-400">
-                            {session?.user.role === 'RESELLER'
-                              ? 'Harga Grosir (Mulai)'
-                              : t('menu_price_label')}
-                          </div>
-                          <div
-                            className={`font-sans text-lg font-bold ${available ? 'text-[#D4802A]' : 'text-zinc-500'}`}
-                          >
-                            {session?.user.role === 'RESELLER' && product.wholesaleKembung > 0 ? (
-                              <div className="flex flex-col items-center leading-tight">
-                                <span className="text-xs line-through text-zinc-400 font-normal">
-                                  {formatPrice(product.priceKembung)}
-                                </span>
-                                <span>{formatPrice(product.wholesaleKembung)}</span>
-                              </div>
-                            ) : (
-                              formatPrice(product.priceKembung)
-                            )}
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => available && isStoreOpen && setSelected(product)}
-                          disabled={!available || !isStoreOpen}
-                          className={
-                            available && isStoreOpen
-                              ? 'bg-[#D4802A] text-white font-bold text-sm px-8 py-3 rounded-[4px] shadow-md transition-all duration-200 active:scale-95 hover:shadow-sm'
-                              : 'bg-zinc-300 text-zinc-500 cursor-not-allowed font-bold text-sm px-8 py-3 rounded-[4px] flex items-center justify-center gap-1.5 opacity-70'
-                          }
-                        >
-                          {!isStoreOpen
-                            ? 'Toko Tutup'
-                            : available
-                              ? t('menu_btn_order')
-                              : 'Habis Terjual'}
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </div>
-          </AnimatePresence>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 

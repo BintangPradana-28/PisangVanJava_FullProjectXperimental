@@ -6,6 +6,8 @@ import { prisma } from '@/lib/prisma'
 const ContactSchema = z
   .object({
     nama: z.string().min(2, 'Nama terlalu pendek').max(100, 'Nama terlalu panjang'),
+    email: z.string().email('Format email tidak valid'),
+    phone: z.string().min(8, 'Nomor HP terlalu pendek').max(20, 'Nomor HP terlalu panjang'),
     pesan: z.string().min(5, 'Pesan terlalu pendek').max(2000, 'Pesan terlalu panjang'),
     consent: z.boolean().refine((val) => val === true, {
       message: 'Anda harus menyetujui Kebijakan Privasi'
@@ -26,15 +28,18 @@ export async function POST(req: Request) {
       )
     }
 
-    const { nama, pesan } = parsed.data
+    const { nama, email, phone, pesan } = parsed.data
     const ipAddress = req.headers.get('x-forwarded-for') || 'Unknown IP'
     const userAgent = req.headers.get('user-agent') || 'Unknown Agent'
 
+    // Format the database message to store the email and phone number cleanly
+    const formattedMessage = `[Email: ${email} | Phone: ${phone}]\n\n${pesan}`
+
     // 2. SAVE TO POSTGRES (Data Asset Capture)
-    const lead = await prisma.contactLead.create({
+    await prisma.contactLead.create({
       data: {
         name: nama,
-        message: pesan,
+        message: formattedMessage,
         ipAddress: ipAddress.substring(0, 45), // IPv6 max length safe
         userAgent: userAgent.substring(0, 255),
         isConsent: true
@@ -44,7 +49,9 @@ export async function POST(req: Request) {
     // 3. GENERATE WHATSAPP REDIRECT URL
     // Kita panggil Setting nomor WA dari database juga jika perlu, tapi untuk performa kita gunakan env/default
     const waNumber = process.env.WHATSAPP_NUMBER || '6281312167554'
-    const text = encodeURIComponent(`Halo Van Java! Saya *${nama}*.\n\n${pesan}`)
+    const text = encodeURIComponent(
+      `Halo Van Java! Saya *${nama}*.\nEmail: ${email}\nNo. HP: ${phone}\n\n${pesan}`
+    )
     const redirectUrl = `https://wa.me/${waNumber}?text=${text}`
 
     // Return the secure redirect URL

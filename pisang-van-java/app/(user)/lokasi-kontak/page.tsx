@@ -36,7 +36,7 @@ const WhatsAppIcon = ({ className }: { className?: string }) => (
 export default function LokasiKontakPage() {
   const { t } = useLanguage()
   const { getSetting } = useSettings()
-  const [form, setForm] = useState({ nama: '', pesan: '' })
+  const [form, setForm] = useState({ nama: '', email: '', phone: '', pesan: '' })
   const [sending, setSend] = useState(false)
   const [consent, setConsent] = useState(false)
   const [openFaq, setFaq] = useState<number | null>(null)
@@ -118,10 +118,22 @@ export default function LokasiKontakPage() {
 
   const handleWA = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.nama.trim() || !form.pesan.trim()) {
+    if (!form.nama.trim() || !form.email.trim() || !form.phone.trim() || !form.pesan.trim()) {
       toast.error(t('kontak_toast_error'))
       return
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(form.email.trim())) {
+      toast.error(t('kontak_toast_error'))
+      return
+    }
+
+    if (form.phone.trim().length < 8) {
+      toast.error(t('kontak_toast_error'))
+      return
+    }
+
     if (!consent) {
       toast.error(t('kontak_consent_label') || 'Anda harus menyetujui Kebijakan Privasi')
       return
@@ -132,7 +144,13 @@ export default function LokasiKontakPage() {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nama: form.nama, pesan: form.pesan, consent })
+        body: JSON.stringify({
+          nama: form.nama,
+          email: form.email,
+          phone: form.phone,
+          pesan: form.pesan,
+          consent
+        })
       })
 
       const data = await res.json()
@@ -142,7 +160,7 @@ export default function LokasiKontakPage() {
       }
 
       window.open(data.redirectUrl, '_blank')
-      setForm({ nama: '', pesan: '' })
+      setForm({ nama: '', email: '', phone: '', pesan: '' })
       setConsent(false)
       toast.success(t('kontak_toast_success'))
     } catch (err: unknown) {
@@ -221,6 +239,38 @@ export default function LokasiKontakPage() {
                     value={form.nama}
                     onChange={(e) => setForm((p) => ({ ...p, nama: e.target.value }))}
                     placeholder={t('kontak_placeholder_name')}
+                    className="w-full px-4 py-3 text-sm rounded-[4px] outline-none transition-all bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-amber-500 focus:border-transparent text-zinc-800 dark:text-zinc-100"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="contact-email"
+                    className="block text-[11px] font-bold tracking-widest uppercase mb-1.5 text-amber-700 dark:text-amber-500"
+                  >
+                    {t('kontak_label_email')}
+                  </label>
+                  <input
+                    id="contact-email"
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                    placeholder={t('kontak_placeholder_email')}
+                    className="w-full px-4 py-3 text-sm rounded-[4px] outline-none transition-all bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-amber-500 focus:border-transparent text-zinc-800 dark:text-zinc-100"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="contact-phone"
+                    className="block text-[11px] font-bold tracking-widest uppercase mb-1.5 text-amber-700 dark:text-amber-500"
+                  >
+                    {t('kontak_label_phone')}
+                  </label>
+                  <input
+                    id="contact-phone"
+                    type="tel"
+                    value={form.phone}
+                    onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                    placeholder={t('kontak_placeholder_phone')}
                     className="w-full px-4 py-3 text-sm rounded-[4px] outline-none transition-all bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-amber-500 focus:border-transparent text-zinc-800 dark:text-zinc-100"
                   />
                 </div>

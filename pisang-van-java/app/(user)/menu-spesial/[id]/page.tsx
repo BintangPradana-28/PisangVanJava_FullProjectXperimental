@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import ProductDetailClient from '@/components/user/ProductDetailClient'
 import { prisma } from '@/lib/prisma'
+import { safeJsonLdScript } from '@/lib/sanitize'
 import type { ProductType } from '@/src/features/menu/components/MenuCards'
 
 // Disable static generation since search params or user context can change things,
@@ -208,12 +209,12 @@ export default async function ProductDetailPage(props: PageProps) {
     },
     ...(averageRating
       ? {
-          aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue: averageRating,
-            reviewCount: product.reviews.length
-          }
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: averageRating,
+          reviewCount: product.reviews.length
         }
+      }
       : {})
   }
 
@@ -221,9 +222,12 @@ export default async function ProductDetailPage(props: PageProps) {
     <main className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pt-20">
       <script
         type="application/ld+json"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO
         // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        // JSON-LD structured data for SEO (Product schema). Not raw HTML — content type
+        // is application/ld+json, so the browser never executes it as markup or script.
+        // safeJsonLdScript() escapes "<" to block "</script>" breakout from free-text
+        // fields (flavorName, deskripsi_topping are admin-entered, not user-submitted).
+        dangerouslySetInnerHTML={{ __html: safeJsonLdScript(productJsonLd) }}
       />
       <ProductDetailClient
         product={mappedProduct}

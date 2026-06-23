@@ -17,7 +17,7 @@ export default function HeroBanner() {
   }, [t])
 
   return (
-    <section className="relative overflow-hidden pt-24 pb-16 sm:pt-28 sm:pb-20 text-white bg-gradient-to-br from-[#3D1C02] via-[#4a2408] to-[#5a2e0a]">
+    <section className="relative overflow-hidden pt-28 pb-16 sm:pt-32 sm:pb-20 text-white bg-gradient-to-br from-[#3D1C02] via-[#4a2408] to-[#5a2e0a]">
       {/* Decorative warmth — soft amber glow, echoes the radial blob used on the outlet CTA */}
       <div
         className="absolute -top-24 -right-16 w-96 h-96 rounded-full opacity-20 pointer-events-none blur-2xl"

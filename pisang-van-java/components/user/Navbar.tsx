@@ -179,7 +179,7 @@ export default function Navbar() {
       >
         <nav
           aria-label="Navigasi Utama"
-          className="max-w-[1200px] mx-auto px-6 flex items-center justify-between"
+          className="max-w-[1200px] mx-auto px-4 md:px-6 flex items-center justify-between"
         >
           {/* Logo */}
           <Link
@@ -190,7 +190,7 @@ export default function Navbar() {
             <div className="w-10 h-10 rounded-[4px] bg-secondary flex items-center justify-center text-xl shadow-sm group-hover:scale-105 transition-transform duration-200">
               🍌
             </div>
-            <div className="leading-tight">
+            <div className="leading-tight whitespace-nowrap">
               <span
                 className={`block font-serif text-lg font-bold transition-colors duration-300 ${
                   useSolidHeader ? 'text-primary dark:text-zinc-100' : 'text-white'
@@ -255,7 +255,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={toggleTheme}
-              className={`p-2 rounded-[4px] transition-all focus:outline-none hover:bg-zinc-100 dark:hover:bg-zinc-800 ${
+              className={`hidden md:block p-2 rounded-[4px] transition-all focus:outline-none hover:bg-zinc-100 dark:hover:bg-zinc-800 ${
                 useSolidHeader ? 'text-zinc-700 dark:text-zinc-200' : 'text-white'
               }`}
               aria-label="Toggle tema gelap/terang"
@@ -267,7 +267,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => setLocale(locale === 'id' ? 'en' : 'id')}
-              className={`text-xs font-bold px-2.5 py-1.5 rounded-[4px] border transition-all hover:bg-zinc-100 dark:hover:bg-zinc-800 ${
+              className={`hidden md:block text-xs font-bold px-2.5 py-1.5 rounded-[4px] border transition-all hover:bg-zinc-100 dark:hover:bg-zinc-800 ${
                 useSolidHeader
                   ? 'text-zinc-700 dark:text-zinc-200 border-zinc-300 dark:border-zinc-700'
                   : 'text-white border-white/40'
@@ -302,7 +302,7 @@ export default function Navbar() {
 
             {/* Auth / Profile Avatar Dropdown */}
             {session ? (
-              <div className="relative">
+              <div className="relative hidden md:block">
                 <button
                   type="button"
                   id="navbar-profile"
@@ -407,7 +407,7 @@ export default function Navbar() {
                 </AnimatePresence>
               </div>
             ) : (
-              <div className="relative">
+              <div className="relative hidden md:block">
                 <button
                   type="button"
                   id="navbar-profile-guest"
@@ -495,7 +495,7 @@ export default function Navbar() {
               ref={mobileMenuTriggerRef}
               type="button"
               onClick={() => setIsOpen(!isOpen)}
-              className={`md:hidden p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary ${
+              className={`md:hidden p-3 -mr-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary transition-all ${
                 useSolidHeader ? 'text-zinc-700 dark:text-zinc-200' : 'text-white'
               }`}
               aria-label={isOpen ? 'Tutup navigasi' : 'Buka navigasi'}
@@ -554,6 +554,15 @@ export default function Navbar() {
                   )
                 })}
                 {/* Additional mobile links */}
+                {session && (
+                  <Link
+                    href="/profile"
+                    onClick={() => setIsOpen(false)}
+                    className="text-base font-semibold py-1 border-b border-zinc-100 dark:border-zinc-800 text-zinc-750 dark:text-zinc-250"
+                  >
+                    👤 {locale === 'id' ? 'Profil Saya' : 'My Profile'}
+                  </Link>
+                )}
                 <Link
                   href="/track-order"
                   onClick={() => setIsOpen(false)}
@@ -575,14 +584,63 @@ export default function Navbar() {
                 >
                   ❓ {locale === 'id' ? 'FAQ & Bantuan' : 'FAQ & Help'}
                 </Link>
-                {!session && (
-                  <Link
-                    href="/member-login"
-                    onClick={() => setIsOpen(false)}
-                    className="w-full flex items-center justify-center bg-secondary text-white py-3 rounded-[4px] font-bold mt-2"
+
+                {/* Theme & Language Switchers for Mobile */}
+                <div className="flex flex-col gap-3 py-3 border-b border-zinc-105 dark:border-zinc-800">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-zinc-650 dark:text-zinc-400">
+                      {locale === 'id' ? 'Tema' : 'Theme'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={toggleTheme}
+                      className="px-3 py-1.5 rounded-[4px] bg-zinc-100 dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-200"
+                    >
+                      {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-zinc-650 dark:text-zinc-400">
+                      {locale === 'id' ? 'Bahasa' : 'Language'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setLocale(locale === 'id' ? 'en' : 'id')}
+                      className="px-3 py-1.5 rounded-[4px] bg-zinc-100 dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-200"
+                    >
+                      {locale === 'id' ? 'English (EN)' : 'Indonesia (ID)'}
+                    </button>
+                  </div>
+                </div>
+
+                {!session ? (
+                  <div className="flex flex-col gap-2 mt-2">
+                    <Link
+                      href="/member-login"
+                      onClick={() => setIsOpen(false)}
+                      className="w-full flex items-center justify-center bg-secondary text-white py-3 rounded-[4px] font-bold text-sm"
+                    >
+                      {t('nav_login')}
+                    </Link>
+                    <Link
+                      href="/member-register"
+                      onClick={() => setIsOpen(false)}
+                      className="w-full flex items-center justify-center border border-zinc-250 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 py-3 rounded-[4px] font-bold text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800/40"
+                    >
+                      {locale === 'id' ? 'Daftar Member' : 'Register Member'}
+                    </Link>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false)
+                      handleSignOut()
+                    }}
+                    className="w-full flex items-center justify-center bg-red-500 text-white py-3 rounded-[4px] font-bold text-sm mt-2"
                   >
-                    {t('nav_login')}
-                  </Link>
+                    🚪 {t('nav_logout')}
+                  </button>
                 )}
               </div>
             </motion.div>

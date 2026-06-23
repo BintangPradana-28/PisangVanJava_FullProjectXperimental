@@ -312,8 +312,19 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
               snapToken ? (
                 <MidtransPayButton snapToken={snapToken} />
               ) : (
-                <div className="w-full text-center p-3 text-sm text-rose-600 font-bold bg-rose-50 rounded-[4px] border border-rose-200">
-                  Gagal membuat sesi pembayaran (Token Missing).
+                <div className="w-full text-left p-4 text-sm text-rose-600 bg-rose-50 rounded-[4px] border border-rose-200 space-y-2">
+                  <p className="font-bold text-center">
+                    Gagal membuat sesi pembayaran (Token Missing).
+                  </p>
+                  {env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION !== 'true' && (
+                    <p className="text-xs text-rose-500 leading-relaxed">
+                      <strong>Tips Developer:</strong> Karena aplikasi berjalan dalam mode{' '}
+                      <strong>SANDBOX</strong>, pastikan variabel lingkungan{' '}
+                      <code>MIDTRANS_SERVER_KEY</code> dan{' '}
+                      <code>NEXT_PUBLIC_MIDTRANS_CLIENT_KEY</code> di file <code>.env</code> /
+                      Vercel menggunakan key Sandbox (biasanya diawali dengan <code>SB-Mid-</code>).
+                    </p>
+                  )}
                 </div>
               )
             ) : (
@@ -349,8 +360,19 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
           snapToken ? (
             <MidtransPayButton snapToken={snapToken} />
           ) : (
-            <div className="w-full text-center p-3 text-sm text-rose-600 font-bold bg-rose-50 rounded-[4px] border border-rose-200">
-              Gagal membuat sesi pembayaran (Token Missing).
+            <div className="w-full text-left p-4 text-sm text-rose-600 bg-rose-50 rounded-[4px] border border-rose-200 space-y-2">
+              <p className="font-bold text-center">
+                Gagal membuat sesi pembayaran (Token Missing).
+              </p>
+              {env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION !== 'true' && (
+                <p className="text-xs text-rose-500 leading-relaxed">
+                  <strong>Tips Developer:</strong> Karena aplikasi berjalan dalam mode{' '}
+                  <strong>SANDBOX</strong>, pastikan variabel lingkungan{' '}
+                  <code>MIDTRANS_SERVER_KEY</code> dan <code>NEXT_PUBLIC_MIDTRANS_CLIENT_KEY</code>{' '}
+                  di file <code>.env</code> / Vercel menggunakan key Sandbox (biasanya diawali
+                  dengan <code>SB-Mid-</code>).
+                </p>
+              )}
             </div>
           )
         ) : (

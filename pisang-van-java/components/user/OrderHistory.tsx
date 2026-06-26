@@ -20,6 +20,7 @@ import { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useLanguage } from '@/context/LanguageContext'
 import { useCartStore } from '@/src/features/cart/stores/cart.store'
+import { cancelOrder } from '@/app/actions/orderHistory'
 
 interface OrderItem {
   id: string
@@ -199,6 +200,7 @@ export default function OrderHistory({ phone = '', useAuth = false }: Props) {
   const [isLoading, setIsLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [isCanceling, setIsCanceling] = useState<string | null>(null)
 
   const router = useRouter()
   const addToCart = useCartStore((s) => s.addItem)
@@ -269,6 +271,31 @@ export default function OrderHistory({ phone = '', useAuth = false }: Props) {
       }
     } catch {
       toast.error('Gagal memproses pesanan ulang. Coba lagi.')
+    }
+  }
+
+  const handleCancelOrder = async (orderId: string) => {
+    if (
+      !window.confirm(
+        t('order_cancel_confirm') || 'Apakah Anda yakin ingin membatalkan pesanan ini?'
+      )
+    ) {
+      return
+    }
+
+    setIsCanceling(orderId)
+    try {
+      const res = await cancelOrder(orderId)
+      if (res.success) {
+        toast.success(t('order_cancel_success') || 'Pesanan berhasil dibatalkan')
+        fetchOrders()
+      } else {
+        toast.error(res.error || t('order_cancel_error') || 'Gagal membatalkan pesanan')
+      }
+    } catch {
+      toast.error('Terjadi kesalahan koneksi saat membatalkan pesanan.')
+    } finally {
+      setIsCanceling(null)
     }
   }
 
@@ -574,12 +601,25 @@ export default function OrderHistory({ phone = '', useAuth = false }: Props) {
 
                         {/* Payment action CTA */}
                         {order.status === 'PENDING_PAYMENT' && (
-                          <Link
-                            href={`/payment/${order.id}`}
-                            className="block w-full bg-[#D4802A] hover:bg-[#b56d24] text-white px-6 py-3 rounded-[4px] font-bold text-sm text-center transition-all shadow-md active:scale-95 mb-3"
-                          >
-                            {t('orders_payment_btn') || 'Selesaikan Pembayaran'}
-                          </Link>
+                          <div className="space-y-2 mb-3">
+                            <Link
+                              href={`/payment/${order.id}`}
+                              className="block w-full bg-[#D4802A] hover:bg-[#b56d24] text-white px-6 py-3 rounded-[4px] font-bold text-sm text-center transition-all shadow-md active:scale-95"
+                            >
+                              {t('orders_payment_btn') || 'Selesaikan Pembayaran'}
+                            </Link>
+                            <button
+                              type="button"
+                              disabled={isCanceling === order.id}
+                              onClick={() => handleCancelOrder(order.id)}
+                              className="w-full flex items-center justify-center gap-2 border border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-650 dark:text-red-400 px-6 py-3 rounded-[4px] font-bold text-sm transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                            >
+                              <XCircle className="w-4 h-4 text-red-500" />
+                              {isCanceling === order.id
+                                ? 'Membatalkan...'
+                                : t('order_cancel_btn') || 'Batalkan Pesanan'}
+                            </button>
+                          </div>
                         )}
 
                         {/* Invoice & Reorder buttons */}

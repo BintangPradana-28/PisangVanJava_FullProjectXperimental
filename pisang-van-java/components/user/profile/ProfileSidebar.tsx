@@ -9,7 +9,8 @@ import {
   Shield,
   ShoppingBag,
   Ticket,
-  User
+  User,
+  Wallet
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -22,6 +23,7 @@ const menuItems = [
   { key: 'profile_menu_info', href: '/profile', icon: User },
   { key: 'profile_menu_address', href: '/profile/alamat', icon: MapPin },
   { key: 'profile_menu_orders', href: '/profile/pesanan', icon: ShoppingBag },
+  { key: 'profile_menu_budget_history', href: '/profile/anggaran', icon: Wallet },
   { key: 'profile_menu_vouchers', href: '/profile/voucher', icon: Ticket },
   { key: 'profile_menu_security', href: '/profile/keamanan', icon: Shield }
 ]

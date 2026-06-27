@@ -7,6 +7,7 @@ import { sendWhatsAppNotification } from '@/lib/notifications'
 import { sendOrderStatusEmail } from '@/src/features/payment/email'
 import { buildOrderStatusPushPayload, sendPushNotification } from '@/lib/push'
 import { revalidatePath } from 'next/cache'
+import { cancelBiteshipOrder } from '@/src/services/biteship.service'
 
 export async function getUserOrders() {
   try {
@@ -215,6 +216,18 @@ export async function cancelOrder(orderId: string) {
         })
       }
     })
+
+    // Cancel Biteship order if registered (outside Prisma transaction to avoid locking database)
+    if (order.biteshipOrderId) {
+      try {
+        const biteshipResult = await cancelBiteshipOrder(order.biteshipOrderId)
+        if (!biteshipResult.success) {
+          console.warn(`[BITESHIP WARNING] Failed to cancel Biteship order ${order.biteshipOrderId}: ${biteshipResult.error}`)
+        }
+      } catch (biteshipErr) {
+        console.error('[BITESHIP ERROR] Exception during Biteship order cancellation:', biteshipErr)
+      }
+    }
 
     // 4. Send notifications (WhatsApp and Email)
     try {

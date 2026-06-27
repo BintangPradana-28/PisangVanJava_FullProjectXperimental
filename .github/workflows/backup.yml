@@ -1,0 +1,50 @@
+name: Database Backup Automation
+
+on:
+  schedule:
+    # Run daily at 17:00 UTC (which is 00:00 WIB/Western Indonesian Time)
+    - cron: '0 17 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  backup:
+    name: Create Encrypted Database Backup
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install dependencies
+        working-directory: ./pisang-van-java
+        run: pnpm install --frozen-lockfile
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Run Backup Script
+        working-directory: ./pisang-van-java
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+        run: npx tsx scripts/backup.ts
+
+      - name: Upload Backup Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: encrypted-database-backup
+          path: pisang-van-java/backups/pvj-backup-*.sql.enc
+          retention-days: 30
+          if-no-files-found: error

@@ -223,6 +223,8 @@ model Order {
   tipAmount      Float       @default(0)
   proofPhotoUrl  String?     // Cloudinary URL — proof of delivery photo
   addressId      String?     // FK to Address model for structured delivery address
+  biteshipOrderId String?
+  waybillId       String?
 
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
@@ -243,6 +245,7 @@ model Order {
   @@index([status])
   @@index([createdAt])
   @@index([addressId])
+  @@index([biteshipOrderId])
 }
 
 model Voucher {

@@ -41,6 +41,12 @@ vi.mock('@/lib/push', () => ({
   buildOrderStatusPushPayload: vi.fn().mockReturnValue({})
 }))
 
+vi.mock('@/src/services/biteship.service', () => ({
+  cancelBiteshipOrder: vi.fn().mockResolvedValue({ success: true }),
+  createBiteshipOrder: vi.fn(),
+  getBiteshipTracking: vi.fn()
+}))
+
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn()
 }))

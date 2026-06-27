@@ -1161,11 +1161,13 @@ export default function OrdersClient({
 
               <div className="p-5 space-y-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-brown-600 block">Unggah Foto Bukti (JPG/PNG/WEBP)</label>
+                  <label htmlFor="proof-photo-file" className="text-xs font-bold text-brown-600 block">Unggah Foto Bukti (JPG/PNG/WEBP)</label>
                   <input
+                    id="proof-photo-file"
                     type="file"
                     accept="image/*"
                     onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                    title="Unggah Foto Bukti"
                     className="w-full text-xs text-zinc-500 file:mr-3 file:py-2 file:px-4 file:rounded-[4px] file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer"
                   />
                   <p className="text-[10px] text-zinc-400">Maksimal 2MB. Diunggah langsung ke CDN aman.</p>

@@ -128,12 +128,17 @@ export default function LaporFormClient({ orders }: { orders: OrderSelection[] }
 
           {/* Hubungkan dengan Pesanan */}
           <div className="space-y-2">
-            <label className="block text-xs font-bold text-brown-600 dark:text-amber-brand uppercase tracking-wider">
+            <label
+              htmlFor="order-select"
+              className="block text-xs font-bold text-brown-600 dark:text-amber-brand uppercase tracking-wider"
+            >
               Pilih Pesanan Terkait (Opsional)
             </label>
             <select
+              id="order-select"
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}
+              title="Pilih Pesanan Terkait"
               className="w-full px-4 py-3 text-sm rounded-[4px] outline-none transition-all
                          bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800
                          text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-[#D4802A]/20 focus:border-[#D4802A]"

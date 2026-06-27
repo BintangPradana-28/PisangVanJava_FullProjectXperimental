@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
+import type { Prisma } from '@prisma/client'
 import { auth } from '@/src/auth'
 import { sendWhatsAppNotification } from '@/lib/notifications'
 import { sendOrderStatusEmail } from '@/src/features/payment/email'
@@ -189,7 +190,7 @@ export async function cancelOrder(orderId: string) {
     }
 
     // Execute database operations transactionally
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // 1. Restore stock
       for (const item of order.items) {
         if (item.variantId) {

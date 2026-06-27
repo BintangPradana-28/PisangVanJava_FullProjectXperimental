@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
-import { updateB2BDealStatus, createB2BDeal } from '@/src/features/crm/actions'
+import { createB2BDeal, updateB2BDealStatus } from '@/src/features/crm/actions'
 
 type Deal = {
   id: string
@@ -86,8 +86,12 @@ export default function B2BBoard({ initialDeals }: { initialDeals: Deal[] }) {
       {/* Header bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-xl font-bold font-serif text-zinc-900 dark:text-zinc-100">B2B Sales Pipeline</h1>
-          <p className="text-xs text-zinc-500">Kelola prospek dan kemitraan Reseller / Korporat Pisang Van Java</p>
+          <h1 className="text-xl font-bold font-serif text-zinc-900 dark:text-zinc-100">
+            B2B Sales Pipeline
+          </h1>
+          <p className="text-xs text-zinc-500">
+            Kelola prospek dan kemitraan Reseller / Korporat Pisang Van Java
+          </p>
         </div>
         <button
           onClick={() => setIsAddOpen(true)}
@@ -140,7 +144,9 @@ export default function B2BBoard({ initialDeals }: { initialDeals: Deal[] }) {
                     className="bg-white dark:bg-zinc-900 p-4 rounded-lg shadow-sm border border-zinc-200/60 dark:border-zinc-800/80 cursor-grab active:cursor-grabbing hover:border-amber-500/40 transition-colors space-y-2.5"
                   >
                     <div>
-                      <h3 className="font-bold text-sm text-zinc-900 dark:text-zinc-100">{deal.companyName}</h3>
+                      <h3 className="font-bold text-sm text-zinc-900 dark:text-zinc-100">
+                        {deal.companyName}
+                      </h3>
                       <p className="text-xs text-zinc-500 font-medium">{deal.dealName}</p>
                     </div>
 
@@ -159,6 +165,8 @@ export default function B2BBoard({ initialDeals }: { initialDeals: Deal[] }) {
                       disabled={isLoading}
                       value={deal.stage}
                       onChange={(e) => handleStatusChange(deal.id, e.target.value as Deal['stage'])}
+                      aria-label="Pilih tahapan deal"
+                      title="Pilih tahapan deal"
                       className="w-full text-xs px-2 py-1.5 border border-zinc-200 dark:border-zinc-800 rounded bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 focus:outline-none focus:border-amber-500"
                     >
                       {STAGES.map((s) => (
@@ -172,7 +180,9 @@ export default function B2BBoard({ initialDeals }: { initialDeals: Deal[] }) {
 
                 {stageDeals.length === 0 && (
                   <div className="h-full min-h-[120px] flex items-center justify-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg py-6">
-                    <p className="text-xs text-center text-zinc-400 font-bold uppercase tracking-wider">Drag / Tarik ke Sini</p>
+                    <p className="text-xs text-center text-zinc-400 font-bold uppercase tracking-wider">
+                      Drag / Tarik ke Sini
+                    </p>
                   </div>
                 )}
               </div>
@@ -189,7 +199,9 @@ export default function B2BBoard({ initialDeals }: { initialDeals: Deal[] }) {
             className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4 text-zinc-800 dark:text-zinc-100 animate-in zoom-in-95 duration-200"
           >
             <div className="flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800 pb-3">
-              <h3 className="font-serif text-lg font-bold text-amber-600 dark:text-amber-400">Tambah Deal B2B Baru</h3>
+              <h3 className="font-serif text-lg font-bold text-amber-600 dark:text-amber-400">
+                Tambah Deal B2B Baru
+              </h3>
               <button
                 type="button"
                 onClick={() => setIsAddOpen(false)}
@@ -201,7 +213,9 @@ export default function B2BBoard({ initialDeals }: { initialDeals: Deal[] }) {
 
             <div className="space-y-3.5 max-h-[60dvh] overflow-y-auto pr-1">
               <div>
-                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Nama Perusahaan *</label>
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Nama Perusahaan *
+                </label>
                 <input
                   type="text"
                   required
@@ -213,7 +227,9 @@ export default function B2BBoard({ initialDeals }: { initialDeals: Deal[] }) {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Nama Kontak Person *</label>
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Nama Kontak Person *
+                </label>
                 <input
                   type="text"
                   required
@@ -226,7 +242,9 @@ export default function B2BBoard({ initialDeals }: { initialDeals: Deal[] }) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">No. HP / WA *</label>
+                  <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                    No. HP / WA *
+                  </label>
                   <input
                     type="tel"
                     required
@@ -237,7 +255,9 @@ export default function B2BBoard({ initialDeals }: { initialDeals: Deal[] }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Email</label>
+                  <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                    Email
+                  </label>
                   <input
                     type="email"
                     placeholder="budi@perusahaan.com"
@@ -249,7 +269,9 @@ export default function B2BBoard({ initialDeals }: { initialDeals: Deal[] }) {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Nama Deal (Prospek) *</label>
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Nama Deal (Prospek) *
+                </label>
                 <input
                   type="text"
                   required
@@ -261,7 +283,9 @@ export default function B2BBoard({ initialDeals }: { initialDeals: Deal[] }) {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Nilai Kontrak (Rupiah)</label>
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Nilai Kontrak (Rupiah)
+                </label>
                 <input
                   type="number"
                   placeholder="15000000"
@@ -272,7 +296,9 @@ export default function B2BBoard({ initialDeals }: { initialDeals: Deal[] }) {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Catatan Tambahan</label>
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Catatan Tambahan
+                </label>
                 <textarea
                   placeholder="Informasi tambahan deal..."
                   value={notes}

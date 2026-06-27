@@ -116,135 +116,139 @@ function LineChart({
   }
 
   return (
-    <svg
-      viewBox={`0 0 ${W} ${H}`}
-      className="w-full h-auto"
-      style={{ overflow: 'visible' }}
-      aria-label="Grafik pendapatan"
-    >
-      <defs>
-        <linearGradient id="areaGrad" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.22" />
-          <stop offset="100%" stopColor={color} stopOpacity="0.02" />
-        </linearGradient>
-      </defs>
-
-      {/* Grid lines */}
-      {yGrids.map(({ y }) => (
-        <line
-          key={y}
-          x1={PL}
-          y1={y.toFixed(1)}
-          x2={W - PR}
-          y2={y.toFixed(1)}
-          stroke="#EDD4A0"
-          strokeWidth="1"
-          strokeDasharray="4 4"
-        />
-      ))}
-
-      {/* Y-axis labels */}
-      {yGrids.map(({ y, val }) => (
-        <text
-          key={val}
-          x={PL - 6}
-          y={(y + 4).toFixed(1)}
-          textAnchor="end"
-          fill="#7A3B18"
-          fontSize="9"
-          fontFamily="system-ui, sans-serif"
+    <div className="overflow-x-auto w-full scrollbar-thin">
+      <div className="min-w-[500px]">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          className="w-full h-auto"
+          style={{ overflow: 'visible' }}
+          aria-label="Grafik pendapatan"
         >
-          {fmtY(val)}
-        </text>
-      ))}
+          <defs>
+            <linearGradient id="areaGrad" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity="0.22" />
+              <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+            </linearGradient>
+          </defs>
 
-      {/* Area */}
-      {data.some((d) => d.value > 0) && <path d={areaPath} fill="url(#areaGrad)" />}
+          {/* Grid lines */}
+          {yGrids.map(({ y }) => (
+            <line
+              key={y}
+              x1={PL}
+              y1={y.toFixed(1)}
+              x2={W - PR}
+              y2={y.toFixed(1)}
+              stroke="#EDD4A0"
+              strokeWidth="1"
+              strokeDasharray="4 4"
+            />
+          ))}
 
-      {/* Line */}
-      <path
-        d={linePath}
-        fill="none"
-        stroke={color}
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-
-      {/* Points + tooltips */}
-      {pts.map((p, i) => (
-        <g key={i}>
-          {/* Hover hit area */}
-          <rect
-            x={p.x - 12}
-            y={PT - 5}
-            width={24}
-            height={plotH + 10}
-            fill="transparent"
-            style={{ cursor: 'pointer' }}
-            onMouseEnter={() => setHovered(i)}
-            onMouseLeave={() => setHovered(null)}
-          />
-          <circle
-            cx={p.x.toFixed(1)}
-            cy={p.y.toFixed(1)}
-            r={hovered === i ? 6 : 4}
-            fill={hovered === i ? color : '#fffaf6'}
-            stroke={color}
-            strokeWidth="2"
-            style={{ pointerEvents: 'none' }}
-          />
-          {/* Tooltip */}
-          {hovered === i && (
-            <g style={{ pointerEvents: 'none' }}>
-              <rect
-                x={Math.min(p.x - 56, W - PR - 116)}
-                y={Math.max(p.y - 48, 2)}
-                width="112"
-                height="34"
-                rx="5"
-                fill="#3D1C02"
-                fillOpacity="0.96"
-              />
-              <text
-                x={Math.min(p.x, W - PR - 60)}
-                y={Math.max(p.y - 30, 20)}
-                textAnchor="middle"
-                fill="white"
-                fontSize="11"
-                fontWeight="bold"
-                fontFamily="system-ui, sans-serif"
-              >
-                {formatPrice(p.value)}
-              </text>
-              <text
-                x={Math.min(p.x, W - PR - 60)}
-                y={Math.max(p.y - 16, 34)}
-                textAnchor="middle"
-                fill="#D4802A"
-                fontSize="9"
-                fontFamily="system-ui, sans-serif"
-              >
-                {p.label}
-              </text>
-            </g>
-          )}
-          {/* X-axis label */}
-          {showLabel(i) && (
+          {/* Y-axis labels */}
+          {yGrids.map(({ y, val }) => (
             <text
-              x={p.x.toFixed(1)}
-              y={H - 3}
-              textAnchor="middle"
+              key={val}
+              x={PL - 6}
+              y={(y + 4).toFixed(1)}
+              textAnchor="end"
               fill="#7A3B18"
-              fontSize={data.length > 20 ? '7' : '9'}
+              fontSize="9"
               fontFamily="system-ui, sans-serif"
             >
-              {p.label}
+              {fmtY(val)}
             </text>
-          )}
-        </g>
-      ))}
-    </svg>
+          ))}
+
+          {/* Area */}
+          {data.some((d) => d.value > 0) && <path d={areaPath} fill="url(#areaGrad)" />}
+
+          {/* Line */}
+          <path
+            d={linePath}
+            fill="none"
+            stroke={color}
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+
+          {/* Points + tooltips */}
+          {pts.map((p, i) => (
+            <g key={i}>
+              {/* Hover hit area */}
+              <rect
+                x={p.x - 12}
+                y={PT - 5}
+                width={24}
+                height={plotH + 10}
+                fill="transparent"
+                style={{ cursor: 'pointer' }}
+                onMouseEnter={() => setHovered(i)}
+                onMouseLeave={() => setHovered(null)}
+              />
+              <circle
+                cx={p.x.toFixed(1)}
+                cy={p.y.toFixed(1)}
+                r={hovered === i ? 6 : 4}
+                fill={hovered === i ? color : '#fffaf6'}
+                stroke={color}
+                strokeWidth="2"
+                style={{ pointerEvents: 'none' }}
+              />
+              {/* Tooltip */}
+              {hovered === i && (
+                <g style={{ pointerEvents: 'none' }}>
+                  <rect
+                    x={Math.min(p.x - 56, W - PR - 116)}
+                    y={Math.max(p.y - 48, 2)}
+                    width="112"
+                    height="34"
+                    rx="5"
+                    fill="#3D1C02"
+                    fillOpacity="0.96"
+                  />
+                  <text
+                    x={Math.min(p.x, W - PR - 60)}
+                    y={Math.max(p.y - 30, 20)}
+                    textAnchor="middle"
+                    fill="white"
+                    fontSize="11"
+                    fontWeight="bold"
+                    fontFamily="system-ui, sans-serif"
+                  >
+                    {formatPrice(p.value)}
+                  </text>
+                  <text
+                    x={Math.min(p.x, W - PR - 60)}
+                    y={Math.max(p.y - 16, 34)}
+                    textAnchor="middle"
+                    fill="#D4802A"
+                    fontSize="9"
+                    fontFamily="system-ui, sans-serif"
+                  >
+                    {p.label}
+                  </text>
+                </g>
+              )}
+              {/* X-axis label */}
+              {showLabel(i) && (
+                <text
+                  x={p.x.toFixed(1)}
+                  y={H - 3}
+                  textAnchor="middle"
+                  fill="#7A3B18"
+                  fontSize={data.length > 20 ? '7' : '9'}
+                  fontFamily="system-ui, sans-serif"
+                >
+                  {p.label}
+                </text>
+              )}
+            </g>
+          ))}
+        </svg>
+      </div>
+    </div>
   )
 }
 
@@ -278,39 +282,41 @@ function PeakHoursHeatmap({ distribution }: { distribution: Record<string, numbe
 
   return (
     <div>
-      <div className="grid grid-cols-12 gap-1 mb-2">
-        {hours.map(({ h, count, label }) => (
-          <div
-            key={h}
-            className="relative flex flex-col items-center justify-center rounded py-2 cursor-default"
-            style={{
-              backgroundColor: getColor(count),
-              transition: 'transform 0.12s',
-              transform: hovered === h ? 'scale(1.15)' : 'scale(1)',
-              zIndex: hovered === h ? 10 : 1
-            }}
-            onMouseEnter={() => setHovered(h)}
-            onMouseLeave={() => setHovered(null)}
-          >
-            <span className="text-xs font-bold leading-none" style={{ color: getTextColor(count) }}>
-              {count}
-            </span>
-            <span
-              className="text-[9px] leading-none mt-0.5 font-medium"
-              style={{ color: getTextColor(count) }}
+      <div className="overflow-x-auto w-full scrollbar-thin pb-2">
+        <div className="grid grid-cols-12 gap-1 mb-2 min-w-[480px]">
+          {hours.map(({ h, count, label }) => (
+            <div
+              key={h}
+              className="relative flex flex-col items-center justify-center rounded py-2 cursor-default"
+              style={{
+                backgroundColor: getColor(count),
+                transition: 'transform 0.12s',
+                transform: hovered === h ? 'scale(1.15)' : 'scale(1)',
+                zIndex: hovered === h ? 10 : 1
+              }}
+              onMouseEnter={() => setHovered(h)}
+              onMouseLeave={() => setHovered(null)}
             >
-              {String(h).padStart(2, '0')}
-            </span>
-            {hovered === h && (
-              <div
-                className="absolute -top-8 left-1/2 bg-brown-700 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20 shadow-lg"
-                style={{ transform: 'translateX(-50%)' }}
+              <span className="text-xs font-bold leading-none" style={{ color: getTextColor(count) }}>
+                {count}
+              </span>
+              <span
+                className="text-[9px] leading-none mt-0.5 font-medium"
+                style={{ color: getTextColor(count) }}
               >
-                {label}: {count} order
-              </div>
-            )}
-          </div>
-        ))}
+                {String(h).padStart(2, '0')}
+              </span>
+              {hovered === h && (
+                <div
+                  className="absolute -top-8 left-1/2 bg-brown-700 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20 shadow-lg"
+                  style={{ transform: 'translateX(-50%)' }}
+                >
+                  {label}: {count} order
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 mt-3">

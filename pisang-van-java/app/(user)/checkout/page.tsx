@@ -559,8 +559,8 @@ export default function CheckoutPage() {
                 {i < step ? '✓' : i + 1}
               </button>
               <span
-                className={`text-xs font-semibold hidden sm:block ${
-                  i === step ? 'text-amber-700 dark:text-amber-400' : 'text-zinc-400'
+                className={`text-xs font-semibold ${
+                  i === step ? 'text-amber-700 dark:text-amber-400 block' : 'text-zinc-400 hidden sm:block'
                 }`}
               >
                 {label}

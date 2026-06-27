@@ -24,6 +24,12 @@ const fraunces = Fraunces({
   adjustFontFallback: false
 })
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover'
+}
+
 export const metadata: Metadata = {
   title: {
     default: 'Pisang Goreng Van Java',

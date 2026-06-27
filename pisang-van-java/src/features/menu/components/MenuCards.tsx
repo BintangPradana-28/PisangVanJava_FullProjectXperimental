@@ -194,7 +194,7 @@ export default function MenuCards({ products }: Props) {
         )}
 
         {/* Product Cards Grid / Skeleton Loader */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
           {filteredProducts.length === 0 ? (
             <div className="col-span-full text-center py-12 text-zinc-500">
               {t('menu_empty_tag')} "{activeTag === 'ALL' ? t('menu_filter_all') : activeTag}"
@@ -236,13 +236,13 @@ export default function MenuCards({ products }: Props) {
                   </Link>
 
                   {/* Card Content */}
-                  <div className="p-6.5 flex flex-col items-center text-center flex-grow">
+                  <div className="p-3.5 sm:p-6.5 flex flex-col items-center text-center flex-grow">
                     <Link
                       href={`/menu-spesial/${product.id}`}
                       className="focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-[4px] block mb-1"
                     >
                       <h3
-                        className={`font-serif text-2xl font-bold text-primary dark:text-zinc-100 w-full text-center transition-colors hover:text-amber-brand ${!available ? 'text-zinc-500' : ''}`}
+                        className={`font-serif text-lg sm:text-2xl font-bold text-primary dark:text-zinc-100 w-full text-center transition-colors hover:text-amber-brand ${!available ? 'text-zinc-500' : ''}`}
                       >
                         {product.flavorName}
                       </h3>

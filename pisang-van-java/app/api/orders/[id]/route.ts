@@ -1,4 +1,4 @@
-import type { OrderStatus } from '@prisma/client'
+import { type OrderStatus, Prisma } from '@prisma/client'
 import { type NextRequest, NextResponse } from 'next/server'
 import { logAudit } from '@/lib/audit'
 import { sendWhatsAppNotification } from '@/lib/notifications'
@@ -236,7 +236,10 @@ export async function PATCH(req: NextRequest, { params }: OrderRouteContext) {
       if (tipAmount !== undefined) updateData.tipAmount = tipAmount
 
       return tx.order.update({
-        where: { id: orderId },
+        where: {
+          id: orderId,
+          status: currentOrder.status
+        },
         data: updateData,
         select: {
           id: true,
@@ -305,6 +308,12 @@ export async function PATCH(req: NextRequest, { params }: OrderRouteContext) {
       }
     })
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      return NextResponse.json(
+        { success: false, error: 'Pesanan telah diubah oleh transaksi lain. Silakan muat ulang halaman.' },
+        { status: 409 }
+      )
+    }
     console.error('[SECURITY] Failed to update order.', error)
     return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 })
   }

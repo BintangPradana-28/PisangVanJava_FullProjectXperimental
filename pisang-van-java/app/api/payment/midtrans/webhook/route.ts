@@ -167,18 +167,22 @@ export async function POST(req: NextRequest) {
         if (updateCount.count > 0) {
           sendEmail = true
 
-          // Increment soldCount for all items in the order
           const orderWithItems = await tx.order.findUnique({
             where: { id: realOrderId },
             include: { items: true }
           })
-          for (const item of orderWithItems?.items || []) {
-            if (item.variantId) {
-              await tx.menuVariant.update({
-                where: { id: item.variantId },
-                data: { soldCount: { increment: item.quantity } }
-              })
-            }
+          // RAG Source: app/api/payment/midtrans/webhook/route.ts (prevent N+1 queries by batching DB updates via Promise.all)
+          if (orderWithItems?.items) {
+            await Promise.all(
+              orderWithItems.items
+                .filter((item) => item.variantId)
+                .map((item) =>
+                  tx.menuVariant.update({
+                    where: { id: item.variantId! },
+                    data: { soldCount: { increment: item.quantity } }
+                  })
+                )
+            )
           }
         }
       } else if (targetOrderStatus === OrderStatus.CANCELED) {
@@ -196,13 +200,18 @@ export async function POST(req: NextRequest) {
             where: { id: realOrderId },
             include: { items: true }
           })
-          for (const item of orderWithItems?.items || []) {
-            if (item.variantId) {
-              await tx.menuVariant.update({
-                where: { id: item.variantId },
-                data: { stock: { increment: item.quantity } }
-              })
-            }
+          // RAG Source: app/api/payment/midtrans/webhook/route.ts (prevent N+1 queries by batching DB updates via Promise.all)
+          if (orderWithItems?.items) {
+            await Promise.all(
+              orderWithItems.items
+                .filter((item) => item.variantId)
+                .map((item) =>
+                  tx.menuVariant.update({
+                    where: { id: item.variantId! },
+                    data: { stock: { increment: item.quantity } }
+                  })
+                )
+            )
           }
         }
       }

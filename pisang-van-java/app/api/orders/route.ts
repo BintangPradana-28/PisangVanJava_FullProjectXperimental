@@ -166,7 +166,8 @@ export async function POST(req: NextRequest) {
 
     console.error('[SECURITY] Order creation failed.', error)
     return NextResponse.json(
-      { success: false, error: `Server error: ${error?.message || 'Unknown error'}` },
+      // RAG Source: app/api/orders/route.ts (sanitize database/server errors to prevent schema leakage)
+      { success: false, error: 'Server error' },
       { status: 500 }
     )
   }

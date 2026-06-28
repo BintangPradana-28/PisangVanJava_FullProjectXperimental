@@ -5,7 +5,6 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/src/auth'
 import { cloudinary } from '@/src/lib/cloudinary'
 
-const _ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_MB = 2
 
 export async function POST(req: NextRequest) {

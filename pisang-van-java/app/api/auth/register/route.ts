@@ -1,10 +1,21 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/redis'
 import { registerSchema } from '@/src/features/auth/schemas'
 import { hashPassword } from '@/src/lib/password'
 
 export async function POST(req: NextRequest) {
   try {
+    // RAG Source: app/api/auth/register/route.ts (apply rate-limiting to registration endpoints)
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1'
+    const { success: withinLimit } = await rateLimit.limit(`register:${ip}`)
+    if (!withinLimit) {
+      return NextResponse.json(
+        { success: false, message: 'Terlalu banyak percobaan pendaftaran. Coba lagi nanti.' },
+        { status: 429 }
+      )
+    }
+
     const body = await req.json()
 
     // 1. Zero-Trust Validation via Zod

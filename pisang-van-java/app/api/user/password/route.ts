@@ -1,12 +1,13 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/redis'
 import { auth } from '@/src/auth'
 import { hashPassword, verifyPassword } from '@/src/lib/password'
 
 const passwordSchema = z.object({
   oldPassword: z.string().min(1, 'Password lama wajib diisi'),
-  newPassword: z.string().min(6, 'Password baru minimal 6 karakter')
+  newPassword: z.string().min(8, 'Password baru minimal 8 karakter')
 })
 
 export async function PUT(req: NextRequest) {
@@ -15,6 +16,15 @@ export async function PUT(req: NextRequest) {
     const userId = session?.user?.id
     if (!session || !userId) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
+    }
+
+    // RAG Source: app/api/user/password/route.ts (apply rate-limiting to password change endpoints)
+    const { success: withinLimit } = await rateLimit.limit(`pwd-change:${userId}`)
+    if (!withinLimit) {
+      return NextResponse.json(
+        { success: false, message: 'Terlalu banyak percobaan penggantian password. Coba lagi dalam 15 menit.' },
+        { status: 429 }
+      )
     }
 
     const body = await req.json()

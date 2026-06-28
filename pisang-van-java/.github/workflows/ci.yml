@@ -50,5 +50,8 @@ jobs:
       - name: Linting (Static Analysis)
         run: pnpm next lint
 
+      - name: TypeScript Type Check
+        run: npx tsc --noEmit
+
       - name: Security & Unit Tests
         run: pnpm test

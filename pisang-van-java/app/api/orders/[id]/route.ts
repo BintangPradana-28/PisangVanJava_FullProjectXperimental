@@ -178,14 +178,17 @@ export async function PATCH(req: NextRequest, { params }: OrderRouteContext) {
         })
 
         if (orderWithItems && orderWithItems.status !== 'CANCELED') {
-          for (const item of orderWithItems.items) {
-            if (item.variantId) {
-              await tx.menuVariant.updateMany({
-                where: { id: item.variantId },
-                data: { stock: { increment: item.quantity } }
-              })
-            }
-          }
+          // RAG Source: app/api/orders/[id]/route.ts (prevent N+1 queries by batching DB updates via Promise.all)
+          await Promise.all(
+            orderWithItems.items
+              .filter((item) => item.variantId)
+              .map((item) =>
+                tx.menuVariant.updateMany({
+                  where: { id: item.variantId! },
+                  data: { stock: { increment: item.quantity } }
+                })
+              )
+          )
         }
       }
 

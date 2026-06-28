@@ -232,6 +232,7 @@ export default function OrderHistory({ phone = '', useAuth = false }: Props) {
       if (!json.success) throw new Error('Failed to load menu')
 
       const liveVariants = json.data.variants
+      const liveToppings = json.data.toppings || []
       let addedCount = 0
       let skippedCount = 0
 
@@ -246,17 +247,28 @@ export default function OrderHistory({ phone = '', useAuth = false }: Props) {
         if (item.baseType === 'Lumpia') basePrice = live.priceLumpia
         if (item.baseType === 'Krispy') basePrice = live.priceKrispy
 
+        // Map toppings using live toppings from database/API
+        const mappedToppings: any[] = []
+        if (item.toppings) {
+          item.toppings.forEach((t: any) => {
+            const matched = liveToppings.find(
+              (lt: any) => lt.name.toLowerCase() === t.name.toLowerCase()
+            )
+            if (matched) {
+              mappedToppings.push({
+                toppingId: matched.id,
+                name: matched.name,
+                priceAdd: matched.price
+              })
+            }
+          })
+        }
+
         addToCart({
           menuVariantId: item.variant.id,
           variantName: `${item.variant.flavorName} (${item.baseType})`,
           basePrice,
-          toppings: item.toppings
-            ? item.toppings.map((t: any) => ({
-                toppingId: t.id || 'unknown',
-                name: t.name,
-                priceAdd: t.price
-              }))
-            : [],
+          toppings: mappedToppings,
           quantity: item.quantity,
           notes: ''
         })

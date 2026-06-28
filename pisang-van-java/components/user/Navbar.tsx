@@ -125,14 +125,15 @@ export default function Navbar() {
 
   // On home page we don't need scroll spy anymore if we link to actual pages
   const isHome = pathname === '/'
-  const useSolidHeader = scrolled || !isHome || isOpen
+  const useSolidHeader = true
 
   const links = [
     { id: 'hero', href: '/', label: t('nav_home') },
     { id: 'menu', href: '/menu-spesial', label: t('nav_menu') },
     { id: 'promo', href: '/promo', label: t('nav_promo') },
     { id: 'tentang', href: '/tentang-kami', label: t('nav_about') },
-    { id: 'lokasi', href: '/lokasi-kontak', label: t('nav_location') }
+    { id: 'lokasi', href: '/lokasi-kontak', label: t('nav_location') },
+    { id: 'faq', href: '/faq', label: t('nav_faq') }
   ]
 
   const isLinkActive = (link: (typeof links)[0]) => {

@@ -94,7 +94,7 @@ export default function PaymentError({ error, reset }: PaymentErrorProps) {
           <p className="text-xs text-brown-400 mt-2 dark:text-zinc-500">
             Perlu bantuan?{' '}
             <a
-              href={`https://wa.me/6281234567890?text=Halo%2C%20saya%20butuh%20bantuan%20pembayaran%20pesanan%20${
+              href={`https://wa.me/6285773728748?text=Halo%2C%20saya%20butuh%20bantuan%20pembayaran%20pesanan%20${
                 orderId ?? ''
               }`}
               target="_blank"

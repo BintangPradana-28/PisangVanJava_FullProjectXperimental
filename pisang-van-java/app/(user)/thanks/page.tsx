@@ -25,7 +25,7 @@ const formatPrice = (price: number): string =>
   }).format(price)
 
 export default function ThanksPage() {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const searchParams = useSearchParams()
   const orderId = searchParams.get('orderId')
 
@@ -75,7 +75,9 @@ export default function ThanksPage() {
         {loading && (
           <div className="mb-6 py-8 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl flex flex-col items-center justify-center gap-2">
             <Loader2 className="w-6 h-6 text-amber-500 animate-spin" />
-            <span className="text-xs text-zinc-400">Memuat rincian belanja Anda...</span>
+            <span className="text-xs text-zinc-400">
+              {locale === 'en' ? 'Loading your order details...' : 'Memuat rincian belanja Anda...'}
+            </span>
           </div>
         )}
 
@@ -86,7 +88,7 @@ export default function ThanksPage() {
                 <Receipt className="w-3.5 h-3.5 text-zinc-400" />#{order.id.slice(-8).toUpperCase()}
               </span>
               <span className="text-zinc-500 font-mono">
-                {new Date(order.createdAt).toLocaleDateString('id-ID', {
+                {new Date(order.createdAt).toLocaleDateString(locale === 'en' ? 'en-US' : 'id-ID', {
                   day: 'numeric',
                   month: 'short',
                   year: 'numeric'
@@ -99,7 +101,7 @@ export default function ThanksPage() {
               <div className="text-xs text-zinc-500 dark:text-zinc-400 grid grid-cols-2 gap-2 pb-3 border-b border-zinc-200/40 dark:border-zinc-800/50">
                 <div>
                   <span className="block font-semibold text-zinc-400 text-[10px] uppercase tracking-wider">
-                    Pelanggan
+                    {locale === 'en' ? 'Customer' : 'Pelanggan'}
                   </span>
                   <span className="text-zinc-850 dark:text-zinc-200 font-medium">
                     {order.customerName}
@@ -107,10 +109,10 @@ export default function ThanksPage() {
                 </div>
                 <div>
                   <span className="block font-semibold text-zinc-400 text-[10px] uppercase tracking-wider">
-                    Metode
+                    {locale === 'en' ? 'Method' : 'Metode'}
                   </span>
                   <span className="text-zinc-850 dark:text-zinc-200 font-medium flex items-center gap-1">
-                    {order.deliveryMethod === 'DELIVERY' ? <>🛵 Delivery</> : <>🛍️ Ambil Sendiri</>}
+                    {order.deliveryMethod === 'DELIVERY' ? <>🛵 Delivery</> : <>{locale === 'en' ? '🛍️ Pickup' : '🛍️ Ambil Sendiri'}</>}
                   </span>
                 </div>
               </div>
@@ -118,7 +120,7 @@ export default function ThanksPage() {
               {/* Items List */}
               <div className="space-y-3">
                 <span className="block font-semibold text-zinc-400 text-[10px] uppercase tracking-wider">
-                  Detail Item
+                  {locale === 'en' ? 'Item Details' : 'Detail Item'}
                 </span>
                 {order.items.map((item: any) => (
                   <div key={item.id} className="flex justify-between items-start text-xs">
@@ -149,13 +151,13 @@ export default function ThanksPage() {
               <div className="pt-3 border-t border-zinc-200/40 dark:border-zinc-800/50 space-y-1.5 text-xs">
                 {order.deliveryFee > 0 && (
                   <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
-                    <span>Ongkos Kirim</span>
+                    <span>{locale === 'en' ? 'Shipping Fee' : 'Ongkos Kirim'}</span>
                     <span className="font-mono">{formatPrice(order.deliveryFee)}</span>
                   </div>
                 )}
                 {order.discountAmount > 0 && (
                   <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-semibold">
-                    <span>Diskon / Potongan</span>
+                    <span>{locale === 'en' ? 'Discount / Promo' : 'Diskon / Potongan'}</span>
                     <span className="font-mono">-{formatPrice(order.discountAmount)}</span>
                   </div>
                 )}

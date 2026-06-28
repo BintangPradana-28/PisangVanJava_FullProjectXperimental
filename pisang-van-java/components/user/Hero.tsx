@@ -91,7 +91,7 @@ export default function Hero({
         <div className="text-left">
           {badge && (
             <div className="inline-flex items-center gap-2 mb-5">
-              <span className="bg-secondary/15 border border-secondary/25 text-secondary dark:text-amber-400 font-mono text-[11px] font-semibold tracking-wider uppercase px-3 py-1 rounded-[6px]">
+              <span className="bg-secondary/15 border border-secondary/25 text-secondary dark:text-amber-400 font-sans text-[11px] font-semibold tracking-wider uppercase px-3 py-1 rounded-[6px]">
                 {badge}
               </span>
             </div>
@@ -130,7 +130,7 @@ export default function Hero({
               </>
             )}
 
-            <div className="flex items-center gap-1.5 text-zinc-550 dark:text-zinc-400 text-xs font-semibold font-mono">
+            <div className="flex items-center gap-1.5 text-zinc-550 dark:text-zinc-400 text-xs font-semibold font-sans">
               <Clock className="w-3.5 h-3.5 opacity-70 text-secondary" />
               <span>10.00 - 21.00 WIB</span>
             </div>
@@ -139,7 +139,7 @@ export default function Hero({
               •
             </span>
 
-            <div className="hidden sm:flex items-center gap-1 text-zinc-550 dark:text-zinc-400 text-xs font-semibold font-mono">
+            <div className="hidden sm:flex items-center gap-1 text-zinc-550 dark:text-zinc-400 text-xs font-semibold font-sans">
               <span>{t('hero_location')}</span>
             </div>
           </div>
@@ -177,7 +177,7 @@ export default function Hero({
               { num: '100%', label: t('hero_stat_local') }
             ].map(({ num, label }) => (
               <div key={label}>
-                <div className="font-mono text-2xl font-bold text-secondary dark:text-amber-400">
+                <div className="font-sans text-2xl font-bold text-secondary dark:text-amber-400">
                   {num}
                 </div>
                 <div className="text-[10px] text-zinc-450 dark:text-zinc-500 tracking-wider uppercase mt-1 font-semibold">
@@ -200,7 +200,7 @@ export default function Hero({
               className="object-cover"
             />
             {badge && (
-              <div className="absolute top-5 right-5 bg-secondary text-white text-[10px] font-bold px-3 py-1.5 rounded-[4px] shadow-sm font-mono uppercase tracking-wider">
+              <div className="absolute top-5 right-5 bg-secondary text-white text-[10px] font-bold px-3 py-1.5 rounded-[4px] shadow-sm font-sans uppercase tracking-wider">
                 {badge}
               </div>
             )}
@@ -211,7 +211,7 @@ export default function Hero({
       {/* Floating Scroll Indicator */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden md:block z-20">
         <div className="flex flex-col items-center gap-1 cursor-pointer animate-bounce">
-          <span className="text-[10px] text-zinc-400 uppercase tracking-widest font-semibold font-mono">
+          <span className="text-[10px] text-zinc-450 dark:text-zinc-550 uppercase tracking-widest font-semibold font-sans">
             {t('hero_scroll_down')}
           </span>
           <span className="text-secondary dark:text-amber-brand text-sm">↓</span>

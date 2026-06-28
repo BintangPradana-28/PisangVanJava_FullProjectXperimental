@@ -23,6 +23,8 @@ interface SearchDialogProps {
   onClose: () => void
 }
 
+let menuCache: Variant[] | null = null
+
 export default function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
   const { t } = useLanguage()
   const router = useRouter()
@@ -46,9 +48,14 @@ export default function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose])
 
-  // Fetch menu variants from /api/menu when dialog is opened
+  // Fetch menu variants from /api/menu when dialog is opened with memory cache fallback
   useEffect(() => {
     if (!isOpen) return
+
+    if (menuCache) {
+      setVariants(menuCache)
+      return
+    }
 
     const fetchMenu = async () => {
       setLoading(true)
@@ -56,6 +63,7 @@ export default function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
         const res = await fetch('/api/menu')
         const json = await res.json()
         if (json.success && json.data?.variants) {
+          menuCache = json.data.variants
           setVariants(json.data.variants)
         }
       } catch (err) {

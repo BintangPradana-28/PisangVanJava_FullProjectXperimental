@@ -339,31 +339,57 @@ export default function CheckoutPage() {
   const handleNextToConfirm = async () => {
     const isRHFValid = await trigger()
     if (!isRHFValid) {
-      toast.error('Periksa kembali isian form Anda')
+      toast.error(isEn ? 'Please check your form inputs' : 'Periksa kembali isian form Anda')
       return
     }
 
     if (delivery === 'DELIVERY') {
       if (isManualAddress && !address.trim()) {
-        toast.error('Alamat pengiriman wajib diisi')
+        toast.error(isEn ? 'Shipping address is required' : 'Alamat pengiriman wajib diisi')
         return
       }
       if (!isManualAddress && !selectedAddressId) {
-        toast.error('Pilih alamat pengiriman terlebih dahulu')
+        toast.error(isEn ? 'Please select a shipping address' : 'Pilih alamat pengiriman terlebih dahulu')
         return
       }
       if (!coordinates) {
-        toast.error('Silakan tentukan lokasi pengiriman Anda pada peta terlebih dahulu')
+        toast.error(isEn ? 'Please select your location on the map' : 'Silakan tentukan lokasi pengiriman Anda pada peta terlebih dahulu')
         return
       }
       if (!selectedRate) {
-        toast.error('Silakan pilih kurir pengiriman terlebih dahulu')
+        toast.error(isEn ? 'Please select a courier service' : 'Silakan pilih kurir pengiriman terlebih dahulu')
         return
       }
     }
-    if (delivery === 'PICKUP' && !pickupTime.trim()) {
-      toast.error('Waktu pengambilan wajib diisi')
-      return
+    if (delivery === 'PICKUP') {
+      if (!pickupTime.trim()) {
+        toast.error(isEn ? 'Pickup time is required' : 'Waktu pengambilan wajib diisi')
+        return
+      }
+      const parseTime = (tStr: string) => {
+        const parts = tStr.replace('.', ':').split(':')
+        if (parts.length < 2) return null
+        return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10)
+      }
+
+      const storeHours = getSetting('jam_operasional', '10.00–21.00')
+      const timeRanges = storeHours.split(/[–-]/)
+      if (timeRanges.length === 2) {
+        const startMin = parseTime(timeRanges[0].trim())
+        const endMin = parseTime(timeRanges[1].trim())
+        const pickupMin = parseTime(pickupTime.trim())
+
+        if (startMin !== null && endMin !== null && pickupMin !== null) {
+          if (pickupMin < startMin || pickupMin > endMin) {
+            toast.error(
+              isEn
+                ? `Store is only open for pickup from ${storeHours}`
+                : `Gerai hanya melayani pengambilan dari jam ${storeHours}`
+            )
+            return
+          }
+        }
+      }
     }
     // All valid → advance
     setStep(2)
@@ -459,9 +485,35 @@ export default function CheckoutPage() {
       toast.error('Setujui kebijakan privasi terlebih dahulu')
       return
     }
-    if (delivery === 'PICKUP' && !pickupTime.trim()) {
-      toast.error('Waktu pengambilan wajib diisi')
-      return
+    if (delivery === 'PICKUP') {
+      if (!pickupTime.trim()) {
+        toast.error(isEn ? 'Pickup time is required' : 'Waktu pengambilan wajib diisi')
+        return
+      }
+      const parseTime = (tStr: string) => {
+        const parts = tStr.replace('.', ':').split(':')
+        if (parts.length < 2) return null
+        return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10)
+      }
+
+      const storeHours = getSetting('jam_operasional', '10.00–21.00')
+      const timeRanges = storeHours.split(/[–-]/)
+      if (timeRanges.length === 2) {
+        const startMin = parseTime(timeRanges[0].trim())
+        const endMin = parseTime(timeRanges[1].trim())
+        const pickupMin = parseTime(pickupTime.trim())
+
+        if (startMin !== null && endMin !== null && pickupMin !== null) {
+          if (pickupMin < startMin || pickupMin > endMin) {
+            toast.error(
+              isEn
+                ? `Store is only open for pickup from ${storeHours}`
+                : `Gerai hanya melayani pengambilan dari jam ${storeHours}`
+            )
+            return
+          }
+        }
+      }
     }
 
     const items = cartItems
@@ -599,7 +651,7 @@ export default function CheckoutPage() {
                 >
                   <div className="bg-white dark:bg-zinc-900 rounded-[4px] border border-zinc-100 dark:border-zinc-800 shadow-sm p-6">
                     <h2 className="font-serif text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-4">
-                      🛒 Periksa Pesanan Anda
+                      {isEn ? '🛒 Review Your Order' : '🛒 Periksa Pesanan Anda'}
                     </h2>
                     <div className="space-y-3">
                       {cartItems.map((item, _i) => {
@@ -692,13 +744,14 @@ export default function CheckoutPage() {
                         href="/menu-spesial"
                         className="text-xs text-amber-600 font-semibold hover:underline"
                       >
-                        ← Tambah item
+                        {isEn ? '← Add items' : '← Tambah item'}
                       </Link>
                       <button
+                        type="button"
                         onClick={() => setStep(1)}
                         className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-8 rounded-[4px] transition-all active:scale-95 shadow-md shadow-amber-200"
                       >
-                        Lanjut →
+                        {isEn ? 'Next →' : 'Lanjut →'}
                       </button>
                     </div>
                   </div>
@@ -715,17 +768,17 @@ export default function CheckoutPage() {
                 >
                   <div className="bg-white dark:bg-zinc-900 rounded-[4px] border border-zinc-100 dark:border-zinc-800 shadow-sm p-6 space-y-5">
                     <h2 className="font-serif text-xl font-bold text-zinc-900 dark:text-zinc-100">
-                      👤 Data Pemesan
+                      👤 {isEn ? 'Customer Details' : 'Data Pemesan'}
                     </h2>
 
                     <div>
                       <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5">
-                        Nama Lengkap *
+                        {isEn ? 'Full Name *' : 'Nama Lengkap *'}
                       </label>
                       <input
                         type="text"
                         {...register('customerName')}
-                        placeholder="Nama Anda..."
+                        placeholder={isEn ? 'Your name...' : 'Nama Anda...'}
                         className={`w-full px-4 py-3 rounded-[4px] border ${errors.customerName ? 'border-red-400 focus:ring-red-400' : 'border-zinc-200 dark:border-zinc-700 focus:ring-amber-400'} bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 transition-all`}
                       />
                       {errors.customerName && (
@@ -737,12 +790,12 @@ export default function CheckoutPage() {
 
                     <div>
                       <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5">
-                        Nomor WhatsApp *
+                        {isEn ? 'WhatsApp Number *' : 'Nomor WhatsApp *'}
                       </label>
                       <input
                         type="tel"
                         {...register('customerPhone', { onChange: handlePhoneChange })}
-                        placeholder="Contoh: 081234567890"
+                        placeholder={isEn ? 'Example: 081234...' : 'Contoh: 081234567890'}
                         className={`w-full px-4 py-3 rounded-[4px] border ${errors.customerPhone ? 'border-red-400 focus:ring-red-400' : 'border-zinc-200 dark:border-zinc-700 focus:ring-amber-400'} bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 transition-all`}
                       />
                       {errors.customerPhone && (
@@ -755,21 +808,21 @@ export default function CheckoutPage() {
                     {/* Delivery Method */}
                     <div>
                       <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
-                        Metode Pengambilan
+                        {isEn ? 'Delivery Method' : 'Metode Pengambilan'}
                       </label>
                       <div className="grid grid-cols-2 gap-3">
                         {[
                           {
                             value: 'PICKUP' as DeliveryMethod,
                             icon: '🏪',
-                            label: 'Ambil Sendiri',
-                            sub: 'Gratis'
+                            label: isEn ? 'Pickup' : 'Ambil Sendiri',
+                            sub: isEn ? 'Free' : 'Gratis'
                           },
                           {
                             value: 'DELIVERY' as DeliveryMethod,
                             icon: '🛵',
-                            label: 'Diantar',
-                            sub: deliveryFee > 0 ? `+${formatPrice(deliveryFee)}` : 'Gratis'
+                            label: isEn ? 'Delivery' : 'Diantar',
+                            sub: deliveryFee > 0 ? `+${formatPrice(deliveryFee)}` : (isEn ? 'Free' : 'Gratis')
                           }
                         ].map((opt) => (
                           <button
@@ -800,7 +853,7 @@ export default function CheckoutPage() {
                             htmlFor="pickup-time-input"
                             className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5"
                           >
-                            Waktu Pengambilan *
+                            {isEn ? 'Pickup Time *' : 'Waktu Pengambilan *'}
                           </label>
                           <input
                             id="pickup-time-input"
@@ -812,12 +865,12 @@ export default function CheckoutPage() {
                         </div>
                         <div>
                           <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5">
-                            Catatan (Opsional)
+                            {isEn ? 'Notes (Optional)' : 'Catatan (Opsional)'}
                           </label>
                           <textarea
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
-                            placeholder="Catatan untuk penjual..."
+                            placeholder={isEn ? 'Notes for seller...' : 'Catatan untuk penjual...'}
                             rows={2}
                             className="w-full px-4 py-3 rounded-[4px] border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all resize-none"
                           />
@@ -828,7 +881,7 @@ export default function CheckoutPage() {
                     {delivery === 'DELIVERY' && (
                       <div className="space-y-4">
                         <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                          Alamat Pengiriman Lengkap *
+                          {isEn ? 'Full Shipping Address *' : 'Alamat Pengiriman Lengkap *'}
                         </label>
 
                         {authStatus === 'authenticated' &&
@@ -853,7 +906,7 @@ export default function CheckoutPage() {
                                     </span>
                                     {addr.isDefault && (
                                       <span className="text-[10px] font-bold bg-amber-200 text-amber-800 px-2 py-0.5 rounded-[4px]">
-                                        Utama
+                                        {isEn ? 'Default' : 'Utama'}
                                       </span>
                                     )}
                                   </div>
@@ -862,7 +915,7 @@ export default function CheckoutPage() {
                                   </p>
                                   {addr.notes && (
                                     <p className="text-xs text-zinc-500 italic mt-1">
-                                      Catatan: {addr.notes}
+                                      {isEn ? 'Notes' : 'Catatan'}: {addr.notes}
                                     </p>
                                   )}
                                 </button>
@@ -873,7 +926,7 @@ export default function CheckoutPage() {
                               onClick={() => setIsManualAddress(true)}
                               className="text-xs font-bold text-amber-600 hover:text-amber-700 underline"
                             >
-                              + Tulis Alamat Baru Secara Manual
+                              {isEn ? '+ Write New Address Manually' : '+ Tulis Alamat Baru Secara Manual'}
                             </button>
                           </div>
                         ) : (
@@ -881,7 +934,7 @@ export default function CheckoutPage() {
                             <textarea
                               value={address}
                               onChange={(e) => setAddress(e.target.value)}
-                              placeholder="Jl. Contoh No.1, RT/RW, Kelurahan, Kecamatan, Kota..."
+                              placeholder={isEn ? 'Street Name, Block, Building No...' : 'Jl. Contoh No.1, RT/RW, Kelurahan, Kecamatan, Kota...'}
                               rows={3}
                               className="w-full px-4 py-3 rounded-[4px] border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all resize-none"
                             />
@@ -891,7 +944,7 @@ export default function CheckoutPage() {
                                 onClick={() => setIsManualAddress(false)}
                                 className="text-xs font-bold text-amber-600 hover:text-amber-700 underline"
                               >
-                                ← Kembali Pilih Alamat Tersimpan
+                                {isEn ? '← Back to Saved Addresses' : '← Kembali Pilih Alamat Tersimpan'}
                               </button>
                             )}
                           </div>
@@ -1094,6 +1147,7 @@ export default function CheckoutPage() {
 
                     <div className="flex justify-between items-center pt-2">
                       <button
+                        type="button"
                         onClick={() => setStep(0)}
                         className="text-sm text-zinc-400 font-semibold hover:text-zinc-600"
                       >
@@ -1101,6 +1155,7 @@ export default function CheckoutPage() {
                       </button>
                       {/* VALIDATED TRANSITION — calls handleNextToConfirm, not setStep(2) directly */}
                       <button
+                        type="button"
                         onClick={handleNextToConfirm}
                         className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-8 rounded-[4px] transition-all active:scale-95 shadow-md shadow-amber-200"
                       >
@@ -1212,12 +1267,14 @@ export default function CheckoutPage() {
 
                     <div className="flex justify-between items-center gap-3">
                       <button
+                        type="button"
                         onClick={() => setStep(1)}
                         className="text-sm text-zinc-400 font-semibold hover:text-zinc-600"
                       >
                         ← Edit
                       </button>
                       <button
+                        type="button"
                         onClick={handleSubmit}
                         disabled={checkoutMutation.isPending || !consent}
                         className={`flex items-center gap-2 font-bold py-3.5 px-8 rounded-[4px] transition-all active:scale-95 text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
@@ -1255,16 +1312,16 @@ export default function CheckoutPage() {
                 className="w-full flex lg:hidden items-center justify-between font-serif text-lg font-bold text-zinc-900 dark:text-zinc-100"
               >
                 <span className="flex items-center gap-2">
-                  🛒 Ringkasan Pesanan
+                  🛒 {isEn ? 'Order Summary' : 'Ringkasan Pesanan'}
                   <span className="text-xs text-zinc-500 font-sans font-normal">
-                    ({showSummaryMobile ? 'Sembunyikan' : 'Lihat Detail'})
+                    ({showSummaryMobile ? (isEn ? 'Hide' : 'Sembunyikan') : (isEn ? 'Show Details' : 'Lihat Detail')})
                   </span>
                 </span>
                 <span className="text-amber-600 font-serif">{formatPrice(grandTotal)}</span>
               </button>
 
               <h3 className="hidden lg:block font-serif text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-4 pb-4 border-b border-zinc-100 dark:border-zinc-800">
-                Ringkasan Pesanan
+                {isEn ? 'Order Summary' : 'Ringkasan Pesanan'}
               </h3>
 
               <div className={`${showSummaryMobile ? 'block' : 'hidden lg:block'} mt-4 lg:mt-0`}>
@@ -1308,20 +1365,20 @@ export default function CheckoutPage() {
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between text-sm text-green-600 font-semibold">
-                      <span>{usePoints ? 'Tukar Koin' : 'Diskon'}</span>
+                      <span>{usePoints ? (isEn ? 'Redeem Coins' : 'Tukar Koin') : (isEn ? 'Discount' : 'Diskon')}</span>
                       <span>−{formatPrice(discount)}</span>
                     </div>
                   )}
                   {delivery === 'DELIVERY' && (
                     <div className="flex justify-between text-sm text-zinc-500">
-                      <span>Ongkos Kirim</span>
+                      <span>{isEn ? 'Shipping Fee' : 'Ongkos Kirim'}</span>
                       <span className="font-medium text-zinc-700 dark:text-zinc-300">
-                        {deliveryFee > 0 ? formatPrice(deliveryFee) : 'Gratis'}
+                        {deliveryFee > 0 ? formatPrice(deliveryFee) : (isEn ? 'Free' : 'Gratis')}
                       </span>
                     </div>
                   )}
                   <div className="flex justify-between font-bold text-zinc-900 dark:text-zinc-100 border-t border-zinc-100 dark:border-zinc-800 pt-3 text-lg">
-                    <span>Total</span>
+                    <span>{isEn ? 'Total' : 'Total'}</span>
                     <span className="text-amber-600 font-serif">{formatPrice(grandTotal)}</span>
                   </div>
                 </div>
@@ -1329,7 +1386,7 @@ export default function CheckoutPage() {
                 {/* Security badge */}
                 <div className="mt-4 flex items-center gap-2 text-xs text-zinc-400 bg-zinc-50 dark:bg-zinc-800/50 rounded-[4px] px-3 py-2.5">
                   <span className="text-green-500 text-base">🔒</span>
-                  <span>Data Anda terenkripsi. Harga dikunci server, bebas manipulasi.</span>
+                  <span>{isEn ? 'Your data is encrypted. Server-side locked price, manipulation-free.' : 'Data Anda terenkripsi. Harga dikunci server, bebas manipulasi.'}</span>
                 </div>
               </div>
             </div>

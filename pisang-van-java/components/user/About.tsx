@@ -105,7 +105,7 @@ export default function About({
                 })}
           >
             <div className="flex flex-wrap items-center gap-3 mb-5">
-              <div className="inline-block bg-secondary/10 text-secondary text-[11px] font-semibold tracking-wider font-mono uppercase px-3 py-1 rounded-[6px]">
+              <div className="inline-block bg-secondary/10 text-secondary text-[11px] font-semibold tracking-wider font-sans uppercase px-3 py-1 rounded-[6px]">
                 {t('about_badge')}
               </div>
               {totalReviews >= 5 && (
@@ -148,8 +148,8 @@ export default function About({
                   key={label}
                   className="rounded-[6px] border border-outline-variant/35 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 px-4 py-3 text-center shadow-sm"
                 >
-                  <div className="font-mono text-2xl font-bold text-amber-brand">{num}</div>
-                  <div className="text-[10px] text-zinc-450 dark:text-zinc-500 font-mono tracking-wider uppercase mt-1 font-semibold">
+                  <div className="font-sans text-2xl font-bold text-amber-brand">{num}</div>
+                  <div className="text-[10px] text-zinc-450 dark:text-zinc-500 font-sans tracking-wider uppercase mt-1 font-semibold">
                     {label}
                   </div>
                 </div>

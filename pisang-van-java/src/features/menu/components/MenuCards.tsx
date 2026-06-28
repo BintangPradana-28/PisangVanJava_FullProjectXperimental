@@ -10,6 +10,7 @@ const QuickViewModal = nextDynamic(() => import('@/components/user/QuickViewModa
 
 import { useSession } from 'next-auth/react'
 import { useLanguage } from '@/context/LanguageContext'
+import { formatPrice, getFlavorDescriptionKey, getFallbackImage } from '@/lib/utils'
 
 export interface ProductType {
   id: string
@@ -35,29 +36,7 @@ interface Props {
   products: ProductType[]
 }
 
-const formatPrice = (price: number): string => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0
-  }).format(price)
-}
 
-const getFallbackImageUrl = (name: string): string => {
-  const lowercaseName = name.toLowerCase()
-  if (lowercaseName.includes('matcha')) return '/images/flavors/matcha.png'
-  if (lowercaseName.includes('strawberry') || lowercaseName.includes('stroberi'))
-    return '/images/flavors/strawberry.png'
-  if (lowercaseName.includes('blueberry') || lowercaseName.includes('bluberi'))
-    return '/images/flavors/blueberry.png'
-  if (lowercaseName.includes('taro')) return '/images/flavors/taro.png'
-  if (lowercaseName.includes('cokelat') || lowercaseName.includes('coklat'))
-    return '/images/flavors/chocolate.png'
-  if (lowercaseName.includes('keju')) return '/images/flavors/cheese.png'
-  if (lowercaseName.includes('vanilla') || lowercaseName.includes('vanila'))
-    return '/images/flavors/vanilla.png'
-  return '/kitchen.png'
-}
 
 const ProductImage = ({
   src,
@@ -106,20 +85,7 @@ const getSalesMagnetTag = (flavorName: string): string => {
   return '⭐ Baru'
 }
 
-const getFlavorDescriptionKey = (flavorName: string): string | null => {
-  const lower = flavorName.toLowerCase()
-  if (lower.includes('cokelat') || lower.includes('coklat')) return 'menu_desc_cokelat'
-  if (lower.includes('matcha')) return 'menu_desc_matcha'
-  if (lower.includes('strawberry') || lower.includes('stroberi')) return 'menu_desc_strawberry'
-  if (lower.includes('blueberry') || lower.includes('bluberi')) return 'menu_desc_blueberry'
-  if (lower.includes('taro')) return 'menu_desc_taro'
-  if (lower.includes('tiramisu')) return 'menu_desc_tiramisu'
-  if (lower.includes('keju')) return 'menu_desc_keju'
-  if (lower.includes('susu')) return 'menu_desc_susu'
-  if (lower.includes('original')) return 'menu_desc_original'
-  if (lower.includes('milky')) return 'menu_desc_milky'
-  return null
-}
+
 
 export default function MenuCards({ products }: Props) {
   const { t } = useLanguage()
@@ -201,7 +167,7 @@ export default function MenuCards({ products }: Props) {
             </div>
           ) : (
             filteredProducts.map((product, i) => {
-              const image = product.imageUrl || getFallbackImageUrl(product.flavorName)
+              const image = product.imageUrl || getFallbackImage(product.flavorName)
               const available = product.isAvailable && product.stock > 0
 
               const defaultPrice =
@@ -253,15 +219,15 @@ export default function MenuCards({ products }: Props) {
                       {product.stock > 0 ? (
                         <>
                           <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                          <span className="text-[10px] font-mono font-semibold text-green-600 dark:text-green-400 tracking-wider uppercase">
-                            Ready: <span className="font-bold">{product.stock}</span>
+                          <span className="text-[10px] font-sans font-semibold text-green-600 dark:text-green-400 tracking-wider uppercase">
+                            {t('menu_stock_available')}: <span className="font-bold font-sans">{product.stock}</span> {t('menu_portion')}
                           </span>
                         </>
                       ) : (
                         <>
                           <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                          <span className="text-[10px] font-mono font-semibold text-red-600 dark:text-red-400 tracking-wider uppercase">
-                            Sold Out
+                          <span className="text-[10px] font-sans font-semibold text-red-600 dark:text-red-400 tracking-wider uppercase">
+                            {t('menu_sold_out_badge')}
                           </span>
                         </>
                       )}
@@ -291,13 +257,13 @@ export default function MenuCards({ products }: Props) {
                       </Link>
 
                       {product.soldCount !== undefined && product.soldCount > 0 && (
-                        <div className="flex items-center gap-1 text-[10px] font-mono font-semibold text-zinc-500 bg-zinc-100 dark:bg-zinc-800/50 px-2 py-0.5 rounded-[6px] tracking-wider uppercase">
+                        <div className="flex items-center gap-1 text-[10px] font-sans font-semibold text-zinc-500 bg-zinc-100 dark:bg-zinc-800/50 px-2 py-0.5 rounded-[6px] tracking-wider uppercase">
                           {product.soldCount > 50 && <span className="text-orange-500">🔥</span>}
                           <span>
                             {product.soldCount >= 1000
                               ? `${(product.soldCount / 1000).toFixed(1)}k+`
                               : product.soldCount}{' '}
-                            Sold
+                            {t('menu_sold')}
                           </span>
                         </div>
                       )}

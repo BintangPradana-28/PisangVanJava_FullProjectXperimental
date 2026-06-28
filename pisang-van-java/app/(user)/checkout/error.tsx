@@ -75,7 +75,7 @@ export default function CheckoutError({ error, reset }: CheckoutErrorProps) {
           <p className="text-xs text-gray-400 mt-2">
             Masalah berlanjut?{' '}
             <a
-              href="https://wa.me/6281234567890?text=Halo%2C%20saya%20mengalami%20masalah%20saat%20checkout"
+              href="https://wa.me/6285773728748?text=Halo%2C%20saya%20mengalami%20masalah%20saat%20checkout"
               target="_blank"
               rel="noopener noreferrer"
               className="text-amber-600 underline"

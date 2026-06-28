@@ -150,7 +150,16 @@ export const deliveryUpdateSchema = z
     status: z.enum(ORDER_STATUS_VALUES).optional(),
     courierPhone: z.string().trim().max(20).optional().nullable(),
     etaMinutes: z.number().int().min(0).max(1440).optional().nullable(),
-    proofPhotoUrl: z.string().url().max(500).optional().nullable(),
+    proofPhotoUrl: z
+      .string()
+      .url()
+      .max(500)
+      .refine(
+        (url) => url.includes('res.cloudinary.com'),
+        'URL foto bukti harus berasal dari res.cloudinary.com'
+      )
+      .optional()
+      .nullable(),
     tipAmount: z.number().finite().min(0).max(10_000_000).optional()
   })
   .strict()

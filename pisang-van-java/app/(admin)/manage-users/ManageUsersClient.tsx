@@ -22,21 +22,29 @@ interface UserType {
 export default function ManageUsersClient() {
   const queryClient = useQueryClient()
   const [filterDeleted, setFilterDeleted] = useState(false)
+  const [page, setPage] = useState(1)
+  const limit = 50
   const [editingCoinUser, setEditingCoinUser] = useState<UserType | null>(null)
   const [coinAdjustment, setCoinAdjustment] = useState(0)
   const [coinReason, setCoinReason] = useState('')
 
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ['admin-users', filterDeleted],
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-users', filterDeleted, page],
     queryFn: async () => {
-      const data = await api<{ success: boolean; data: UserType[]; message?: string }>(
-        `/api/admin/users?deleted=${filterDeleted}`
-      )
-      if (!data.success) throw new Error(data.message || 'Gagal memuat pengguna')
-      return data.data
+      const res = await api<{
+        success: boolean
+        data: UserType[]
+        pagination?: { totalPages: number }
+        message?: string
+      }>(`/api/admin/users?deleted=${filterDeleted}&page=${page}&limit=${limit}`)
+      if (!res.success) throw new Error(res.message || 'Gagal memuat pengguna')
+      return res
     },
     staleTime: 0
   })
+
+  const users = data?.data || []
+  const totalPages = data?.pagination?.totalPages || 1
 
   const roleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
@@ -133,13 +141,19 @@ export default function ManageUsersClient() {
     <div className="space-y-6">
       <div className="flex gap-4">
         <button
-          onClick={() => setFilterDeleted(false)}
-          className={`px-4 py-2 rounded-[4px] text-sm font-bold transition-all ${!filterDeleted ? 'bg-brown-700 text-white' : 'bg-white text-brown-700 border border-brown-200'}`}
+          onClick={() => {
+            setFilterDeleted(false)
+            setPage(1)
+          }}
+          className={`px-4 py-2 rounded-[4px] text-sm font-bold transition-all ${!filterDeleted ? 'bg-brown-700 text-white' : 'bg-white text-brown-700 border border-cream-200'}`}
         >
           Pengguna Aktif
         </button>
         <button
-          onClick={() => setFilterDeleted(true)}
+          onClick={() => {
+            setFilterDeleted(true)
+            setPage(1)
+          }}
           className={`px-4 py-2 rounded-[4px] text-sm font-bold transition-all ${filterDeleted ? 'bg-red-600 text-white' : 'bg-white text-red-600 border border-red-200'}`}
         >
           Pengguna Terhapus
@@ -244,6 +258,28 @@ export default function ManageUsersClient() {
             </tbody>
           </table>
         </div>
+        {/* Pagination Footer */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 bg-cream-50/50 border-t border-cream-100 text-xs">
+            <button
+              onClick={() => setPage((p) => Math.max(p - 1, 1))}
+              disabled={page === 1}
+              className="px-3 py-1.5 bg-white border border-cream-200 hover:bg-cream-50 text-brown-800 font-bold rounded-[4px] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Sebelumnya
+            </button>
+            <span className="font-mono text-brown-600 font-medium">
+              Halaman {page} dari {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+              disabled={page === totalPages}
+              className="px-3 py-1.5 bg-white border border-cream-200 hover:bg-cream-50 text-brown-800 font-bold rounded-[4px] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Berikutnya
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Modal Edit Coin */}

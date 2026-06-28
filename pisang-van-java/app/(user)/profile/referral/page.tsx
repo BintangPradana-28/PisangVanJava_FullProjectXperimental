@@ -1,7 +1,7 @@
 'use client'
 
-import { AlertCircle, CheckCircle, Copy, Gift, Loader2, Users } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { CheckCircle, Copy, Gift, Loader2, Users } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { applyReferralCode, generateMyReferralCode, getReferralStats } from '@/app/actions/referral'
 
@@ -11,11 +11,7 @@ export default function ReferralPage() {
   const [referralInput, setReferralInput] = useState('')
   const [isApplying, setIsApplying] = useState(false)
 
-  useEffect(() => {
-    fetchStats()
-  }, [])
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const data = await getReferralStats()
       setStats(data)
@@ -24,7 +20,11 @@ export default function ReferralPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchStats()
+  }, [fetchStats])
 
   const handleGenerateCode = async () => {
     try {

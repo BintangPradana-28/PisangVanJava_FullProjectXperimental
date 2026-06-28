@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/redis'
 
 // STRICT VALIDATION (C-Level Standard)
 const ContactSchema = z
@@ -17,6 +18,15 @@ const ContactSchema = z
 
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1'
+    const { success: limitSuccess } = await rateLimit.limit(`contact_post_${ip}`)
+    if (!limitSuccess) {
+      return NextResponse.json(
+        { error: 'Terlalu banyak permintaan. Silakan coba lagi nanti.' },
+        { status: 429 }
+      )
+    }
+
     const rawBody = await req.json()
 
     // 1. ABSOLUTE QUARANTINE (Zod Validation)

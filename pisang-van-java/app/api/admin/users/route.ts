@@ -14,25 +14,45 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url)
     const filterDeleted = searchParams.get('deleted') === 'true'
+    const page = Math.max(parseInt(searchParams.get('page') || '1', 10), 1)
+    const limit = Math.max(parseInt(searchParams.get('limit') || '50', 10), 1)
+    const safeLimit = Math.min(limit, 100)
+    const skip = (page - 1) * safeLimit
 
-    const users = await prisma.user.findMany({
-      where: filterDeleted ? { isDeleted: true } : { isDeleted: false },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        koinPisang: true,
-        referralCode: true,
-        referredBy: true,
-        isDeleted: true,
-        isBanned: true,
-        createdAt: true
-      },
-      orderBy: { createdAt: 'desc' }
+    const where: Prisma.UserWhereInput = filterDeleted ? { isDeleted: true } : { isDeleted: false }
+
+    const [users, totalCount] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip,
+        take: safeLimit,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          koinPisang: true,
+          referralCode: true,
+          referredBy: true,
+          isDeleted: true,
+          isBanned: true,
+          createdAt: true
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.user.count({ where })
+    ])
+
+    return NextResponse.json({
+      success: true,
+      data: users,
+      pagination: {
+        page,
+        limit: safeLimit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / safeLimit)
+      }
     })
-
-    return NextResponse.json({ success: true, data: users })
   } catch (error) {
     console.error('GET /api/admin/users Error:', error)
     return NextResponse.json(

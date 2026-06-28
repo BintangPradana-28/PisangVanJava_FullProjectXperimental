@@ -122,7 +122,7 @@ export default function KitchenClient({ initialOrders }: KitchenClientProps) {
   const [connectionStatus, setConnectionStatus] = useState<
     'connecting' | 'connected' | 'disconnected'
   >('disconnected')
-  const [reconnectTrigger, setReconnectTrigger] = useState(0)
+  const [_reconnectTrigger, setReconnectTrigger] = useState(0)
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set())
   const [, forceRender] = useState(0)
   const prevOrderIdsRef = useRef<Set<string>>(new Set(initialOrders.map((o) => o.id)))
@@ -241,6 +241,50 @@ export default function KitchenClient({ initialOrders }: KitchenClientProps) {
     }
   }
 
+  // ── Fetch new order data ─────────────────────────────────────────────────────
+  const handleNewOrder = useCallback(async (orderId: string) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' }
+      })
+
+      if (!res.ok) return
+
+      const json = await res.json()
+      if (json.success && json.data) {
+        const newOrder: KitchenOrder = {
+          id: json.data.id,
+          customerName: json.data.customerName,
+          status: json.data.status,
+          notes: json.data.notes,
+          source: json.data.source,
+          deliveryMethod: json.data.deliveryMethod,
+          createdAt: json.data.createdAt,
+          items:
+            json.data.items?.map((item: Record<string, unknown>) => ({
+              id: item.id,
+              baseType: item.baseType,
+              quantity: item.quantity,
+              variant: item.variant,
+              toppings: item.toppings || []
+            })) || []
+        }
+
+        const activeStatuses = ['PENDING_PAYMENT', 'PROCESSING', 'READY']
+        if (activeStatuses.includes(newOrder.status)) {
+          setOrders((prev) => {
+            // Prevent duplicates
+            if (prev.some((o) => o.id === newOrder.id)) return prev
+            return [...prev, newOrder]
+          })
+        }
+      }
+    } catch (error) {
+      console.error('[KDS] Failed to fetch new order:', error)
+    }
+  }, [])
+
   // ── Supabase Realtime Subscription ───────────────────────────────────────────
   useEffect(() => {
     if (!supabaseBrowserClient) {
@@ -294,7 +338,10 @@ export default function KitchenClient({ initialOrders }: KitchenClientProps) {
       setConnectionStatus('disconnected')
       supabaseBrowserClient?.removeChannel(channel)
     }
-  }, [reconnectTrigger])
+  }, [
+    // New order arrived — refetch full order data from API
+    handleNewOrder
+  ])
 
   // ── Polling Fallback ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -387,49 +434,7 @@ export default function KitchenClient({ initialOrders }: KitchenClientProps) {
     prevOrderIdsRef.current = currentIds
   }, [orders])
 
-  // ── Fetch new order data ─────────────────────────────────────────────────────
-  const handleNewOrder = useCallback(async (orderId: string) => {
-    try {
-      const res = await fetch(`/api/orders/${orderId}`, {
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' }
-      })
 
-      if (!res.ok) return
-
-      const json = await res.json()
-      if (json.success && json.data) {
-        const newOrder: KitchenOrder = {
-          id: json.data.id,
-          customerName: json.data.customerName,
-          status: json.data.status,
-          notes: json.data.notes,
-          source: json.data.source,
-          deliveryMethod: json.data.deliveryMethod,
-          createdAt: json.data.createdAt,
-          items:
-            json.data.items?.map((item: Record<string, unknown>) => ({
-              id: item.id,
-              baseType: item.baseType,
-              quantity: item.quantity,
-              variant: item.variant,
-              toppings: item.toppings || []
-            })) || []
-        }
-
-        const activeStatuses = ['PENDING_PAYMENT', 'PROCESSING', 'READY']
-        if (activeStatuses.includes(newOrder.status)) {
-          setOrders((prev) => {
-            // Prevent duplicates
-            if (prev.some((o) => o.id === newOrder.id)) return prev
-            return [...prev, newOrder]
-          })
-        }
-      }
-    } catch (error) {
-      console.error('[KDS] Failed to fetch new order:', error)
-    }
-  }, [])
 
   // ── Dispatch Courier Handlers ──────────────────────────────────────────────────
   const handleDispatchBiteship = async (orderId: string) => {
@@ -488,58 +493,61 @@ export default function KitchenClient({ initialOrders }: KitchenClientProps) {
   }
 
   // ── Update Order Status ──────────────────────────────────────────────────────
-  const handleStatusUpdate = useCallback(async (orderId: string, currentStatus: string) => {
-    const orderObj = orders.find((o) => o.id === orderId)
-    if (currentStatus === 'READY' && orderObj?.deliveryMethod === 'DELIVERY') {
-      setDispatchCourierPhone('')
-      setDispatchEtaMinutes(30)
-      setDispatchingOrder(orderObj)
-      return
-    }
-
-    const nextStatus = STATUS_FLOW[currentStatus]
-    if (!nextStatus) return
-
-    setUpdatingIds((prev) => new Set(prev).add(orderId))
-
-    // Take a snapshot for optimistic UI rollback
-    let snapshot: KitchenOrder[] = []
-    setOrders((prev) => {
-      snapshot = prev
-      if (nextStatus === 'COMPLETED' || nextStatus === 'CANCELED') {
-        return prev.filter((o) => o.id !== orderId)
-      } else {
-        return prev.map((o) => (o.id === orderId ? { ...o, status: nextStatus } : o))
-      }
-    })
-
-    try {
-      const res = await fetch(`/api/orders/${orderId}`, {
-        method: 'PATCH',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: nextStatus })
-      })
-
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}))
-        throw new Error(json.error || 'Gagal update status')
+  const handleStatusUpdate = useCallback(
+    async (orderId: string, currentStatus: string) => {
+      const orderObj = orders.find((o) => o.id === orderId)
+      if (currentStatus === 'READY' && orderObj?.deliveryMethod === 'DELIVERY') {
+        setDispatchCourierPhone('')
+        setDispatchEtaMinutes(30)
+        setDispatchingOrder(orderObj)
+        return
       }
 
-      toast.success(`Status diperbarui: ${STATUS_LABELS[nextStatus] || nextStatus}`)
-    } catch (error) {
-      // Revert change if API fails
-      setOrders(snapshot)
-      const message = error instanceof Error ? error.message : 'Gagal update status'
-      toast.error(message)
-    } finally {
-      setUpdatingIds((prev) => {
-        const next = new Set(prev)
-        next.delete(orderId)
-        return next
+      const nextStatus = STATUS_FLOW[currentStatus]
+      if (!nextStatus) return
+
+      setUpdatingIds((prev) => new Set(prev).add(orderId))
+
+      // Take a snapshot for optimistic UI rollback
+      let snapshot: KitchenOrder[] = []
+      setOrders((prev) => {
+        snapshot = prev
+        if (nextStatus === 'COMPLETED' || nextStatus === 'CANCELED') {
+          return prev.filter((o) => o.id !== orderId)
+        } else {
+          return prev.map((o) => (o.id === orderId ? { ...o, status: nextStatus } : o))
+        }
       })
-    }
-  }, [])
+
+      try {
+        const res = await fetch(`/api/orders/${orderId}`, {
+          method: 'PATCH',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: nextStatus })
+        })
+
+        if (!res.ok) {
+          const json = await res.json().catch(() => ({}))
+          throw new Error(json.error || 'Gagal update status')
+        }
+
+        toast.success(`Status diperbarui: ${STATUS_LABELS[nextStatus] || nextStatus}`)
+      } catch (error) {
+        // Revert change if API fails
+        setOrders(snapshot)
+        const message = error instanceof Error ? error.message : 'Gagal update status'
+        toast.error(message)
+      } finally {
+        setUpdatingIds((prev) => {
+          const next = new Set(prev)
+          next.delete(orderId)
+          return next
+        })
+      }
+    },
+    [orders.find]
+  )
 
   // ── Group orders by status ───────────────────────────────────────────────────
   const pendingOrders = orders.filter((o) => o.status === 'PENDING_PAYMENT')

@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import type React from 'react'
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useCallback, useEffect, useState } from 'react'
 
 export interface CartItem {
   productId: string
@@ -39,6 +39,46 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [mounted, setMounted] = useState(false)
   const [isDBLoaded, setIsDBLoaded] = useState(false)
+
+  // Helper for background sync
+  const syncToDB = useCallback((items: CartItem[]) => {
+    const payloadItems = items.map((item) => ({
+      productId: item.productId,
+      toppingId: item.toppingId ?? null,
+      name: item.name,
+      quantity: item.quantity,
+      notes: item.notes,
+      baseType: item.baseType ?? null
+    }))
+
+    fetch('/api/cart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: payloadItems }),
+      credentials: 'include'
+    }).catch((err) => console.error('Failed to sync cart', err))
+  }, [])
+
+  const mergeCarts = useCallback((dbCart: CartItem[], localCart: CartItem[]) => {
+    let merged = [...dbCart]
+    localCart.forEach((localItem) => {
+      const existingIndex = merged.findIndex(
+        (item) =>
+          item.productId === localItem.productId &&
+          item.toppingName === localItem.toppingName &&
+          item.notes === localItem.notes
+      )
+      if (existingIndex > -1) {
+        merged[existingIndex].quantity += localItem.quantity
+        merged[existingIndex].totalPrice =
+          (merged[existingIndex].basePrice + merged[existingIndex].toppingPrice) *
+          merged[existingIndex].quantity
+      } else {
+        merged = [...merged, localItem]
+      }
+    })
+    return merged
+  }, [])
 
   // 1. Initial Load (Local Storage & DB)
   useEffect(() => {
@@ -89,26 +129,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
 
     setMounted(true)
-  }, [status])
+  }, [status, mergeCarts, syncToDB])
 
-  // Helper for background sync
-  const syncToDB = (items: CartItem[]) => {
-    const payloadItems = items.map((item) => ({
-      productId: item.productId,
-      toppingId: item.toppingId ?? null,
-      name: item.name,
-      quantity: item.quantity,
-      notes: item.notes,
-      baseType: item.baseType ?? null
-    }))
 
-    fetch('/api/cart', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items: payloadItems }),
-      credentials: 'include'
-    }).catch((err) => console.error('Failed to sync cart', err))
-  }
 
   // 2. Auto-save side effect
   useEffect(() => {
@@ -120,28 +143,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       // Sync to DB when cart changes
       syncToDB(cartItems)
     }
-  }, [cartItems, mounted, status, isDBLoaded])
+  }, [
+    cartItems,
+    mounted,
+    status,
+    isDBLoaded, // Sync to DB when cart changes
+    syncToDB
+  ])
 
-  const mergeCarts = (dbCart: CartItem[], localCart: CartItem[]) => {
-    let merged = [...dbCart]
-    localCart.forEach((localItem) => {
-      const existingIndex = merged.findIndex(
-        (item) =>
-          item.productId === localItem.productId &&
-          item.toppingName === localItem.toppingName &&
-          item.notes === localItem.notes
-      )
-      if (existingIndex > -1) {
-        merged[existingIndex].quantity += localItem.quantity
-        merged[existingIndex].totalPrice =
-          (merged[existingIndex].basePrice + merged[existingIndex].toppingPrice) *
-          merged[existingIndex].quantity
-      } else {
-        merged = [...merged, localItem]
-      }
-    })
-    return merged
-  }
+
 
   const addToCart = (newItem: Omit<CartItem, 'totalPrice'>) => {
     setCartItems((prev) => {

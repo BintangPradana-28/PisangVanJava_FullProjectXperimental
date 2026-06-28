@@ -2,6 +2,7 @@ import type { Prisma } from '@prisma/client'
 import { type NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/redis'
 import { auth } from '@/src/auth'
 
 const reviewSchema = z.object({
@@ -9,7 +10,15 @@ const reviewSchema = z.object({
   variantId: z.string().min(1).optional(),
   rating: z.number().int().min(1).max(5),
   comment: z.string().max(1000).optional(),
-  imageUrl: z.string().url().optional().or(z.literal(''))
+  imageUrl: z
+    .string()
+    .url()
+    .refine(
+      (url) => url.includes('res.cloudinary.com'),
+      'URL gambar harus berasal dari res.cloudinary.com'
+    )
+    .optional()
+    .or(z.literal(''))
 })
 
 // GET /api/reviews
@@ -22,6 +31,11 @@ export async function GET(req: NextRequest) {
   const isAdmin = session && ['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)
   const adminView = req.nextUrl.searchParams.get('adminView') === 'true' && isAdmin
 
+  const page = Math.max(parseInt(req.nextUrl.searchParams.get('page') || '1', 10), 1)
+  const limit = Math.max(parseInt(req.nextUrl.searchParams.get('limit') || '10', 10), 1)
+  const safeLimit = Math.min(limit, 50)
+  const skip = (page - 1) * safeLimit
+
   const where: Prisma.ReviewWhereInput = adminView ? {} : { isHidden: false }
   if (variantId) where.variantId = variantId
   if (ratingFilter) where.rating = parseInt(ratingFilter, 10)
@@ -31,6 +45,8 @@ export async function GET(req: NextRequest) {
   try {
     const reviews = await prisma.review.findMany({
       where,
+      skip,
+      take: safeLimit,
       orderBy: { createdAt: 'desc' },
       include: {
         user: { select: { name: true } },
@@ -61,29 +77,39 @@ export async function GET(req: NextRequest) {
     const allReviewsWhere: Prisma.ReviewWhereInput = variantId
       ? { variantId, isHidden: false }
       : { isHidden: false }
-    const allReviews = await prisma.review.findMany({
+
+    const aggregates = await prisma.review.aggregate({
       where: allReviewsWhere,
-      select: { rating: true }
+      _avg: { rating: true },
+      _count: { id: true }
     })
 
-    let average = 0
-    const starCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+    const starCountsGroup = await prisma.review.groupBy({
+      by: ['rating'],
+      where: allReviewsWhere,
+      _count: { id: true }
+    })
 
-    if (allReviews.length > 0) {
-      let sum = 0
-      allReviews.forEach((r: any) => {
-        sum += r.rating
-        if (starCounts[r.rating as keyof typeof starCounts] !== undefined) {
-          starCounts[r.rating as keyof typeof starCounts]++
-        }
-      })
-      average = Number((sum / allReviews.length).toFixed(1))
-    }
+    const starCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+    starCountsGroup.forEach((g: any) => {
+      const r = g.rating
+      if (r >= 1 && r <= 5) {
+        starCounts[r as keyof typeof starCounts] = g._count.id
+      }
+    })
+
+    const average = aggregates._avg.rating ? Number(aggregates._avg.rating.toFixed(1)) : 0
+    const total = aggregates._count.id
 
     return NextResponse.json({
       success: true,
       data,
-      aggregates: { average, total: allReviews.length, starCounts }
+      pagination: {
+        page,
+        limit: safeLimit,
+        total
+      },
+      aggregates: { average, total, starCounts }
     })
   } catch (err) {
     console.error('[GET /api/reviews]', err)
@@ -96,6 +122,15 @@ export async function GET(req: NextRequest) {
 
 // POST /api/reviews
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1'
+  const { success: limitSuccess } = await rateLimit.limit(`reviews_post_${ip}`)
+  if (!limitSuccess) {
+    return NextResponse.json(
+      { success: false, error: 'Terlalu banyak permintaan. Silakan coba lagi nanti.' },
+      { status: 429 }
+    )
+  }
+
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json(

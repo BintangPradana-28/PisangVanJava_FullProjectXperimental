@@ -309,7 +309,7 @@ export async function createCheckoutOrder(
       }
     }
 
-    const midtransItems = result.preparedItems!.map((item: any) => ({
+    const midtransItems = (result.preparedItems || []).map((item: any) => ({
       id: item.variantId,
       price: item.unitPrice,
       quantity: item.quantity,
@@ -381,7 +381,7 @@ export async function createCheckoutOrder(
     deliveryFee: result.deliveryFee!,
     totalPrice: result.totalPrice,
     voucherCode: normalizedInput.voucherCode ?? null,
-    itemLines: result.preparedItems!.map((item: any) => item.whatsappLine)
+    itemLines: (result.preparedItems || []).map((item: any) => item.whatsappLine)
   })
 
   return {
@@ -496,7 +496,7 @@ async function resolveDeliveryFeeOutsideTx(
       const lat = parseFloat(latStr.trim())
       const lng = parseFloat(lngStr.trim())
 
-      if (!isNaN(lat) && !isNaN(lng)) {
+      if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
         const { calculateShippingRates } = await import('@/src/services/shipping.service')
 
         const variantIds = Array.from(new Set(input.items.map((item) => item.variantId)))

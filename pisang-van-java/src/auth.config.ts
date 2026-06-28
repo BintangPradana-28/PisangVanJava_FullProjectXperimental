@@ -54,6 +54,27 @@ export const authConfig = {
         if (session.name) token.name = session.name
         if (session.image) token.picture = session.image
       }
+
+      // Refresh user role & banned status from DB every 1 minute to avoid stale credentials
+      const now = Date.now()
+      const lastChecked = token.lastChecked as number | undefined
+      if (token.id && (!lastChecked || now - lastChecked > 60 * 1000)) {
+        try {
+          const { prisma } = await import('@/lib/prisma')
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { role: true, isBanned: true }
+          })
+          if (dbUser) {
+            token.role = dbUser.role
+            token.isBanned = dbUser.isBanned
+          }
+          token.lastChecked = now
+        } catch (e) {
+          console.error('Failed to refresh token role from DB', e)
+        }
+      }
+
       return token
     },
     async session({ session, token }) {
@@ -92,7 +113,7 @@ export const authConfig = {
     warn(code) {
       console.warn('[NEXTAUTH WARN]:', code)
     },
-    debug(code) {}
+    debug(_code) {}
   },
   providers: [
     GoogleProvider({

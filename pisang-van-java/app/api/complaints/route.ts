@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/redis'
 import { auth } from '@/src/auth'
 
 const createComplaintSchema = z
@@ -12,8 +13,17 @@ const createComplaintSchema = z
   .strict()
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1'
+  const { success: limitSuccess } = await rateLimit.limit(`complaints_post_${ip}`)
+  if (!limitSuccess) {
+    return NextResponse.json(
+      { success: false, error: 'Terlalu banyak permintaan. Silakan coba lagi nanti.' },
+      { status: 429 }
+    )
+  }
+
   const session = await auth()
-  if (!session || !session.user?.id) {
+  if (!session?.user?.id) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
   }
 

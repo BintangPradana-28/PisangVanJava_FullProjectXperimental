@@ -11,7 +11,7 @@ export async function requireAdminActor() {
     return null
   }
 
-  if (session.user.role !== 'ADMIN') {
+  if (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN') {
     return null
   }
 

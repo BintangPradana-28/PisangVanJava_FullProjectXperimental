@@ -100,6 +100,8 @@ export default function ReferralPage() {
               <button
                 onClick={copyToClipboard}
                 className="p-3 bg-white text-[#D4802A] rounded-[4px] hover:bg-orange-50 active:scale-95 transition-all shadow-sm"
+                aria-label="Salin kode referral"
+                title="Salin kode referral"
               >
                 <Copy className="w-5 h-5" />
               </button>

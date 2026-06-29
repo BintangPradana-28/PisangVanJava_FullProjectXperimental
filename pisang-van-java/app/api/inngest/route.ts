@@ -5,5 +5,6 @@ import { orderStatusWorkflow } from '@/src/features/payment/inngest/order-status
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [paymentSettledWorkflow, orderStatusWorkflow]
+  functions: [paymentSettledWorkflow, orderStatusWorkflow],
+  streaming: true
 })

@@ -10,7 +10,7 @@ export function getPostHogClient() {
 
   if (!posthogClient) {
     posthogClient = new PostHog(env.NEXT_PUBLIC_POSTHOG_KEY, {
-      host: 'https://us.i.posthog.com', // Update this based on the actual region chosen
+      host: env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
       flushAt: 1,
       flushInterval: 0
     })

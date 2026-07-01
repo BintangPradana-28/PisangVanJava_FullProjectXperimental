@@ -6,10 +6,10 @@ import { z } from 'zod'
 
 export const env = createEnv({
   server: {
-    DATABASE_URL: z.string().optional(),
+    DATABASE_URL: z.string().min(1),
     DIRECT_URL: z.string().optional(),
-    AUTH_SECRET: z.string().optional(),
-    MIDTRANS_SERVER_KEY: z.string().optional(),
+    AUTH_SECRET: z.string().min(1),
+    MIDTRANS_SERVER_KEY: z.string().min(1),
     UPSTASH_REDIS_REST_URL: z.string().optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
     RESEND_API_KEY: z.string().optional(),

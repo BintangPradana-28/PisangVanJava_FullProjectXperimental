@@ -4,12 +4,32 @@ import crypto from 'node:crypto'
 import { type NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/src/auth'
 import { cloudinary } from '@/src/lib/cloudinary'
+import { rateLimit } from '@/lib/redis'
+import * as Sentry from '@sentry/nextjs'
 
 const MAX_MB = 2
 
 export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+
+  // Rate Limiting
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown-ip'
+  const identifier = session.user?.id || ip
+  let rateLimitSuccess = true
+  try {
+    const res = await rateLimit.limit(`upload_limit_${identifier}`)
+    rateLimitSuccess = res.success
+  } catch (redisError) {
+    Sentry.captureException(redisError)
+  }
+
+  if (!rateLimitSuccess) {
+    return NextResponse.json(
+      { success: false, error: 'Terlalu banyak unggahan. Silakan coba lagi nanti.' },
+      { status: 429 }
+    )
+  }
 
   try {
     const formData = await req.formData()

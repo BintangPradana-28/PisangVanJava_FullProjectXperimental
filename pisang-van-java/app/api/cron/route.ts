@@ -1,13 +1,13 @@
+import { OrderStatus, type Prisma } from '@prisma/client'
 import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { OrderStatus, Prisma } from '@prisma/client'
 import { logger } from '@/src/lib/logger'
 
 export async function GET(req: NextRequest) {
   // Validate CRON_SECRET if set
   const authHeader = req.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     // Task 1: Expire Orders older than 24 hours
     if (!task || task === 'expire-orders') {
       const expiredThreshold = new Date(Date.now() - 24 * 60 * 60 * 1000)
-      
+
       // Fetch expired orders
       const expiredOrders = await prisma.order.findMany({
         where: {
@@ -44,7 +44,9 @@ export async function GET(req: NextRequest) {
               if (order.items) {
                 await Promise.all(
                   order.items
-                    .filter((item: { variantId: string | null; quantity: number }) => item.variantId)
+                    .filter(
+                      (item: { variantId: string | null; quantity: number }) => item.variantId
+                    )
                     .map((item: { variantId: string | null; quantity: number }) =>
                       tx.menuVariant.update({
                         where: { id: item.variantId! },
@@ -64,7 +66,7 @@ export async function GET(req: NextRequest) {
     // Task 2: Cleanup logs older than 90 days
     if (!task || task === 'cleanup-logs') {
       const logsThreshold = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
-      
+
       const deletedAudit = await prisma.auditLog.deleteMany({
         where: { createdAt: { lt: logsThreshold } }
       })
@@ -77,7 +79,9 @@ export async function GET(req: NextRequest) {
         deletedAudit: deletedAudit.count,
         deletedAuth: deletedAuth.count
       }
-      logger.info(`[CRON] Cleaned up ${deletedAudit.count} audit logs and ${deletedAuth.count} auth logs.`)
+      logger.info(
+        `[CRON] Cleaned up ${deletedAudit.count} audit logs and ${deletedAuth.count} auth logs.`
+      )
     }
 
     return NextResponse.json({ success: true, results })

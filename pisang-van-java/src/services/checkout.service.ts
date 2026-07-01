@@ -598,7 +598,7 @@ async function resolveDeliveryFeeOutsideTx(
   return deliveryFee
 }
 
-async function resolveWhatsAppNumber(): Promise<string | null> {
+export async function resolveWhatsAppNumber(): Promise<string | null> {
   const settings = await prisma.siteSetting.findMany({
     where: {
       key: {

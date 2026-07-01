@@ -23,7 +23,13 @@ export default function ReferralPage() {
   }, [])
 
   useEffect(() => {
-    fetchStats()
+    let cancelled = false
+    if (!cancelled) {
+      fetchStats()
+    }
+    return () => {
+      cancelled = true
+    }
   }, [fetchStats])
 
   const handleGenerateCode = async () => {

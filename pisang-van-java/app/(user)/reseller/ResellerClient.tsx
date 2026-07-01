@@ -244,7 +244,10 @@ export default function ResellerClient({
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div className="grid sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1.5" htmlFor="contact-name">
+                          <label
+                            className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1.5"
+                            htmlFor="contact-name"
+                          >
                             Nama Kontak (Pendaftar)
                           </label>
                           <input
@@ -257,7 +260,10 @@ export default function ResellerClient({
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1.5" htmlFor="whatsapp-number">
+                          <label
+                            className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1.5"
+                            htmlFor="whatsapp-number"
+                          >
                             Nomor WhatsApp
                           </label>
                           <input
@@ -315,9 +321,7 @@ export default function ResellerClient({
                         disabled={isPending}
                         className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-[4px] transition-all active:scale-[0.98] shadow-sm shadow-amber-200 dark:shadow-none text-sm disabled:opacity-50"
                       >
-                        {isPending
-                          ? 'Mengirimkan Pendaftaran...'
-                          : 'Kirim Pendaftaran Reseller 🚀'}
+                        {isPending ? 'Mengirimkan Pendaftaran...' : 'Kirim Pendaftaran Reseller 🚀'}
                       </button>
                     </form>
                   )}

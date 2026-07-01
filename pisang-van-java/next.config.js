@@ -14,7 +14,8 @@ const nextConfig = {
     minimumCacheTTL: 31536000,
     remotePatterns: [
       { protocol: 'https', hostname: 'vamxyslzeimlsofhgmry.supabase.co' },
-      { protocol: 'https', hostname: 'lh3.googleusercontent.com' } // Google OAuth avatars
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' }, // Google OAuth avatars
+      { protocol: 'https', hostname: 'res.cloudinary.com' } // Menu photo uploads via /api/upload
     ]
   },
 
@@ -72,7 +73,7 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://va.vercel-scripts.com https://app.midtrans.com https://app.sandbox.midtrans.com; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://vamxyslzeimlsofhgmry.supabase.co https://lh3.googleusercontent.com; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self' https://maps.google.com https://www.google.com https://app.midtrans.com https://app.sandbox.midtrans.com; connect-src 'self' https://va.vercel-scripts.com https://*.sentry.io https://*.ingest.sentry.io https://app.midtrans.com https://app.sandbox.midtrans.com; frame-ancestors 'none'; upgrade-insecure-requests;"
+              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://va.vercel-scripts.com https://app.midtrans.com https://app.sandbox.midtrans.com; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://vamxyslzeimlsofhgmry.supabase.co https://lh3.googleusercontent.com https://res.cloudinary.com; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self' https://maps.google.com https://www.google.com https://app.midtrans.com https://app.sandbox.midtrans.com; connect-src 'self' https://va.vercel-scripts.com https://*.sentry.io https://*.ingest.sentry.io https://app.midtrans.com https://app.sandbox.midtrans.com; frame-ancestors 'none'; upgrade-insecure-requests;"
           }
         ]
       }

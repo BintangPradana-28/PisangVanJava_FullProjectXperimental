@@ -73,7 +73,15 @@ export default function AlamatPage() {
   }
 
   useEffect(() => {
-    fetchAddresses()
+    // Cleanup flag prevents setState after unmount if fetchAddresses resolves
+    // after the component navigates away (profile sub-page navigation pattern)
+    let cancelled = false
+    if (!cancelled) {
+      fetchAddresses()
+    }
+    return () => {
+      cancelled = true
+    }
   }, [fetchAddresses])
 
   const handleOpenModal = (address?: AddressType) => {

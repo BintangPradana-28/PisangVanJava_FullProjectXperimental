@@ -19,7 +19,11 @@ export default function TentangKamiPage() {
   const [galleryProducts, setGalleryProducts] = useState<any[]>([])
 
   useEffect(() => {
-    fetch('/api/menu')
+    // AbortController cleanup prevents setState on unmounted component
+    // when user navigates away mid-fetch (missing cleanup identified in audit)
+    const controller = new AbortController()
+
+    fetch('/api/menu', { signal: controller.signal })
       .then((res) => res.json())
       .then((res) => {
         if (res.success && res.data) {
@@ -27,7 +31,7 @@ export default function TentangKamiPage() {
           if (variants.length > 0) {
             setFlavorsCount(variants.length)
             setGalleryProducts(
-              variants.map((v: any) => ({
+              variants.map((v: { id: string; flavorName: string; imageUrl: string | null }) => ({
                 id: v.id,
                 flavorName: v.flavorName,
                 imageUrl: v.imageUrl
@@ -40,7 +44,14 @@ export default function TentangKamiPage() {
           }
         }
       })
-      .catch(() => {})
+      .catch((err: unknown) => {
+        // AbortError is expected on cleanup — suppress silently
+        if (err instanceof Error && err.name !== 'AbortError') {
+          console.warn('[TentangKami] Failed to fetch menu data:', err.message)
+        }
+      })
+
+    return () => controller.abort()
   }, [])
 
   const values = [

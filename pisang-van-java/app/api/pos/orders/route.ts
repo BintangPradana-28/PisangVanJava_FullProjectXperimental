@@ -112,11 +112,49 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         }
       }
 
-      // 1. Stock validation for all items
+      // 1. Stock validation + SERVER-AUTHORITATIVE price lookup for all items.
+      const allToppingIds = Array.from(
+        new Set(data.items.flatMap((item) => [item.toppingId, ...(item.toppingIds ?? [])]))
+      ).filter((id): id is string => Boolean(id))
+
+      const toppingPriceById = new Map<string, number>()
+      if (allToppingIds.length > 0) {
+        const toppingRecords = await tx.topping.findMany({
+          where: { id: { in: allToppingIds } },
+          select: { id: true, price: true }
+        })
+        for (const t of toppingRecords) toppingPriceById.set(t.id, t.price)
+      }
+
+      function resolveVariantPrice(
+        variant: { priceKembung: number; priceLumpia: number; priceKrispy: number },
+        baseType: 'Kembung' | 'Lumpia' | 'Krispy'
+      ): number {
+        if (baseType === 'Lumpia') return variant.priceLumpia
+        if (baseType === 'Krispy') return variant.priceKrispy
+        return variant.priceKembung
+      }
+
+      const verifiedItems: Array<{
+        variantId: string
+        toppingId?: string | null
+        toppingIds?: string[]
+        baseType: 'Kembung' | 'Lumpia' | 'Krispy'
+        quantity: number
+        unitPrice: number
+        subtotal: number
+      }> = []
+
       for (const item of data.items) {
         const variant = await tx.menuVariant.findUnique({
           where: { id: item.variantId },
-          select: { stock: true, flavorName: true }
+          select: {
+            stock: true,
+            flavorName: true,
+            priceKembung: true,
+            priceLumpia: true,
+            priceKrispy: true
+          }
         })
 
         if (!variant) {
@@ -128,17 +166,34 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             `Stok ${variant.flavorName} habis atau tidak mencukupi. Sisa: ${variant.stock}`
           )
         }
+
+        const itemToppingIds = Array.from(
+          new Set([item.toppingId, ...(item.toppingIds ?? [])].filter((id): id is string => Boolean(id)))
+        )
+        const toppingTotal = itemToppingIds.reduce(
+          (sum, id) => sum + (toppingPriceById.get(id) ?? 0),
+          0
+        )
+        const verifiedUnitPrice = resolveVariantPrice(variant, item.baseType) + toppingTotal
+        const verifiedSubtotal = verifiedUnitPrice * item.quantity
+
+        verifiedItems.push({
+          variantId: item.variantId,
+          toppingId: item.toppingId,
+          toppingIds: item.toppingIds,
+          baseType: item.baseType,
+          quantity: item.quantity,
+          unitPrice: verifiedUnitPrice,
+          subtotal: verifiedSubtotal
+        })
       }
 
       // 2. Determine order status based on payment method
       const isCash = data.paymentMethod === 'CASH'
       const orderStatus = isCash ? 'COMPLETED' : 'PENDING_PAYMENT'
 
-      // 3. Server-side recalculate total (Zero-Trust: never trust client totalPrice)
-      const serverTotal = data.items.reduce(
-        (sum: number, item: { subtotal: number }) => sum + item.subtotal,
-        0
-      )
+      // 3. Server-side recalculate total (Zero-Trust: never trust client totalPrice).
+      const serverTotal = verifiedItems.reduce((sum, item) => sum + item.subtotal, 0)
       const safeDiscount = Math.min(data.discountAmount, serverTotal)
       const finalPrice = Math.max(0, serverTotal - safeDiscount)
 
@@ -156,7 +211,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           notes: data.notes,
           discountAmount: safeDiscount,
           items: {
-            create: data.items.map((item) => {
+            create: verifiedItems.map((item) => {
               const connectIds: { id: string }[] = []
               if (item.toppingId) {
                 connectIds.push({ id: item.toppingId })

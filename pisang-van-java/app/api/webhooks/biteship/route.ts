@@ -1,11 +1,25 @@
 import { OrderStatus, type Prisma } from '@prisma/client'
 import * as Sentry from '@sentry/nextjs'
+import crypto from 'node:crypto'
 import { type NextRequest, NextResponse } from 'next/server'
 import { sendWhatsAppNotification } from '@/lib/notifications'
 import { prisma } from '@/lib/prisma'
 import { buildOrderStatusPushPayload, sendPushNotification } from '@/lib/push'
 import { redis } from '@/lib/redis'
 import { sendOrderStatusEmail } from '@/src/features/payment/email'
+
+// SECURITY FIX: a plain `token !== expectedToken` string comparison is vulnerable to
+// a timing attack — JS string inequality short-circuits at the first mismatched
+// character, so response time leaks how many leading characters were guessed
+// correctly, letting an attacker recover the token byte-by-byte over many requests.
+// crypto.timingSafeEqual() takes constant time regardless of where strings diverge.
+// Mirrors the same pattern already used in src/features/pos/utils/verifyApprovalToken.ts.
+function timingSafeTokenEqual(provided: string, expected: string): boolean {
+  const providedBuffer = Buffer.from(provided)
+  const expectedBuffer = Buffer.from(expected)
+  if (providedBuffer.length !== expectedBuffer.length) return false
+  return crypto.timingSafeEqual(providedBuffer, expectedBuffer)
+}
 
 // Allowed status mapping from Biteship to DB OrderStatus
 const STATUS_MAP: Record<string, OrderStatus> = {
@@ -20,7 +34,11 @@ const STATUS_MAP: Record<string, OrderStatus> = {
 export async function POST(req: NextRequest) {
   try {
     const payload = await req.json()
-    console.info('[BITESHIP WEBHOOK] Received payload:', JSON.stringify(payload))
+    // SECURITY FIX: previously logged the ENTIRE raw payload via JSON.stringify,
+    // which can include customer name/phone and delivery address through the
+    // `courier`/destination fields. That data was flowing into server logs and
+    // Sentry breadcrumbs. Only non-PII identifiers are logged now.
+    console.info('[BITESHIP WEBHOOK] Received event:', payload?.event, 'order_id:', payload?.order_id)
 
     const { event, order_id, status, courier } = payload
 
@@ -34,7 +52,7 @@ export async function POST(req: NextRequest) {
     // Zero-Trust Security: Optional token authentication via URL query parameter or header
     const token = req.nextUrl.searchParams.get('token') || req.headers.get('x-biteship-token')
     const expectedToken = process.env.BITESHIP_WEBHOOK_TOKEN
-    if (expectedToken && token !== expectedToken) {
+    if (expectedToken && (!token || !timingSafeTokenEqual(token, expectedToken))) {
       console.warn('[SECURITY] Unauthorized Biteship webhook attempt detected')
       return NextResponse.json(
         { success: false, error: 'Unauthorized: Invalid token' },

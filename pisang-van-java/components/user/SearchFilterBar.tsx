@@ -44,9 +44,21 @@ const SORT_OPTIONS = [
 
 interface SearchFilterBarProps {
   totalItems: number
+  initialSearch?: string
+  initialFilter?: string
+  initialFlavor?: string
+  initialSort?: string
+  initialAvailable?: boolean
 }
 
-export default function SearchFilterBar({ totalItems }: SearchFilterBarProps) {
+export default function SearchFilterBar({
+  totalItems,
+  initialSearch = '',
+  initialFilter = 'all',
+  initialFlavor = 'all',
+  initialSort = 'default',
+  initialAvailable = false
+}: SearchFilterBarProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { t } = useLanguage()
@@ -54,25 +66,25 @@ export default function SearchFilterBar({ totalItems }: SearchFilterBarProps) {
 
   // RAG Source: components/user/SearchFilterBar.tsx
   const [search, setSearch] = useQueryState('q', {
-    defaultValue: '',
+    defaultValue: initialSearch,
     shallow: false
   })
   const [localSearch, setLocalSearch] = useState(search)
 
   const [baseFilter, setBaseFilter] = useQueryState('filter', {
-    defaultValue: 'all',
+    defaultValue: initialFilter,
     shallow: false
   })
   const [flavorFilter, setFlavorFilter] = useQueryState('flavor', {
-    defaultValue: 'all',
+    defaultValue: initialFlavor,
     shallow: false
   })
   const [sortBy, setSortBy] = useQueryState('sort', {
-    defaultValue: 'default',
+    defaultValue: initialSort,
     shallow: false
   })
   const [availableOnlyStr, setAvailableOnlyStr] = useQueryState('available', {
-    defaultValue: 'false',
+    defaultValue: initialAvailable ? 'true' : 'false',
     shallow: false
   })
 

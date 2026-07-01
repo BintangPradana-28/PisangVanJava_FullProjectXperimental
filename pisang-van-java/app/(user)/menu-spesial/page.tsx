@@ -223,7 +223,14 @@ export default async function MenuSpesialPage(props: {
       <HeroBanner />
 
       {/* ── Search & Filter bar (Client Component with Debouncing) ── */}
-      <SearchFilterBar totalItems={filtered.length} />
+      <SearchFilterBar
+        totalItems={filtered.length}
+        initialSearch={q}
+        initialFilter={filter}
+        initialFlavor={flavor}
+        initialSort={sort}
+        initialAvailable={available}
+      />
 
       {/* ── Grid & Favorites (Client Component for Animations) ── */}
       <MenuGrid products={filtered} />

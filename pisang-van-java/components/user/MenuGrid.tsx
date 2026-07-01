@@ -10,12 +10,10 @@ import toast from 'react-hot-toast'
 import QuickViewModal from '@/components/user/QuickViewModal'
 import { useLanguage } from '@/context/LanguageContext'
 import { useSettings } from '@/context/SettingsContext'
+import { formatPrice, getFallbackImage, getFlavorDescriptionKey } from '@/lib/utils'
 import type { ProductType } from '@/src/features/menu/components/MenuCards'
 import { animateFlyHeart } from '@/src/lib/animations'
 import { isStoreOpen as checkStoreOpen } from '@/src/lib/time'
-import { formatPrice, getFallbackImage, getFlavorDescriptionKey } from '@/lib/utils'
-
-
 
 // Maps tags set by admin (AdminMenuDashboard.tsx → Tags picker) to a small icon
 // for the customer-facing badge. Distinct from the ⭐ rating and 🔥 sold-count
@@ -72,8 +70,6 @@ const ProductImage = ({
   )
 }
 
-
-
 export default function MenuGrid({ products }: { products: ProductType[] }) {
   const { t } = useLanguage()
   const router = useRouter()
@@ -111,6 +107,16 @@ export default function MenuGrid({ products }: { products: ProductType[] }) {
     }
   }, [session])
 
+  useEffect(() => {
+    const variantId = _searchParams?.get('variantId') || _searchParams?.get('variant')
+    if (variantId && products.length > 0) {
+      const prod = products.find((p) => p.id === variantId)
+      if (prod) {
+        setSelected(prod)
+      }
+    }
+  }, [_searchParams, products])
+
   const toggleFavorite = (e: React.MouseEvent, variantId: string) => {
     e.stopPropagation()
     if (!session?.user) {
@@ -134,7 +140,9 @@ export default function MenuGrid({ products }: { products: ProductType[] }) {
         })
         const data = await res.json()
         if (!data.success) throw new Error(data.error)
-        setFavorites((prev) => (isFav ? prev.filter((id) => id !== variantId) : [...prev, variantId]))
+        setFavorites((prev) =>
+          isFav ? prev.filter((id) => id !== variantId) : [...prev, variantId]
+        )
         toast.success(isFav ? 'Dihapus dari favorit' : 'Ditambahkan ke favorit', {
           id: `fav-${variantId}`
         })

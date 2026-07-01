@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, Clock, Coins, Gift } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Clock, Coins, Gift } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface KoinLog {
@@ -10,8 +10,21 @@ interface KoinLog {
   createdAt: Date | string
 }
 
-export default function KoinHistoryClient({ logs }: { logs: KoinLog[] }) {
+interface KoinHistoryClientProps {
+  logs: KoinLog[]
+  page: number
+  limit: number
+  totalCount: number
+}
+
+export default function KoinHistoryClient({
+  logs,
+  page,
+  limit,
+  totalCount
+}: KoinHistoryClientProps) {
   const router = useRouter()
+  const totalPages = Math.ceil(totalCount / limit)
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -77,6 +90,70 @@ export default function KoinHistoryClient({ logs }: { logs: KoinLog[] }) {
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3 sm:px-6">
+            <div className="flex flex-1 justify-between sm:hidden">
+              <button
+                type="button"
+                onClick={() => router.push(`?page=${page - 1}`)}
+                disabled={page <= 1}
+                className="relative inline-flex items-center rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-2 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-55 dark:hover:bg-zinc-800 disabled:opacity-50"
+              >
+                Sebelumnya
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push(`?page=${page + 1}`)}
+                disabled={page >= totalPages}
+                className="relative ml-3 inline-flex items-center rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-2 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-55 dark:hover:bg-zinc-800 disabled:opacity-50"
+              >
+                Selanjutnya
+              </button>
+            </div>
+            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Menampilkan{' '}
+                  <span className="font-semibold">
+                    {Math.min(totalCount, (page - 1) * limit + 1)}
+                  </span>{' '}
+                  sampai <span className="font-semibold">{Math.min(totalCount, page * limit)}</span>{' '}
+                  dari <span className="font-semibold">{totalCount}</span> transaksi
+                </p>
+              </div>
+              <div>
+                <nav
+                  className="isolate inline-flex -space-x-px rounded-md shadow-sm"
+                  aria-label="Pagination"
+                >
+                  <button
+                    type="button"
+                    onClick={() => router.push(`?page=${page - 1}`)}
+                    disabled={page <= 1}
+                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-zinc-400 dark:text-zinc-500 ring-1 ring-inset ring-zinc-200 dark:ring-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-850 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                  >
+                    <span className="sr-only">Previous</span>
+                    <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                  <span className="relative inline-flex items-center px-4 py-2 text-xs font-semibold text-zinc-900 dark:text-zinc-100 ring-1 ring-inset ring-zinc-200 dark:ring-zinc-800 focus:outline-none">
+                    Halaman {page} dari {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => router.push(`?page=${page + 1}`)}
+                    disabled={page >= totalPages}
+                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-zinc-400 dark:text-zinc-500 ring-1 ring-inset ring-zinc-200 dark:ring-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-850 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                  >
+                    <span className="sr-only">Next</span>
+                    <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </nav>
+              </div>
+            </div>
           </div>
         )}
       </div>

@@ -43,13 +43,25 @@ export default function FavoritesClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ variantId })
       })
+      if (!res.ok) {
+        throw new Error('Gagal menghapus favorit')
+      }
       return res.json()
     },
-    onSuccess: (_data, variantId) => {
-      toast.success('Dihapus dari favorit')
+    onMutate: async (variantId) => {
+      const previousFavorites = favorites
       setFavorites((prev) => prev.filter((f) => f.variantId !== variantId))
+      return { previousFavorites }
     },
-    onError: () => toast.error('Gagal menghapus favorit')
+    onError: (_err, _variantId, context) => {
+      toast.error('Gagal menghapus favorit')
+      if (context?.previousFavorites) {
+        setFavorites(context.previousFavorites)
+      }
+    },
+    onSuccess: () => {
+      toast.success('Dihapus dari favorit')
+    }
   })
 
   if (favorites.length === 0) {
@@ -170,7 +182,7 @@ export default function FavoritesClient({
 
               {/* Action */}
               <Link
-                href="/menu-spesial"
+                href={`/menu-spesial?variantId=${item.variantId}`}
                 className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#D4802A] hover:bg-[#b86f24] text-white text-xs font-bold rounded-[4px] transition-all"
               >
                 <ShoppingCart className="w-3.5 h-3.5" />

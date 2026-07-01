@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
       take: safeLimit,
       orderBy: { createdAt: 'desc' },
       include: {
-        user: { select: { name: true } },
+        user: { select: adminView ? { name: true, email: true } : { name: true } },
         variant: { select: { flavorName: true } }
       }
     })
@@ -65,6 +65,7 @@ export async function GET(req: NextRequest) {
         id: r.id,
         userId: r.userId,
         userName: adminView ? r.user?.name : maskName(r.user?.name),
+        ...(adminView && { userEmail: r.user?.email ?? '' }),
         variantName: r.variant?.flavorName || 'Pesanan Umum',
         rating: r.rating,
         comment: r.comment,
@@ -153,13 +154,28 @@ export async function POST(req: NextRequest) {
 
   try {
     const order = await prisma.order.findUnique({ where: { id: orderId } })
-    if (order && order.userId !== session.user.id) {
+    if (!order) {
+      return NextResponse.json(
+        { success: false, error: 'Pesanan tidak ditemukan.' },
+        { status: 404 }
+      )
+    }
+    if (order.userId !== session.user.id) {
       return NextResponse.json(
         { success: false, error: 'Forbidden: Order ini bukan milik Anda.' },
         { status: 403 }
       )
     }
-    const isVerifiedBuyer = order !== null
+    if (order.status !== 'COMPLETED' && order.status !== 'DELIVERED') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Ulasan hanya dapat dikirim untuk pesanan yang sudah selesai atau terkirim.'
+        },
+        { status: 400 }
+      )
+    }
+    const isVerifiedBuyer = true
 
     const review = await prisma.review.upsert({
       where: { userId_orderId: { userId: session.user.id, orderId } },

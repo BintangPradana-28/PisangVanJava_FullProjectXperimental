@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     }
 
     const { level, message, context } = parsed.data
-    console.info(`[CLIENT_LOG][${level}][user:${session.user.id}] ${message}`, context ?? {})
+    console.info('[CLIENT_LOG][%s][user:%s] %s', level, session.user.id, message, context ?? {})
 
     return NextResponse.json({ success: true })
   } catch (_error) {

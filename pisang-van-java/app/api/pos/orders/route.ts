@@ -135,6 +135,24 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         return variant.priceKembung
       }
 
+      const variantQuantities = new Map<string, number>()
+      for (const item of data.items) {
+        variantQuantities.set(
+          item.variantId,
+          (variantQuantities.get(item.variantId) || 0) + item.quantity
+        )
+      }
+
+      const variantById = new Map<string, {
+        id: string
+        version: number
+        stock: number
+        flavorName: string
+        priceKembung: number
+        priceLumpia: number
+        priceKrispy: number
+      }>()
+
       const verifiedItems: Array<{
         variantId: string
         toppingId?: string | null
@@ -146,22 +164,30 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       }> = []
 
       for (const item of data.items) {
-        const variant = await tx.menuVariant.findUnique({
-          where: { id: item.variantId },
-          select: {
-            stock: true,
-            flavorName: true,
-            priceKembung: true,
-            priceLumpia: true,
-            priceKrispy: true
-          }
-        })
-
+        let variant = variantById.get(item.variantId)
         if (!variant) {
-          throw new Error(`Produk dengan ID ${item.variantId} tidak ditemukan.`)
+          const dbVariant = await tx.menuVariant.findUnique({
+            where: { id: item.variantId },
+            select: {
+              id: true,
+              version: true,
+              stock: true,
+              flavorName: true,
+              priceKembung: true,
+              priceLumpia: true,
+              priceKrispy: true
+            }
+          })
+
+          if (!dbVariant) {
+            throw new Error(`Produk dengan ID ${item.variantId} tidak ditemukan.`)
+          }
+          variant = dbVariant
+          variantById.set(item.variantId, dbVariant)
         }
 
-        if (variant.stock < item.quantity) {
+        const totalQuantity = variantQuantities.get(item.variantId) ?? 0
+        if (variant.stock < totalQuantity) {
           throw new Error(
             `Stok ${variant.flavorName} habis atau tidak mencukupi. Sisa: ${variant.stock}`
           )
@@ -236,16 +262,24 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         }
       })
 
-      // 5. Atomic Decrement of Stock
-      for (const item of data.items) {
-        await tx.menuVariant.update({
-          where: { id: item.variantId },
+      // 5. Atomic Decrement of Stock (Compare-and-Swap / Optimistic Locking)
+      for (const [variantId, totalQuantity] of Array.from(variantQuantities.entries())) {
+        const variant = variantById.get(variantId)!
+        const updateResult = await tx.menuVariant.updateMany({
+          where: {
+            id: variantId,
+            version: variant.version,
+            stock: { gte: totalQuantity }
+          },
           data: {
-            stock: {
-              decrement: item.quantity
-            }
+            stock: { decrement: totalQuantity },
+            version: { increment: 1 }
           }
         })
+
+        if (updateResult.count === 0) {
+          throw new Error(`Gagal memproses transaksi: Stok untuk ${variant.flavorName} telah berubah. Silakan coba lagi.`)
+        }
       }
 
       return { order: newOrder, isIdempotent: false, finalPrice }

@@ -83,7 +83,7 @@ resource "cloudflare_ruleset" "pvj_waf_webhook" {
 
     expression = <<-EOT
       (
-        http.request.uri.path eq "/api/webhooks/midtrans"
+        http.request.uri.path eq "/api/payment/midtrans/webhook"
         and not ip.src in {103.208.23.0/24}
       )
     EOT
@@ -130,7 +130,7 @@ resource "cloudflare_ruleset" "pvj_rate_limiting" {
     enabled     = true
     ref         = "rate-limit-login"
 
-    expression = "http.request.uri.path eq \"/api/auth/login\""
+    expression = "http.request.uri.path eq \"/api/auth/callback/credentials\""
 
     action_parameters {}
 

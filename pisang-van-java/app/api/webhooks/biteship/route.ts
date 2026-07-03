@@ -6,6 +6,7 @@ import { sendWhatsAppNotification } from '@/lib/notifications'
 import { prisma } from '@/lib/prisma'
 import { buildOrderStatusPushPayload, sendPushNotification } from '@/lib/push'
 import { redis } from '@/lib/redis'
+import { env } from '@/src/env'
 import { sendOrderStatusEmail } from '@/src/features/payment/email'
 
 // SECURITY FIX: a plain `token !== expectedToken` string comparison is vulnerable to
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     // Zero-Trust Security: Optional token authentication via URL query parameter or header
     const token = req.nextUrl.searchParams.get('token') || req.headers.get('x-biteship-token')
-    const expectedToken = process.env.BITESHIP_WEBHOOK_TOKEN
+    const expectedToken = env.BITESHIP_WEBHOOK_TOKEN
     if (expectedToken && (!token || !timingSafeTokenEqual(token, expectedToken))) {
       console.warn('[SECURITY] Unauthorized Biteship webhook attempt detected')
       return NextResponse.json(

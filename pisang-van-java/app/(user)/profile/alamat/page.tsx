@@ -23,7 +23,7 @@ import {
 import { useLanguage } from '@/context/LanguageContext'
 
 // Dynamic import Leaflet map (disable SSR to prevent window is not defined error)
-const MapPicker = dynamic(() => import('@/src/components/MapPicker'), {
+const MapPicker = dynamic(() => import('@/components/user/MapPicker'), {
   ssr: false,
   loading: () => (
     <div className="h-64 w-full bg-zinc-100 dark:bg-zinc-800 animate-pulse rounded-[4px] flex flex-col items-center justify-center gap-3">

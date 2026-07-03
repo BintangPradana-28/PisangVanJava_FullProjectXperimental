@@ -26,6 +26,7 @@ export const env = createEnv({
     CLOUDINARY_API_KEY: z.string().min(1).optional(),
     CLOUDINARY_CLOUD_NAME: z.string().min(1).optional(),
     BITESHIP_API_KEY: z.string().optional(),
+    BITESHIP_WEBHOOK_TOKEN: z.string().optional(),
 
     // ✅ Web Push VAPID (server-side only)
     // RAG Source: lib/push.ts — VAPID keys consumed server-side by web-push library
@@ -69,6 +70,7 @@ export const env = createEnv({
     CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
     CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
     BITESHIP_API_KEY: process.env.BITESHIP_API_KEY,
+    BITESHIP_WEBHOOK_TOKEN: process.env.BITESHIP_WEBHOOK_TOKEN,
 
     // Web Push VAPID
     VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,

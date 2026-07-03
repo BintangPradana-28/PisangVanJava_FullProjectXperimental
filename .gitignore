@@ -11,3 +11,5 @@
 /node_modules
 .next
 Untitled Session.session*
+.bolt/
+.agents/

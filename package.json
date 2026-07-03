@@ -1,40 +1,20 @@
 {
-  "name": "PisangVanJava_FullProject",
+  "name": "pisang-van-java-workspace",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "cd pisang-van-java && pnpm run dev",
-    "build": "cd pisang-van-java && pnpm run build",
-    "start": "cd pisang-van-java && pnpm run start",
-    "db:push": "cd pisang-van-java && pnpm run db:push",
-    "db:studio": "cd pisang-van-java && pnpm run db:studio"
+    "dev": "pnpm --filter pisang-goreng-van-java dev",
+    "build": "pnpm --filter pisang-goreng-van-java build",
+    "start": "pnpm --filter pisang-goreng-van-java start",
+    "lint": "pnpm --filter pisang-goreng-van-java lint",
+    "format": "pnpm --filter pisang-goreng-van-java format",
+    "test": "pnpm --filter pisang-goreng-van-java test",
+    "test:unit": "pnpm --filter pisang-goreng-van-java test:unit",
+    "test:e2e": "pnpm --filter pisang-goreng-van-java test:e2e",
+    "db:push": "pnpm --filter pisang-goreng-van-java db:push",
+    "db:migrate": "pnpm --filter pisang-goreng-van-java db:migrate",
+    "db:seed": "pnpm --filter pisang-goreng-van-java db:seed",
+    "db:studio": "pnpm --filter pisang-goreng-van-java db:studio"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devEngines": {
-    "packageManager": {
-      "name": "npm",
-      "version": "^10.0.0",
-      "onFail": "ignore"
-    }
-  },
-  "type": "module",
-  "dependencies": {
-    "midtrans-client": "^1.4.3",
-    "web-push": "^3.6.7"
-  },
-  "devDependencies": {
-    "@types/midtrans-client": "^1.4.0",
-    "@types/web-push": "^3.6.4"
-  },
-  "onlyBuiltDependencies": [
-    "@scarf/scarf",
-    "@tree-sitter-grammars/tree-sitter-yaml",
-    "core-js-pure",
-    "tree-sitter",
-    "tree-sitter-json"
-  ]
+  "type": "module"
 }

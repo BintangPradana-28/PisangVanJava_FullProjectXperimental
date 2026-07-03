@@ -9,9 +9,9 @@ services:
     tmpfs:
       - /var/run/postgresql
     environment:
-      POSTGRES_USER: pguser
-      POSTGRES_PASSWORD: pgpassword
-      POSTGRES_DB: pisanggorengdb
+      POSTGRES_USER: ${POSTGRES_USER:-pguser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pgpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-pisanggorengdb}
     ports:
       - "5432:5432"
     volumes:
@@ -24,10 +24,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgresql://pguser:pgpassword@db:5432/pisanggorengdb?schema=public
-      - SESSION_SECRET=pisang-goreng-van-java-docker-secret-key-2024
-      - NEXT_PUBLIC_WA_NUMBER=6285773728748
-      - NEXT_PUBLIC_SITE_URL=http://localhost:3000
+      - DATABASE_URL=${DATABASE_URL:-postgresql://${POSTGRES_USER:-pguser}:${POSTGRES_PASSWORD:-pgpassword}@db:5432/${POSTGRES_DB:-pisanggorengdb}?schema=public}
+      - SESSION_SECRET=${SESSION_SECRET:-pisang-goreng-van-java-docker-secret-key-2024}
+      - NEXT_PUBLIC_WA_NUMBER=${NEXT_PUBLIC_WA_NUMBER:-6285773728748}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
     volumes:
       - uploads:/app/public/uploads
     restart: unless-stopped

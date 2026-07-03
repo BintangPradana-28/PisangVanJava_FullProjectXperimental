@@ -1,12 +1,13 @@
 import { OrderStatus, type Prisma } from '@prisma/client'
 import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { env } from '@/src/env'
 import { logger } from '@/src/lib/logger'
 
 export async function GET(req: NextRequest) {
   // Validate CRON_SECRET if set
   const authHeader = req.headers.get('authorization')
-  const cronSecret = process.env.CRON_SECRET
+  const cronSecret = env.CRON_SECRET
   if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
   }

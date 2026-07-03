@@ -55,8 +55,15 @@ export default function AddEditMenuModal({ open, editItem, onClose, onSaved }: P
       toast.error('Nama varian wajib diisi')
       return
     }
-    if (!form.priceKembung || !form.priceLumpia || !form.priceKrispy) {
-      toast.error('Semua harga wajib diisi')
+    if (
+      !form.priceKembung ||
+      form.priceKembung <= 0 ||
+      !form.priceLumpia ||
+      form.priceLumpia <= 0 ||
+      !form.priceKrispy ||
+      form.priceKrispy <= 0
+    ) {
+      toast.error('Semua harga wajib diisi dan harus lebih dari 0')
       return
     }
 

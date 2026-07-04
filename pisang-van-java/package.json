@@ -72,7 +72,7 @@
     "clsx": "^2.1.1",
     "dayjs": "^1.11.21",
     "decimal.js": "^10.6.0",
-    "framer-motion": "^11.18.2",
+    "framer-motion": "^12.42.2",
     "immer": "^11.1.8",
     "inngest": "^4.11.0",
     "isomorphic-dompurify": "^3.16.0",

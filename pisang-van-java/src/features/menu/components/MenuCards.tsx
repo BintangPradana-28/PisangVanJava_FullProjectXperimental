@@ -10,7 +10,7 @@ const QuickViewModal = nextDynamic(() => import('@/components/user/QuickViewModa
 
 import { useSession } from 'next-auth/react'
 import { useLanguage } from '@/context/LanguageContext'
-import { formatPrice, getFallbackImage, getFlavorDescriptionKey } from '@/lib/utils'
+import { formatPrice, getFlavorDescriptionKey, getFallbackImage } from '@/lib/utils'
 
 export interface ProductType {
   id: string
@@ -35,6 +35,8 @@ export interface ProductType {
 interface Props {
   products: ProductType[]
 }
+
+
 
 const ProductImage = ({
   src,
@@ -82,6 +84,8 @@ const getSalesMagnetTag = (flavorName: string): string => {
   // The user requested 'Rekomendasi Chef' to be changed to 'Baru' like the other cards
   return '⭐ Baru'
 }
+
+
 
 export default function MenuCards({ products }: Props) {
   const { t } = useLanguage()
@@ -216,9 +220,7 @@ export default function MenuCards({ products }: Props) {
                         <>
                           <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
                           <span className="text-[10px] font-sans font-semibold text-green-600 dark:text-green-400 tracking-wider uppercase">
-                            {t('menu_stock_available')}:{' '}
-                            <span className="font-bold font-sans">{product.stock}</span>{' '}
-                            {t('menu_portion')}
+                            {t('menu_stock_available')}: <span className="font-bold font-sans">{product.stock}</span> {t('menu_portion')}
                           </span>
                         </>
                       ) : (

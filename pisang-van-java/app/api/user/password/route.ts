@@ -3,8 +3,8 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { rateLimit } from '@/lib/redis'
 import { auth } from '@/src/auth'
-import { logger } from '@/src/lib/logger'
 import { hashPassword, verifyPassword } from '@/src/lib/password'
+import { logger } from '@/src/lib/logger'
 
 const passwordSchema = z.object({
   oldPassword: z.string().min(1, 'Password lama wajib diisi'),
@@ -23,10 +23,7 @@ export async function PUT(req: NextRequest) {
     const { success: withinLimit } = await rateLimit.limit(`pwd-change:${userId}`)
     if (!withinLimit) {
       return NextResponse.json(
-        {
-          success: false,
-          message: 'Terlalu banyak percobaan penggantian password. Coba lagi dalam 15 menit.'
-        },
+        { success: false, message: 'Terlalu banyak percobaan penggantian password. Coba lagi dalam 15 menit.' },
         { status: 429 }
       )
     }

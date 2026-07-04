@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { redis } from '@/lib/redis'
 import { normalizePhoneNumber } from '@/lib/utils'
 import { auth } from '@/src/auth'
+import { isStoreOpen } from '@/src/lib/time'
 import {
   type CheckoutActor,
   CheckoutSecurityError,
@@ -258,6 +259,16 @@ export async function createCheckoutOrder(
   input: CreateOrderInput,
   actor: CheckoutActor
 ): Promise<CreateCheckoutOrderResult> {
+  // SECURITY FIX (audit QA & Security — business logic bypass): sebelumnya status
+  // buka/tutup toko (isStoreOpen) hanya dicek di client (app/(user)/checkout/page.tsx).
+  // Tidak ada satu pun layer server (service/repository/route) yang memvalidasinya, jadi
+  // order tetap bisa dibuat lewat POST /api/orders langsung kapan pun, di luar jam
+  // operasional. Sekarang ditegakkan di sini juga, sebelum transaksi checkout dimulai.
+  const storeStatus = await resolveStoreOpenStatus()
+  if (!storeStatus.isOpen) {
+    throw new CheckoutSecurityError(403, storeStatus.message || 'Kedai sedang tutup.')
+  }
+
   const normalizedInput = {
     ...input,
     customerPhone: normalizePhoneNumber(input.customerPhone)
@@ -598,7 +609,7 @@ async function resolveDeliveryFeeOutsideTx(
   return deliveryFee
 }
 
-export async function resolveWhatsAppNumber(): Promise<string | null> {
+async function resolveWhatsAppNumber(): Promise<string | null> {
   const settings = await prisma.siteSetting.findMany({
     where: {
       key: {
@@ -621,6 +632,21 @@ export async function resolveWhatsAppNumber(): Promise<string | null> {
   }
 
   return null
+}
+
+async function resolveStoreOpenStatus(): Promise<{ isOpen: boolean; message: string }> {
+  const settings = await prisma.siteSetting.findMany({
+    where: { key: { in: ['jam_operasional', 'store_status'] } },
+    select: { key: true, value: true }
+  })
+
+  const jamOperasional =
+    settings.find((s: any) => s.key === 'jam_operasional')?.value || '10.00–21.00'
+  const storeMode = settings.find((s: any) => s.key === 'store_status')?.value || 'AUTO'
+
+  // isStoreOpen mengembalikan { isOpen, message } — bukan boolean — pesan closed-nya
+  // sudah cukup deskriptif (mis. jam buka kembali) jadi dipakai langsung, tidak dibangun ulang.
+  return isStoreOpen(jamOperasional, storeMode)
 }
 
 function parseCurrencySetting(value: string): number | null {

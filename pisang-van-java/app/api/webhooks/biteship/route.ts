@@ -6,8 +6,8 @@ import { sendWhatsAppNotification } from '@/lib/notifications'
 import { prisma } from '@/lib/prisma'
 import { buildOrderStatusPushPayload, sendPushNotification } from '@/lib/push'
 import { redis } from '@/lib/redis'
-import { env } from '@/src/env'
 import { sendOrderStatusEmail } from '@/src/features/payment/email'
+import { env } from '@/src/env'
 
 // SECURITY FIX: a plain `token !== expectedToken` string comparison is vulnerable to
 // a timing attack — JS string inequality short-circuits at the first mismatched

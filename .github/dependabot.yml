@@ -1,0 +1,39 @@
+# .github/dependabot.yml
+# RAG Source: package.json (pisang-van-java) — 91 dependencies with no automated
+# update mechanism found during the DevOps audit. Weekly cadence chosen over daily
+# to avoid PR spam on a project this size; grouped patch/minor updates into a single
+# PR per ecosystem so review isn't 20 separate notifications every week.
+version: 2
+updates:
+  # Main application dependencies
+  - package-ecosystem: 'npm'
+    directory: '/pisang-van-java'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    open-pull-requests-limit: 10
+    groups:
+      minor-and-patch:
+        update-types:
+          - 'minor'
+          - 'patch'
+    ignore:
+      # Major version bumps reviewed manually — Next.js/React/Prisma major upgrades
+      # typically need migration steps that shouldn't land via an automated PR.
+      - dependency-name: 'next'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react-dom'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@prisma/client'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'prisma'
+        update-types: ['version-update:semver-major']
+
+  # GitHub Actions versions used across ci.yml, security.yml, codeql.yml, backup.yml
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'

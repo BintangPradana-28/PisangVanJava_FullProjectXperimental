@@ -32,6 +32,7 @@
 - Communication : Resend & React Email
 - Media Storage : Cloudinary
 - Analytics/Telemetry: Sentry + PostHog
+- Secrets & Key Management: Doppler (Secrets Isolation), AWS KMS (Backup Key Rotation)
 - Tooling : Biome (Linter/Formatter), Vitest + Playwright (Testing), @t3-oss/env-nextjs (Env Security)
 
 ---

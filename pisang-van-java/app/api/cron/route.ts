@@ -1,14 +1,31 @@
-import { OrderStatus, type Prisma } from '@prisma/client'
+import crypto from 'node:crypto'
 import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { env } from '@/src/env'
+import { OrderStatus, Prisma } from '@prisma/client'
 import { logger } from '@/src/lib/logger'
 
+function safeSecretEquals(a: string, b: string): boolean {
+  const bufA = Buffer.from(a)
+  const bufB = Buffer.from(b)
+  if (bufA.length !== bufB.length) return false
+  return crypto.timingSafeEqual(bufA, bufB)
+}
+
 export async function GET(req: NextRequest) {
-  // Validate CRON_SECRET if set
-  const authHeader = req.headers.get('authorization')
-  const cronSecret = env.CRON_SECRET
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  // SECURITY FIX (audit QA & Security): sebelumnya `if (cronSecret && authHeader !== ...)` —
+  // kalau CRON_SECRET tidak di-set, endpoint GET ini (yang men-trigger cancel order massal &
+  // penghapusan audit/auth log) terbuka untuk siapa pun tanpa autentikasi, dan bisa dipicu
+  // hanya dengan mengunjungi URL-nya. Sekarang fail-closed: CRON_SECRET wajib dikonfigurasi,
+  // dan dibandingkan dengan timing-safe comparison.
+  const cronSecret = process.env.CRON_SECRET
+  if (!cronSecret) {
+    logger.error(new Error('CRON_SECRET missing'), '[SECURITY] CRON_SECRET belum dikonfigurasi — menolak semua request cron demi keamanan.')
+    return NextResponse.json({ success: false, error: 'Cron not configured' }, { status: 503 })
+  }
+
+  const authHeader = req.headers.get('authorization') || ''
+  const expected = `Bearer ${cronSecret}`
+  if (!safeSecretEquals(authHeader, expected)) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -21,7 +38,7 @@ export async function GET(req: NextRequest) {
     // Task 1: Expire Orders older than 24 hours
     if (!task || task === 'expire-orders') {
       const expiredThreshold = new Date(Date.now() - 24 * 60 * 60 * 1000)
-
+      
       // Fetch expired orders
       const expiredOrders = await prisma.order.findMany({
         where: {
@@ -45,9 +62,7 @@ export async function GET(req: NextRequest) {
               if (order.items) {
                 await Promise.all(
                   order.items
-                    .filter(
-                      (item: { variantId: string | null; quantity: number }) => item.variantId
-                    )
+                    .filter((item: { variantId: string | null; quantity: number }) => item.variantId)
                     .map((item: { variantId: string | null; quantity: number }) =>
                       tx.menuVariant.update({
                         where: { id: item.variantId! },
@@ -67,7 +82,7 @@ export async function GET(req: NextRequest) {
     // Task 2: Cleanup logs older than 90 days
     if (!task || task === 'cleanup-logs') {
       const logsThreshold = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
-
+      
       const deletedAudit = await prisma.auditLog.deleteMany({
         where: { createdAt: { lt: logsThreshold } }
       })
@@ -80,9 +95,7 @@ export async function GET(req: NextRequest) {
         deletedAudit: deletedAudit.count,
         deletedAuth: deletedAuth.count
       }
-      logger.info(
-        `[CRON] Cleaned up ${deletedAudit.count} audit logs and ${deletedAuth.count} auth logs.`
-      )
+      logger.info(`[CRON] Cleaned up ${deletedAudit.count} audit logs and ${deletedAuth.count} auth logs.`)
     }
 
     return NextResponse.json({ success: true, results })

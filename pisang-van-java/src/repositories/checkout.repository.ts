@@ -1,6 +1,5 @@
 import { OrderStatus, type Prisma } from '@prisma/client'
-import DOMPurify from '@/lib/sanitize'
-import { calculateDiscount as calculateDiscountDecimal } from '@/src/lib/financial/money'
+import { stripHtmlTags } from '@/lib/sanitize'
 import {
   type BaseType,
   type CheckoutActor,
@@ -227,12 +226,12 @@ export async function executeCheckoutTransaction(
       const order = await tx.order.create({
         data: {
           userId: actor.userId,
-          customerName: DOMPurify.sanitize(input.customerName),
+          customerName: stripHtmlTags(input.customerName),
           customerPhone: input.customerPhone,
           totalPrice,
           status: OrderStatus.PENDING_PAYMENT,
           notes: normalizeNullableText(input.notes)
-            ? DOMPurify.sanitize(normalizeNullableText(input.notes) as string)
+            ? stripHtmlTags(normalizeNullableText(input.notes) as string)
             : null,
           source,
           voucherCode: voucherApplication?.code ?? null,
@@ -372,22 +371,24 @@ export function calculateDiscount(voucher: VoucherRecord, cartTotal: number): nu
     return null
   }
 
-  if (voucher.discountType === 'PERCENTAGE' && voucher.discountValue > 100) {
-    return null
+  if (voucher.discountType === 'FIXED') {
+    return Math.min(cartTotal, Math.floor(voucher.discountValue))
   }
 
-  try {
-    const discountDecimal = calculateDiscountDecimal(
-      cartTotal,
-      voucher.discountType as 'FIXED' | 'PERCENTAGE',
-      voucher.discountValue,
-      voucher.maxDiscount ?? undefined
-    )
-    return discountDecimal.toNumber()
-  } catch (err) {
-    console.error('[calculateDiscount error]', err)
-    return null
+  if (voucher.discountType === 'PERCENTAGE') {
+    if (voucher.discountValue > 100) {
+      return null
+    }
+
+    const uncappedDiscount = Math.floor(cartTotal * (voucher.discountValue / 100))
+    const cappedDiscount =
+      voucher.maxDiscount === null
+        ? uncappedDiscount
+        : Math.min(uncappedDiscount, voucher.maxDiscount)
+    return Math.min(cartTotal, Math.floor(cappedDiscount))
   }
+
+  return null
 }
 
 export function selectBasePrice(

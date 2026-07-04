@@ -3,6 +3,7 @@
 // Purpose: Server-side utility to verify Manager PIN approval tokens (HMAC-based)
 
 import crypto from 'node:crypto'
+import { getAuthSecret } from '@/src/env'
 
 /**
  * Verifies a POS Manager approval token.
@@ -24,8 +25,13 @@ export function verifyApprovalToken(token: string): boolean {
     const expiry = Number(expStr)
     if (!Number.isFinite(expiry) || Date.now() > expiry) return false
 
-    // Recompute HMAC with the same secret used in generateApprovalToken
-    const secret = process.env.NEXTAUTH_SECRET || 'fallback_secret_for_local_only'
+    // Recompute HMAC with the same secret used in generateApprovalToken.
+    // SECURITY FIX: sebelumnya fallback ke 'fallback_secret_for_local_only' (string
+    // publik yang ada di source code) jika NEXTAUTH_SECRET kosong — artinya siapa pun
+    // yang tahu string itu bisa memalsukan token approval override Manager PIN POS
+    // tanpa pernah tahu PIN sungguhan. Sekarang pakai resolver fail-closed yang sama
+    // dengan session auth (lihat src/env.ts:getAuthSecret).
+    const secret = getAuthSecret()
     const expectedSignature = crypto.createHmac('sha256', secret).update(payload).digest('hex')
 
     // Timing-safe comparison (Zero-Trust mandate)

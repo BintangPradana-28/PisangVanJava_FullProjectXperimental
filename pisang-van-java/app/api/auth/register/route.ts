@@ -1,15 +1,29 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { rateLimit } from '@/lib/redis'
+import { normalizePhoneNumber } from '@/lib/utils'
 import { registerSchema } from '@/src/features/auth/schemas'
-import { logger } from '@/src/lib/logger'
 import { hashPassword } from '@/src/lib/password'
+import { logger } from '@/src/lib/logger'
 
+// SECURITY FIX (audit QA & Security):
+// Endpoint ini adalah kontrak publik terdokumentasi di /api-docs (lihat
+// src/lib/openapi/generator.ts) untuk konsumen API eksternal, jadi TIDAK dihapus —
+// tapi implementasinya sebelumnya menyimpang dari alur registrasi utama
+// (src/features/auth/actions.ts registerUser) dalam 3 hal:
+//   1. Field `whatsapp` divalidasi tapi tidak pernah disimpan ke User.phone (data hilang).
+//   2. Pesan 409 "Email sudah terdaftar" membocorkan eksistensi akun (user enumeration),
+//      berbeda dari pesan opaque di alur utama.
+//   3. Rate-limit key `register:${ip}` terpisah dari `register_ip_${ip}` milik alur utama,
+//      sehingga penyerang bisa memakai kedua endpoint bergantian untuk melipatgandakan
+//      kuota percobaan registrasi.
+// Ketiganya diselaraskan dengan alur utama di bawah ini.
 export async function POST(req: NextRequest) {
   try {
-    // RAG Source: app/api/auth/register/route.ts (apply rate-limiting to registration endpoints)
+    // Rate limit key disamakan dengan src/features/auth/actions.ts agar kedua entry
+    // point berbagi satu kuota per-IP, bukan dua kuota terpisah.
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1'
-    const { success: withinLimit } = await rateLimit.limit(`register:${ip}`)
+    const { success: withinLimit } = await rateLimit.limit(`register_ip_${ip}`)
     if (!withinLimit) {
       return NextResponse.json(
         { success: false, message: 'Terlalu banyak percobaan pendaftaran. Coba lagi nanti.' },
@@ -32,16 +46,21 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { name, email, password } = parsed.data
+    const { name, email, password, whatsapp, referralCode } = parsed.data
 
-    // 2. Check if email already exists
+    // 2. Anti-user-enumeration: cek email tanpa membocorkan eksistensi akun di respons.
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
+      select: { id: true }
     })
 
     if (existingUser) {
+      // OPAQUE ERROR — sama seperti registerUser() agar tidak jadi oracle enumerasi akun.
       return NextResponse.json(
-        { success: false, message: 'Email sudah terdaftar' },
+        {
+          success: false,
+          message: 'Pendaftaran ditolak. Jika Anda sudah memiliki akun, silakan masuk.'
+        },
         { status: 409 }
       )
     }
@@ -49,14 +68,26 @@ export async function POST(req: NextRequest) {
     // 3. Hash password securely
     const passwordHash = await hashPassword(password)
 
-    // 4. Save to Database (Prisma)
+    // 3b. Referral code opsional (sama seperti alur utama)
+    let validReferralCode: string | null = null
+    if (referralCode) {
+      const referrer = await prisma.user.findUnique({ where: { referralCode } })
+      if (referrer) {
+        validReferralCode = referrer.referralCode
+      }
+    }
+
+    // 4. Save to Database (Prisma) — phone kini ikut tersimpan, tidak lagi hilang.
     const newUser = await prisma.user.create({
       data: {
         name,
         email,
+        phone: normalizePhoneNumber(whatsapp),
         passwordHash,
-        role: 'CUSTOMER'
-      }
+        role: 'CUSTOMER',
+        referredBy: validReferralCode
+      },
+      select: { id: true, name: true, email: true }
     })
 
     // 5. Return sanitized response (NEVER return passwordHash)

@@ -18,41 +18,20 @@ const customIcon = new L.Icon({
 // Koordinat default: Kedai Cipayung, Jakarta
 const DEFAULT_CENTER: [number, number] = [-6.3157, 106.9016]
 
-interface LatLngObj {
-  lat: number
-  lng: number
-}
-
 interface MapPickerProps {
-  // Original components/user/MapPicker props
-  position?: [number, number] | LatLngObj | null
-  setPosition?: (pos: [number, number]) => void
+  position: [number, number] | null
+  setPosition: (pos: [number, number]) => void
   setAddressName?: (addr: string) => void
-
-  // Original src/components/MapPicker props
-  initialPosition?: LatLngObj | [number, number] | null
-  onPositionChange?: (pos: LatLngObj) => void
 }
 
-function LocationMarker({
-  position,
-  updatePosition,
-  setAddressName
-}: {
-  position: [number, number] | null
-  updatePosition: (lat: number, lng: number) => void
-  setAddressName?: (addr: string) => void
-}) {
-  const map = useMapEvents({
+function LocationMarker({ position, setPosition, setAddressName }: MapPickerProps) {
+  useMapEvents({
     click(e) {
-      const lat = e.latlng.lat
-      const lng = e.latlng.lng
-      updatePosition(lat, lng)
-      map.flyTo(e.latlng, map.getZoom())
+      setPosition([e.latlng.lat, e.latlng.lng])
 
       // Reverse geocode via Nominatim OSM
       fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${e.latlng.lat}&lon=${e.latlng.lng}&zoom=18&addressdetails=1`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -64,20 +43,7 @@ function LocationMarker({
     }
   })
 
-  return position === null ? null : (
-    <Marker
-      position={position}
-      icon={customIcon}
-      draggable={true}
-      eventHandlers={{
-        dragend: (e) => {
-          const marker = e.target
-          const latlng = marker.getLatLng()
-          updatePosition(latlng.lat, latlng.lng)
-        }
-      }}
-    />
-  )
+  return position === null ? null : <Marker position={position} icon={customIcon}></Marker>
 }
 
 // Komponen helper untuk menggeser peta ke posisi marker terpilih
@@ -91,38 +57,14 @@ function MapUpdater({ center }: { center: [number, number] | null }) {
   return null
 }
 
-export default function MapPicker({
-  position,
-  setPosition,
-  setAddressName,
-  initialPosition,
-  onPositionChange
-}: MapPickerProps) {
+export default function MapPicker({ position, setPosition, setAddressName }: MapPickerProps) {
   const [mounted, setMounted] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searching, setSearching] = useState(false)
 
-  const normalizePosition = (pos: any): [number, number] | null => {
-    if (!pos) return null
-    if (Array.isArray(pos)) return [pos[0], pos[1]]
-    if (typeof pos === 'object' && 'lat' in pos && 'lng' in pos) return [pos.lat, pos.lng]
-    return null
-  }
-
-  const activePosition = normalizePosition(position) || normalizePosition(initialPosition)
-
   useEffect(() => {
     setMounted(true)
   }, [])
-
-  const updatePosition = (lat: number, lng: number) => {
-    if (setPosition) {
-      setPosition([lat, lng])
-    }
-    if (onPositionChange) {
-      onPositionChange({ lat, lng })
-    }
-  }
 
   if (!mounted) {
     return (
@@ -144,7 +86,7 @@ export default function MapPicker({
       if (data && data.length > 0) {
         const lat = parseFloat(data[0].lat)
         const lon = parseFloat(data[0].lon)
-        updatePosition(lat, lon)
+        setPosition([lat, lon])
         if (setAddressName) {
           setAddressName(data[0].display_name)
         }
@@ -182,7 +124,7 @@ export default function MapPicker({
       {/* Leaflet Map */}
       <div className="w-full h-[320px] rounded-[4px] overflow-hidden shadow-inner border border-zinc-100 dark:border-zinc-800 z-0 relative">
         <MapContainer
-          center={activePosition || DEFAULT_CENTER}
+          center={position || DEFAULT_CENTER}
           zoom={14}
           scrollWheelZoom={true}
           style={{ height: '100%', width: '100%', zIndex: 0 }}
@@ -192,11 +134,11 @@ export default function MapPicker({
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <LocationMarker
-            position={activePosition}
-            updatePosition={updatePosition}
+            position={position}
+            setPosition={setPosition}
             setAddressName={setAddressName}
           />
-          <MapUpdater center={activePosition} />
+          <MapUpdater center={position} />
         </MapContainer>
         <div className="absolute bottom-2 left-2 bg-white/95 dark:bg-zinc-900/95 px-3 py-1.5 rounded-[4px] text-[10px] sm:text-xs font-semibold shadow-sm z-[400] pointer-events-none text-zinc-600 dark:text-zinc-300 border border-zinc-100 dark:border-zinc-800">
           💡 Klik pada peta untuk memindahkan pinpoint marker

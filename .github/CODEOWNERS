@@ -1,0 +1,9 @@
+# .github/CODEOWNERS
+# RAG Source: git remote URL observed earlier in this project
+# (github.com/BintangPradana-28/PisangGorengVanJava_FullProject.git)
+#
+# Single-owner project — every file requires review from the same owner.
+# Split this out by directory (e.g. /pisang-van-java/prisma/ @someone-else)
+# if collaborators join later.
+
+* @BintangPradana-28

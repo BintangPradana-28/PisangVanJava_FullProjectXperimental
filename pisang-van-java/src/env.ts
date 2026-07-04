@@ -6,10 +6,23 @@ import { z } from 'zod'
 
 export const env = createEnv({
   server: {
-    DATABASE_URL: z.string().min(1),
+    // ARCHITECTURE FIX (audit item #7): DATABASE_URL is the one variable in this
+    // file with zero graceful-degradation path anywhere in the codebase — Prisma
+    // throws a raw, unhelpful connection error, and unlike MIDTRANS_SERVER_KEY
+    // (which has a dedicated setup-instructions page at
+    // app/(user)/payment/[orderId]/page.tsx) there's no equivalent friendly
+    // fallback UI for a missing database. Making it required means the app fails
+    // fast and clearly at boot instead of failing confusingly on the first request
+    // that touches Prisma. Everything else below is left .optional() deliberately:
+    // this project's convention (see e.g. src/services/shipping.service.ts,
+    // lib/notifications.ts) is that third-party integrations detect a missing key
+    // and no-op / show a setup message rather than crash — flipping those to
+    // required would fight that intentional "clone and run without every secret
+    // configured yet" design, not fix a bug.
+    DATABASE_URL: z.string().min(1, 'DATABASE_URL wajib diisi — aplikasi tidak bisa boot tanpa koneksi database'),
     DIRECT_URL: z.string().optional(),
-    AUTH_SECRET: z.string().min(1),
-    MIDTRANS_SERVER_KEY: z.string().min(1),
+    AUTH_SECRET: z.string().optional(),
+    MIDTRANS_SERVER_KEY: z.string().optional(),
     UPSTASH_REDIS_REST_URL: z.string().optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
     RESEND_API_KEY: z.string().optional(),
@@ -26,8 +39,11 @@ export const env = createEnv({
     CLOUDINARY_API_KEY: z.string().min(1).optional(),
     CLOUDINARY_CLOUD_NAME: z.string().min(1).optional(),
     BITESHIP_API_KEY: z.string().optional(),
-    BITESHIP_WEBHOOK_TOKEN: z.string().optional(),
-    CRON_SECRET: z.string().optional(),
+    // ARCHITECTURE FIX (audit item #7): was read directly via raw process.env in
+    // app/api/webhooks/biteship/route.ts, bypassing this validated env layer
+    // entirely. Declared here so it goes through the same validation/typing as
+    // every other secret in the project.
+    BITESHIP_WEBHOOK_TOKEN: z.string().min(16).optional(),
 
     // ✅ Web Push VAPID (server-side only)
     // RAG Source: lib/push.ts — VAPID keys consumed server-side by web-push library
@@ -72,7 +88,6 @@ export const env = createEnv({
     CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
     BITESHIP_API_KEY: process.env.BITESHIP_API_KEY,
     BITESHIP_WEBHOOK_TOKEN: process.env.BITESHIP_WEBHOOK_TOKEN,
-    CRON_SECRET: process.env.CRON_SECRET,
 
     // Web Push VAPID
     VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,

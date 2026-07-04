@@ -79,14 +79,7 @@ export async function queueWhatsAppNotification(
   const qstashToken = env.QSTASH_TOKEN
   if (!qstashToken) {
     console.warn('[WA] QStash is not configured. Falling back to synchronous Fonnte send.')
-    return sendWhatsAppNotification(
-      customerPhone,
-      customerName,
-      orderStatus,
-      orderId,
-      etaMinutes,
-      courierName
-    )
+    return sendWhatsAppNotification(customerPhone, customerName, orderStatus, orderId, etaMinutes, courierName)
   }
 
   try {
@@ -113,13 +106,6 @@ export async function queueWhatsAppNotification(
   } catch (error) {
     console.error('[QSTASH ERROR] Failed to queue WA notification:', error)
     // Fallback to sync send on QStash publish failure to prevent missing notifications
-    return sendWhatsAppNotification(
-      customerPhone,
-      customerName,
-      orderStatus,
-      orderId,
-      etaMinutes,
-      courierName
-    )
+    return sendWhatsAppNotification(customerPhone, customerName, orderStatus, orderId, etaMinutes, courierName)
   }
 }

@@ -1,4 +1,3 @@
-import type { Metadata } from 'next'
 import { unstable_cache } from 'next/cache'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
@@ -7,32 +6,6 @@ import MenuGrid from '@/components/user/MenuGrid'
 import SearchFilterBar from '@/components/user/SearchFilterBar'
 import { prisma } from '@/lib/prisma'
 import { safeJsonLdScript } from '@/lib/sanitize'
-
-// RAG Source: app/(user)/menu-spesial/[id]/page.tsx (generateMetadata pattern)
-// OG image wired to /api/og (Vercel Satori route) — was built but never connected
-export const metadata: Metadata = {
-  title: 'Menu Spesial | Pisang Goreng Van Java',
-  description:
-    'Jelajahi aneka varian pisang goreng premium Pisang Van Java — Kembung, Lumpia, Krispy — dengan pilihan topping melimpah dan rasa autentik.',
-  keywords: ['pisang goreng', 'pisang goreng premium', 'pisang van java', 'jajanan jakarta'],
-  openGraph: {
-    title: 'Menu Spesial Pisang Van Java',
-    description: 'Aneka varian pisang goreng premium dengan topping pilihan.',
-    url: 'https://pisanggorengvanjava.com/menu-spesial',
-    siteName: 'Pisang Van Java',
-    locale: 'id_ID',
-    type: 'website',
-    images: [
-      {
-        // RAG Source: app/api/og/route.tsx (accepts title, desc query params)
-        url: '/api/og?title=Menu+Spesial&desc=Aneka+varian+pisang+goreng+premium',
-        width: 1200,
-        height: 630,
-        alt: 'Menu Spesial Pisang Goreng Van Java'
-      }
-    ]
-  }
-}
 import HeroBanner from './HeroBanner'
 
 // Removing force-dynamic to allow Next.js optimizations

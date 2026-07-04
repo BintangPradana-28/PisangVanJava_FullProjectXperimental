@@ -14,8 +14,7 @@ const nextConfig = {
     minimumCacheTTL: 31536000,
     remotePatterns: [
       { protocol: 'https', hostname: 'vamxyslzeimlsofhgmry.supabase.co' },
-      { protocol: 'https', hostname: 'lh3.googleusercontent.com' }, // Google OAuth avatars
-      { protocol: 'https', hostname: 'res.cloudinary.com' } // Menu photo uploads via /api/upload
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' } // Google OAuth avatars
     ]
   },
 
@@ -69,12 +68,15 @@ const nextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=(), browsing-topics=()'
-          },
-          {
-            key: 'Content-Security-Policy',
-            value:
-              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://va.vercel-scripts.com https://app.midtrans.com https://app.sandbox.midtrans.com; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://vamxyslzeimlsofhgmry.supabase.co https://lh3.googleusercontent.com https://res.cloudinary.com; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self' https://maps.google.com https://www.google.com https://app.midtrans.com https://app.sandbox.midtrans.com; connect-src 'self' https://va.vercel-scripts.com https://*.sentry.io https://*.ingest.sentry.io https://app.midtrans.com https://app.sandbox.midtrans.com; frame-ancestors 'none'; upgrade-insecure-requests;"
           }
+          // SECURITY FIX (audit QA & Security): Content-Security-Policy SEBELUMNYA didefinisikan
+          // di sini DENGAN 'unsafe-inline' & 'unsafe-eval' TANPA syarat dev/prod — bertentangan
+          // langsung dengan CSP nonce-based + strict-dynamic yang jauh lebih ketat di
+          // middleware.ts (yang juga sudah mencakup domain Cloudflare Turnstile, Google Maps,
+          // dan endpoint pelaporan /api/csp-report yang CSP di file ini tidak punya sama sekali).
+          // Dua definisi CSP untuk header yang sama adalah bug konfigurasi — middleware.ts adalah
+          // satu-satunya sumber kebenaran sekarang. Header keamanan LAIN di atas (HSTS,
+          // X-Frame-Options, dst.) tetap di sini karena middleware.ts tidak menyetelnya.
         ]
       }
     ]

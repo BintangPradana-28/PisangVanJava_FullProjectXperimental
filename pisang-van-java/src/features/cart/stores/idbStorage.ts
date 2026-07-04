@@ -33,10 +33,7 @@ export const idbStorage: StateStorage = {
         request.onerror = () => reject(request.error)
       })
     } catch (e) {
-      console.warn(
-        '[ZUSTAND IDB] Failed to get item from IndexedDB, falling back to localStorage.',
-        e
-      )
+      console.warn('[ZUSTAND IDB] Failed to get item from IndexedDB, falling back to localStorage.', e)
       return localStorage.getItem(name)
     }
   },
@@ -54,10 +51,7 @@ export const idbStorage: StateStorage = {
         request.onerror = () => reject(request.error)
       })
     } catch (e) {
-      console.warn(
-        '[ZUSTAND IDB] Failed to set item in IndexedDB, falling back to localStorage.',
-        e
-      )
+      console.warn('[ZUSTAND IDB] Failed to set item in IndexedDB, falling back to localStorage.', e)
       localStorage.setItem(name, value)
     }
   },
@@ -75,10 +69,7 @@ export const idbStorage: StateStorage = {
         request.onerror = () => reject(request.error)
       })
     } catch (e) {
-      console.warn(
-        '[ZUSTAND IDB] Failed to remove item from IndexedDB, falling back to localStorage.',
-        e
-      )
+      console.warn('[ZUSTAND IDB] Failed to remove item from IndexedDB, falling back to localStorage.', e)
       localStorage.removeItem(name)
     }
   }

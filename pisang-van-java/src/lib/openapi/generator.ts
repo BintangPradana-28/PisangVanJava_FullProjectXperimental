@@ -1,8 +1,4 @@
-import {
-  extendZodWithOpenApi,
-  OpenAPIRegistry,
-  OpenApiGeneratorV3
-} from '@asteasolutions/zod-to-openapi'
+import { extendZodWithOpenApi, OpenAPIRegistry, OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi'
 import { z } from 'zod'
 
 export function getOpenApiSpec() {
@@ -13,11 +9,7 @@ export function getOpenApiSpec() {
 
   // 2. Load schemas dynamically inside the execution scope to ensure prototype decoration is complete
   const { loginSchema, registerSchema } = require('@/src/features/auth/schemas')
-  const {
-    createOrderInputSchema,
-    validateVoucherInputSchema,
-    deliveryUpdateSchema
-  } = require('@/src/features/checkout/schemas')
+  const { createOrderInputSchema, validateVoucherInputSchema, deliveryUpdateSchema } = require('@/src/features/checkout/schemas')
 
   // 3. Register request schemas
   registry.register('LoginRequest', loginSchema)

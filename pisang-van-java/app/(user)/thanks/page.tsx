@@ -1,13 +1,21 @@
 'use client'
 
-import Lottie from 'lottie-react'
-import { Calendar, CheckSquare, Clock, Home, Loader2, MapPin, Receipt } from 'lucide-react'
+import {
+  Calendar,
+  CheckSquare,
+  Clock,
+  Home,
+  Loader2,
+  MapPin,
+  Receipt
+} from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import Lottie from 'lottie-react'
+import successAnimation from '@/public/animations/success.json'
 import ConfettiCanvas from '@/components/user/ConfettiCanvas'
 import { useLanguage } from '@/context/LanguageContext'
-import successAnimation from '@/public/animations/success.json'
 import { getOrderSummary } from '@/src/features/checkout/actions'
 
 const formatPrice = (price: number): string =>
@@ -49,7 +57,11 @@ export default function ThanksPage() {
       <ConfettiCanvas />
       <div className="w-full max-w-lg rounded-2xl bg-white p-6 sm:p-8 text-center shadow-md dark:bg-zinc-900 border border-zinc-200/50 dark:border-zinc-800/80">
         <div className="mx-auto mb-5 flex h-24 w-24 items-center justify-center">
-          <Lottie animationData={successAnimation} loop={false} className="w-24 h-24" />
+          <Lottie
+            animationData={successAnimation}
+            loop={false}
+            className="w-24 h-24"
+          />
         </div>
 
         <h1 className="mb-2 font-serif text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white">
@@ -102,11 +114,7 @@ export default function ThanksPage() {
                     {locale === 'en' ? 'Method' : 'Metode'}
                   </span>
                   <span className="text-zinc-850 dark:text-zinc-200 font-medium flex items-center gap-1">
-                    {order.deliveryMethod === 'DELIVERY' ? (
-                      <>🛵 Delivery</>
-                    ) : (
-                      <>{locale === 'en' ? '🛍️ Pickup' : '🛍️ Ambil Sendiri'}</>
-                    )}
+                    {order.deliveryMethod === 'DELIVERY' ? <>🛵 Delivery</> : <>{locale === 'en' ? '🛍️ Pickup' : '🛍️ Ambil Sendiri'}</>}
                   </span>
                 </div>
               </div>

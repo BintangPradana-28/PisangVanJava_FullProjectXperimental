@@ -168,6 +168,17 @@ model MenuVariant {
   @@map("Product")
 }
 
+// ARCHITECTURE AUDIT NOTE (belum diputuskan — perlu keputusan manual):
+// Model ini punya NOL referensi di seluruh app/, components/, src/ — tidak ada
+// query, tidak ada UI admin, tidak ada logic bisnis yang menyentuhnya. Kemungkinan
+// besar ini sisa rencana fitur multi-outlet yang belum (atau tidak jadi) dibangun.
+// Tidak dihapus di sini secara sepihak karena ini operasi destruktif terhadap
+// schema — kalau tabel ini sudah punya baris data di database production,
+// menghapus model + push schema akan menghapus tabel & datanya secara permanen,
+// dan kami tidak punya visibilitas ke isi database live untuk memastikan aman.
+// Keputusan yang perlu diambil pemilik proyek:
+//   (a) Kembangkan fitur multi-outlet menggunakan model ini, atau
+//   (b) Konfirmasi tabel di database live kosong, lalu hapus model ini dengan aman.
 model StoreBranch {
   id              String   @id @default(cuid())
   nomor_wa        String
@@ -486,5 +497,47 @@ model KoinPisangLog {
 
   @@index([userId])
   @@index([createdAt])
+
+  // ============================================================
+// Intended path: prisma/schema.prisma (ADDITIVE — append after model Favorite)
+// State Source : RAG — model Favorite (id/userId/relation/index style),
+//                model AuditLog (optional-field + createdAt-only pattern)
+// Decision     : New model, not reusing AuditLog — AuditLog is an admin/system
+//                trail (logAudit() writes SYSTEM-attributed rows too); mixing
+//                user-facing notifications into it would leak admin actions
+//                into a customer's notification feed. Separate model, same style.
+// ⚠️ DRAFT — do not run `prisma migrate` without explicit human go-ahead.
+// ============================================================
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  link      String? // e.g. "/profile/pesanan" — matches PushNotificationPayload.url convention (lib/push.ts)
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, isRead]) // powers both "list mine" and "unread count" queries without a second index
+}
+
+// --- Required: one relation line on the existing User model (additive only) ---
+// Add next to the existing `favorites Favorite[]` line:
+//
+//   model User {
+//     ...unchanged...
+//     favorites     Favorite[]      // existing
+//     notifications Notification[]  // NEW
+//     ...unchanged...
+//   }
+
+// ============================================================
+// Migration: CREATE TABLE — additive, non-destructive, but still a schema
+// migration requiring a human-run `prisma migrate dev --name add_notifications`.
+// ============================================================
+
 }
 

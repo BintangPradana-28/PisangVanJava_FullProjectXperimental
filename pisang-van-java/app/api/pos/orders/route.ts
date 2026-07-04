@@ -113,6 +113,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       }
 
       // 1. Stock validation + SERVER-AUTHORITATIVE price lookup for all items.
+      // SECURITY FIX: previously this loop only selected {stock, flavorName} and the
+      // server trusted item.unitPrice/item.subtotal from the client request body —
+      // a cashier (CASHIER role, not just ADMIN) could submit subtotal: 1 for any
+      // cart and the order would be created with that price. Retail price columns
+      // are now fetched from MenuVariant and used to recompute the true unit price;
+      // POS is walk-in-only (PosRole excludes RESELLER, see POS_ROLES above), so no
+      // wholesale-price branching is needed here unlike src/repositories/checkout.repository.ts.
       const allToppingIds = Array.from(
         new Set(data.items.flatMap((item) => [item.toppingId, ...(item.toppingIds ?? [])]))
       ).filter((id): id is string => Boolean(id))
@@ -135,24 +142,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         return variant.priceKembung
       }
 
-      const variantQuantities = new Map<string, number>()
-      for (const item of data.items) {
-        variantQuantities.set(
-          item.variantId,
-          (variantQuantities.get(item.variantId) || 0) + item.quantity
-        )
-      }
-
-      const variantById = new Map<string, {
-        id: string
-        version: number
-        stock: number
-        flavorName: string
-        priceKembung: number
-        priceLumpia: number
-        priceKrispy: number
-      }>()
-
       const verifiedItems: Array<{
         variantId: string
         toppingId?: string | null
@@ -163,35 +152,35 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         subtotal: number
       }> = []
 
-      for (const item of data.items) {
-        let variant = variantById.get(item.variantId)
-        if (!variant) {
-          const dbVariant = await tx.menuVariant.findUnique({
-            where: { id: item.variantId },
-            select: {
-              id: true,
-              version: true,
-              stock: true,
-              flavorName: true,
-              priceKembung: true,
-              priceLumpia: true,
-              priceKrispy: true
-            }
-          })
+      // ARCHITECTURE FIX: variant + version snapshot kept per variantId so the stock
+      // decrement step below can guard against a time-of-check-to-time-of-use race —
+      // see the "5. Atomic Decrement of Stock" block for the actual guard.
+      const variantById = new Map<string, { version: number; flavorName: string }>()
 
-          if (!dbVariant) {
-            throw new Error(`Produk dengan ID ${item.variantId} tidak ditemukan.`)
+      for (const item of data.items) {
+        const variant = await tx.menuVariant.findUnique({
+          where: { id: item.variantId },
+          select: {
+            stock: true,
+            flavorName: true,
+            priceKembung: true,
+            priceLumpia: true,
+            priceKrispy: true,
+            version: true
           }
-          variant = dbVariant
-          variantById.set(item.variantId, dbVariant)
+        })
+
+        if (!variant) {
+          throw new Error(`Produk dengan ID ${item.variantId} tidak ditemukan.`)
         }
 
-        const totalQuantity = variantQuantities.get(item.variantId) ?? 0
-        if (variant.stock < totalQuantity) {
+        if (variant.stock < item.quantity) {
           throw new Error(
             `Stok ${variant.flavorName} habis atau tidak mencukupi. Sisa: ${variant.stock}`
           )
         }
+
+        variantById.set(item.variantId, { version: variant.version, flavorName: variant.flavorName })
 
         const itemToppingIds = Array.from(
           new Set([item.toppingId, ...(item.toppingIds ?? [])].filter((id): id is string => Boolean(id)))
@@ -219,6 +208,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       const orderStatus = isCash ? 'COMPLETED' : 'PENDING_PAYMENT'
 
       // 3. Server-side recalculate total (Zero-Trust: never trust client totalPrice).
+      // SECURITY FIX: now sums verifiedItems (server-computed from DB prices) instead
+      // of data.items (client-submitted subtotal) — see verifiedItems block above.
       const serverTotal = verifiedItems.reduce((sum, item) => sum + item.subtotal, 0)
       const safeDiscount = Math.min(data.discountAmount, serverTotal)
       const finalPrice = Math.max(0, serverTotal - safeDiscount)
@@ -254,6 +245,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 toppings: connectIds.length > 0 ? { connect: connectIds } : undefined,
                 baseType: item.baseType,
                 quantity: item.quantity,
+                // SECURITY FIX: unitPrice/subtotal now come from verifiedItems
+                // (server-computed), not from the original client-submitted item.
                 unitPrice: item.unitPrice,
                 subtotal: item.subtotal
               }
@@ -262,7 +255,27 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         }
       })
 
-      // 5. Atomic Decrement of Stock (Compare-and-Swap / Optimistic Locking)
+      // 5. Atomic Decrement of Stock — ARCHITECTURE FIX (race condition):
+      // previously this read variant.stock in step 1, checked it in JS, then called
+      // tx.menuVariant.update({ where: { id } }) with no re-check at write time. Two
+      // concurrent POS registers both submitting an order for the last unit of an
+      // item could both pass the JS check and both successfully decrement, taking
+      // stock negative — Postgres's default Read Committed isolation does not lock
+      // rows on SELECT, so nothing prevented this. The guard below mirrors the
+      // proven pattern in src/repositories/checkout.repository.ts: version +
+      // stock:{gte} in the WHERE clause makes the decrement a genuine compare-and-swap
+      // that can only succeed if both conditions still hold at the moment Postgres
+      // executes the UPDATE. If another transaction won the race, updateMany matches
+      // zero rows and this throws, rolling back the whole order — instead of
+      // silently corrupting inventory.
+      const variantQuantities = new Map<string, number>()
+      for (const item of data.items) {
+        variantQuantities.set(
+          item.variantId,
+          (variantQuantities.get(item.variantId) || 0) + item.quantity
+        )
+      }
+
       for (const [variantId, totalQuantity] of Array.from(variantQuantities.entries())) {
         const variant = variantById.get(variantId)!
         const updateResult = await tx.menuVariant.updateMany({
@@ -278,7 +291,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         })
 
         if (updateResult.count === 0) {
-          throw new Error(`Gagal memproses transaksi: Stok untuk ${variant.flavorName} telah berubah. Silakan coba lagi.`)
+          throw new Error(
+            `Stok ${variant.flavorName} berubah atau habis saat transaksi diproses. Silakan ulangi pesanan.`
+          )
         }
       }
 

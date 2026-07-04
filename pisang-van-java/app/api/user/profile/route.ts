@@ -6,7 +6,10 @@ import { auth } from '@/src/auth'
 export const dynamic = 'force-dynamic'
 
 const profileSchema = z.object({
-  name: z.string().optional(),
+  // SECURITY FIX (audit QA & Security): sebelumnya tanpa .max(), user bisa mengisi nama
+  // dengan string berukuran sangat besar (mis. beberapa MB) — membebani storage & rendering
+  // di halaman mana pun nama ditampilkan. Field lain di schema ini sudah punya batas atas.
+  name: z.string().max(100, 'Nama maksimal 100 karakter').optional(),
   phone: z
     .string()
     .min(1, 'Nomor WhatsApp tidak boleh kosong')

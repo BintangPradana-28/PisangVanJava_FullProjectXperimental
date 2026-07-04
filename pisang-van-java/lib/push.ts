@@ -104,6 +104,25 @@ export async function sendPushNotification(
   userId: string,
   payload: PushNotificationPayload
 ): Promise<void> {
+  // NEW: in-app notification row — independent of push subscription state.
+  // Written FIRST and separately: a user with no push subscription (or with
+  // notifications permission denied in their browser) must still see this
+  // in their in-app bell. This was the entire point of adding it — see
+  // PHASE_0_NOTIFICATION_CENTER.md for the gap this closes.
+  try {
+    await prisma.notification.create({
+      data: {
+        userId,
+        title: payload.title,
+        body: payload.body,
+        link: payload.url
+      }
+    })
+  } catch (err) {
+    console.error('[PUSH] Failed to write in-app notification row:', err)
+    // Non-fatal — web push below still attempts to fire even if this failed.
+  }
+
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
     console.warn('[PUSH] VAPID keys not configured — skipping push notification.')
     return
@@ -114,20 +133,17 @@ export async function sendPushNotification(
 
   try {
     await webpush.sendNotification(
-      // web-push accepts PushSubscription shape directly
       subscription as Parameters<typeof webpush.sendNotification>[0],
       JSON.stringify(payload),
-      {
-        TTL: 60 * 60 * 24 // Deliver within 24 h or discard (suits order updates)
-      }
+      { TTL: 60 * 60 * 24 }
     )
   } catch (err: unknown) {
     // Type-narrow the web-push error shape
     const statusCode =
       err !== null &&
-      typeof err === 'object' &&
-      'statusCode' in err &&
-      typeof (err as Record<string, unknown>).statusCode === 'number'
+        typeof err === 'object' &&
+        'statusCode' in err &&
+        typeof (err as Record<string, unknown>).statusCode === 'number'
         ? (err as { statusCode: number }).statusCode
         : null
 

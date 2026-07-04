@@ -4,10 +4,11 @@ import { revalidatePath, revalidateTag } from 'next/cache'
 import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { redis } from '@/lib/redis'
+import { inngest } from '@/src/lib/inngest'
 import { mapMidtransStatusToPaymentStatus } from '@/src/features/payment/payment-status.mapper'
 import { verifyMidtransSignature } from '@/src/features/payment/service'
-import { inngest } from '@/src/lib/inngest'
 import { logger } from '@/src/lib/logger'
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -227,9 +228,7 @@ export async function POST(req: NextRequest) {
             orderId: realOrderId
           }
         })
-        .catch((err) =>
-          logger.error(err as Error, '[INNGEST ERROR] Failed to dispatch payment.settled event')
-        )
+        .catch((err) => logger.error(err as Error, '[INNGEST ERROR] Failed to dispatch payment.settled event'))
     }
 
     // Force real-time Edge Cache purge for Storefront and Dashboard

@@ -1,4 +1,5 @@
-#!/bin/sh
-cd pisang-van-java
-npx lint-staged
-npx secretlint "**/*"
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🛡️ Running pre-commit hooks (Secretlint + Biome)..."
+pnpm lint-staged

@@ -23,7 +23,10 @@ import {
 import { useLanguage } from '@/context/LanguageContext'
 
 // Dynamic import Leaflet map (disable SSR to prevent window is not defined error)
-const MapPicker = dynamic(() => import('@/components/user/MapPicker'), {
+// ARCHITECTURE FIX: now points at the consolidated MapPicker (see
+// components/shared/MapPicker.tsx) instead of the profile-only copy that used
+// to live at src/components/MapPicker.tsx.
+const MapPicker = dynamic(() => import('@/components/shared/MapPicker'), {
   ssr: false,
   loading: () => (
     <div className="h-64 w-full bg-zinc-100 dark:bg-zinc-800 animate-pulse rounded-[4px] flex flex-col items-center justify-center gap-3">
@@ -33,7 +36,9 @@ const MapPicker = dynamic(() => import('@/components/user/MapPicker'), {
   )
 })
 
-type LatLng = { lat: number; lng: number }
+// ARCHITECTURE FIX: mapPosition is now a [lat, lng] tuple to match the
+// consolidated MapPicker's prop shape (previously a {lat, lng} object local to
+// this file's own duplicate MapPicker implementation).
 type AddressType = {
   id: string
   label: string
@@ -59,7 +64,7 @@ export default function AlamatPage() {
     notes: '',
     isDefault: false
   })
-  const [mapPosition, setMapPosition] = useState<LatLng | null>(null)
+  const [mapPosition, setMapPosition] = useState<[number, number] | null>(null)
 
   const fetchAddresses = async () => {
     setIsLoading(true)
@@ -73,15 +78,7 @@ export default function AlamatPage() {
   }
 
   useEffect(() => {
-    // Cleanup flag prevents setState after unmount if fetchAddresses resolves
-    // after the component navigates away (profile sub-page navigation pattern)
-    let cancelled = false
-    if (!cancelled) {
-      fetchAddresses()
-    }
-    return () => {
-      cancelled = true
-    }
+    fetchAddresses()
   }, [fetchAddresses])
 
   const handleOpenModal = (address?: AddressType) => {
@@ -94,7 +91,7 @@ export default function AlamatPage() {
         isDefault: address.isDefault
       })
       if (address.latitude && address.longitude) {
-        setMapPosition({ lat: address.latitude, lng: address.longitude })
+        setMapPosition([address.latitude, address.longitude])
       } else {
         setMapPosition(null)
       }
@@ -114,8 +111,8 @@ export default function AlamatPage() {
       label: formData.label,
       fullAddress: formData.fullAddress,
       notes: formData.notes,
-      latitude: mapPosition?.lat || null,
-      longitude: mapPosition?.lng || null,
+      latitude: mapPosition?.[0] || null,
+      longitude: mapPosition?.[1] || null,
       isDefault: formData.isDefault
     }
 
@@ -343,10 +340,7 @@ export default function AlamatPage() {
                         </span>
                       )}
                     </label>
-                    <MapPicker
-                      initialPosition={mapPosition}
-                      onPositionChange={(pos) => setMapPosition(pos)}
-                    />
+                    <MapPicker position={mapPosition} setPosition={(pos) => setMapPosition(pos)} />
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">
                       {t('address_map_help')}
                     </p>

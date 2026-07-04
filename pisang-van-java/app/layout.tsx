@@ -5,7 +5,6 @@ import '../styles/globals.css'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { headers } from 'next/headers'
-import { safeJsonLdScript } from '@/lib/sanitize'
 import { Providers } from './providers'
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -45,11 +44,7 @@ export const metadata: Metadata = {
   }
 }
 
-// LocalBusiness JSON-LD — developer-authored static object (not user input).
-// safeJsonLdScript() escapes "</script>" breakout via "</script>" → "\u003c/script\u003e".
-// RAG Source: app/(user)/menu-spesial/[id]/page.tsx (identical usage pattern, same lib)
-// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD schema requires raw script injection. Content is developer-authored, not user-submitted. safeJsonLdScript() escapes the </script> attack vector.
-const localBusinessJsonLd = {
+const _localBusinessJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'FoodEstablishment',
   name: 'Pisang Goreng Van Java',
@@ -100,14 +95,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-screen flex flex-col">
         <Providers>{children}</Providers>
 
-        {/* LocalBusiness JSON-LD — restored from quarantine. safeJsonLdScript() used instead
-            of raw dangerouslySetInnerHTML. Enables Google Knowledge Panel + Maps rich results.
-            RAG Source: lib/sanitize.ts (safeJsonLdScript), menu-spesial/[id]/page.tsx (pattern) */}
-        <script
-          type="application/ld+json"
-          // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
-          dangerouslySetInnerHTML={{ __html: safeJsonLdScript(localBusinessJsonLd) }}
-        />
+        {/* [QUARANTINED] LocalBusiness JSON-LD removed due to XSS Gateway VETO (dangerouslySetInnerHTML prohibited) */}
         <Analytics />
         <SpeedInsights />
       </body>

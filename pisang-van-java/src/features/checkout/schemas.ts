@@ -291,10 +291,12 @@ export interface PaymentOrderView {
 
 export class CheckoutSecurityError extends Error {
   readonly statusCode: number
+  readonly reason?: string
 
-  constructor(statusCode: number) {
+  constructor(statusCode: number, reason?: string) {
     super('CHECKOUT_SECURITY_REJECTION')
     this.name = 'CheckoutSecurityError'
     this.statusCode = statusCode
+    this.reason = reason
   }
 }

@@ -1,13 +1,15 @@
-import { queueWhatsAppNotification } from '@/lib/notifications'
-import { prisma } from '@/lib/prisma'
 import { inngest } from '@/src/lib/inngest'
+import { prisma } from '@/lib/prisma'
 import { sendOrderConfirmationEmail } from '../email'
+import { queueWhatsAppNotification } from '@/lib/notifications'
 
 export const paymentSettledWorkflow = inngest.createFunction(
-  {
-    id: 'payment-settled-workflow',
+  { 
+    id: 'payment-settled-workflow', 
     name: 'Order Payment Settled Workflow',
-    triggers: [{ event: 'order/payment.settled' }]
+    triggers: [
+      { event: 'order/payment.settled' }
+    ]
   },
   async ({ event, step }) => {
     const orderId = event.data.orderId as string

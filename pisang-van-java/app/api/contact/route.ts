@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { rateLimit } from '@/lib/redis'
-import { resolveWhatsAppNumber } from '@/src/services/checkout.service'
 
 // STRICT VALIDATION (C-Level Standard)
 const ContactSchema = z
@@ -58,8 +57,8 @@ export async function POST(req: Request) {
     })
 
     // 3. GENERATE WHATSAPP REDIRECT URL
-    const resolvedWa = await resolveWhatsAppNumber()
-    const waNumber = resolvedWa || process.env.WHATSAPP_NUMBER || '6285773728748'
+    // Kita panggil Setting nomor WA dari database juga jika perlu, tapi untuk performa kita gunakan env/default
+    const waNumber = process.env.WHATSAPP_NUMBER || '6285773728748'
     const text = encodeURIComponent(
       `Halo Van Java! Saya *${nama}*.\nEmail: ${email}\nNo. HP: ${phone}\n\n${pesan}`
     )

@@ -1,17 +1,16 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import Lottie from 'lottie-react'
 import { ArrowLeft, Minus, Plus, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import Lottie from 'lottie-react'
+import emptyCartAnimation from '@/public/animations/empty-cart.json'
 import toast, { Toaster } from 'react-hot-toast'
 import { useLanguage } from '@/context/LanguageContext'
 import { useSettings } from '@/context/SettingsContext'
-import { formatPrice, getFallbackImage } from '@/lib/utils'
-import emptyCartAnimation from '@/public/animations/empty-cart.json'
 import {
   selectCartItemCount,
   selectCartItems,
@@ -20,6 +19,8 @@ import {
   useCartStore
 } from '@/src/features/cart/stores/cart.store'
 import { generateWaCartLink } from '@/src/lib/wa-link-client'
+import { formatPrice, getFallbackImage } from '@/lib/utils'
+
 
 export default function KeranjangPage() {
   const router = useRouter()
@@ -106,7 +107,11 @@ export default function KeranjangPage() {
             className="text-center py-20"
           >
             <div className="w-32 h-32 mx-auto mb-6 flex items-center justify-center">
-              <Lottie animationData={emptyCartAnimation} loop={true} className="w-32 h-32" />
+              <Lottie
+                animationData={emptyCartAnimation}
+                loop={true}
+                className="w-32 h-32"
+              />
             </div>
             <h2 className="font-serif text-xl font-bold text-zinc-800 dark:text-zinc-200 mb-2">
               {t('cart_empty_title')}

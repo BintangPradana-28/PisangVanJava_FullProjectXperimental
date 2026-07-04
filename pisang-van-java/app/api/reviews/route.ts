@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
       take: safeLimit,
       orderBy: { createdAt: 'desc' },
       include: {
-        user: { select: adminView ? { name: true, email: true } : { name: true } },
+        user: { select: { name: true } },
         variant: { select: { flavorName: true } }
       }
     })
@@ -65,7 +65,6 @@ export async function GET(req: NextRequest) {
         id: r.id,
         userId: r.userId,
         userName: adminView ? r.user?.name : maskName(r.user?.name),
-        ...(adminView && { userEmail: r.user?.email ?? '' }),
         variantName: r.variant?.flavorName || 'Pesanan Umum',
         rating: r.rating,
         comment: r.comment,
@@ -153,28 +152,32 @@ export async function POST(req: NextRequest) {
   const { orderId, variantId, rating, comment, imageUrl } = parsed.data
 
   try {
+    // SECURITY FIX (audit QA & Security — review-bombing gap): sebelumnya hanya menolak
+    // ketika order DITEMUKAN tapi milik orang lain. Kalau orderId TIDAK ADA sama sekali
+    // (string bebas apa pun), request tetap lolos dengan isVerifiedBuyer: false — artinya
+    // satu akun bisa membuat banyak review dengan orderId fiktif berbeda-beda tanpa pernah
+    // punya order asli (unique constraint userId_orderId tidak menahan ini karena orderId-nya
+    // bebas). Sekarang orderId WAJIB merujuk order asli milik user ini, dan order harus sudah
+    // sampai ke pelanggan (DELIVERED/COMPLETED) — bukan sekadar dibuat (PENDING_PAYMENT dst).
     const order = await prisma.order.findUnique({ where: { id: orderId } })
-    if (!order) {
+
+    if (!order || order.userId !== session.user.id) {
       return NextResponse.json(
-        { success: false, error: 'Pesanan tidak ditemukan.' },
-        { status: 404 }
-      )
-    }
-    if (order.userId !== session.user.id) {
-      return NextResponse.json(
-        { success: false, error: 'Forbidden: Order ini bukan milik Anda.' },
+        { success: false, error: 'Order tidak ditemukan atau bukan milik Anda.' },
         { status: 403 }
       )
     }
-    if (order.status !== 'COMPLETED' && order.status !== 'DELIVERED') {
+
+    if (order.status !== 'DELIVERED' && order.status !== 'COMPLETED') {
       return NextResponse.json(
         {
           success: false,
-          error: 'Ulasan hanya dapat dikirim untuk pesanan yang sudah selesai atau terkirim.'
+          error: 'Ulasan hanya bisa diberikan setelah pesanan selesai diterima.'
         },
         { status: 400 }
       )
     }
+
     const isVerifiedBuyer = true
 
     const review = await prisma.review.upsert({

@@ -1,6 +1,7 @@
 import { type OrderStatus, Prisma } from '@prisma/client'
 import { type NextRequest, NextResponse } from 'next/server'
 import { logAudit } from '@/lib/audit'
+import { inngest } from '@/src/lib/inngest'
 import { prisma } from '@/lib/prisma'
 import {
   ALLOWED_STATUS_TRANSITIONS,
@@ -8,7 +9,6 @@ import {
   orderStatusInputSchema,
   paymentFormInputSchema
 } from '@/src/features/checkout/schemas'
-import { inngest } from '@/src/lib/inngest'
 import { hasValidSameOriginHeaders, requireCheckoutActor } from '@/src/services/checkout.service'
 
 interface OrderRouteContext {
@@ -278,9 +278,7 @@ export async function PATCH(req: NextRequest, { params }: OrderRouteContext) {
             status: order.status
           }
         })
-        .catch((err) =>
-          console.error('[INNGEST ERROR] Failed to dispatch order status change event', err)
-        )
+        .catch((err) => console.error('[INNGEST ERROR] Failed to dispatch order status change event', err))
     }
 
     return NextResponse.json({

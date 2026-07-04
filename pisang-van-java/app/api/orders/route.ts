@@ -6,7 +6,6 @@ import {
   createOrderInputSchema,
   orderQueryInputSchema
 } from '@/src/features/checkout/schemas'
-import { logger } from '@/src/lib/logger'
 import {
   createCheckoutOrder,
   enforceCheckoutRateLimit,
@@ -14,6 +13,7 @@ import {
   hasValidSameOriginHeaders,
   requireCheckoutActor
 } from '@/src/services/checkout.service'
+import { logger } from '@/src/lib/logger'
 
 export async function GET(req: NextRequest) {
   const actor = await requireCheckoutActor()

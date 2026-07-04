@@ -56,11 +56,7 @@ export const createMenuVariantSchema = z.object({
 })
 
 // Partial() memungkinkan PATCH/PUT parsial — hanya field yang dikirim yang diupdate
-export const updateMenuVariantSchema = createMenuVariantSchema
-  .extend({
-    stock: z.number().int('Stok harus berupa bilangan bulat').min(0, 'Stok tidak boleh kurang dari 0').optional()
-  })
-  .partial()
+export const updateMenuVariantSchema = createMenuVariantSchema.partial()
 
 // ── Topping Schemas ───────────────────────────────────────────────────────────
 

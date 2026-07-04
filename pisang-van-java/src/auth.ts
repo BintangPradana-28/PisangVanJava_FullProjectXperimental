@@ -7,7 +7,6 @@ import { prisma } from '@/lib/prisma'
 import { rateLimit } from '@/lib/redis'
 import { loginSchema } from '@/src/features/auth/schemas'
 import { verifyPassword } from '@/src/lib/password'
-import { logger } from '@/src/lib/logger'
 import { authConfig } from './auth.config'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -40,7 +39,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // 2. IP-BASED RATE LIMITING
         const headerStore = await headers()
         const ip = headerStore.get('x-forwarded-for')?.split(',')[0] || 'unknown-ip'
-        logger.debug(`Rate limiting IP: ${ip}`)
+        console.log('Rate limiting IP:', ip)
 
         let rateLimitSuccess = true
         try {
@@ -53,16 +52,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!rateLimitSuccess) {
           throw new Error('Terlalu banyak percobaan. Silakan coba lagi nanti.')
         }
-        logger.debug('Rate limit passed or bypassed.')
+        console.log('Rate limit passed or bypassed.')
 
         const user = await prisma.user.findUnique({
           where: { email: username }
         })
-        logger.debug(`User found in DB: ${!!user}`)
+        console.log('User found in DB:', !!user)
 
         // 3. OPAQUE ERRORS & BAN CHECK
         if (!user || user.isDeleted || !user.passwordHash) {
-          logger.debug('User missing or no password hash.')
+          console.log('User missing or no password hash.')
           throw new Error('Email atau Sandi tidak valid.')
         }
 

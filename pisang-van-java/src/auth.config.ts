@@ -1,6 +1,7 @@
 import * as jwt from 'jose'
 import type { DefaultSession, NextAuthConfig } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
+import { getAuthSecret } from '@/src/env'
 
 declare module 'next-auth' {
   interface Session {
@@ -104,7 +105,10 @@ export const authConfig = {
       return session
     }
   },
-  secret: process.env.NEXTAUTH_SECRET || 'default_secret_key_change_me_in_production',
+  // SECURITY FIX: sebelumnya fallback ke string hardcoded jika NEXTAUTH_SECRET kosong —
+  // lihat src/env.ts:getAuthSecret() untuk detail. Sekarang fail-closed (throw) alih-alih
+  // diam-diam memakai secret publik yang bisa dipakai siapa pun memalsukan session JWT.
+  secret: getAuthSecret(),
   debug: false,
   logger: {
     error(error) {
@@ -119,7 +123,14 @@ export const authConfig = {
     GoogleProvider({
       clientId: process.env.AUTH_GOOGLE_ID || 'MOCK_CLIENT_ID',
       clientSecret: process.env.AUTH_GOOGLE_SECRET || 'MOCK_CLIENT_SECRET',
-      allowDangerousEmailAccountLinking: true
+      // SECURITY FIX: sebelumnya `true`. Karena registrasi Credentials di aplikasi ini
+      // TIDAK memverifikasi kepemilikan email (emailVerified tidak pernah di-set — lihat
+      // src/features/auth/actions.ts), auto-linking akun Google ke akun password dengan
+      // email yang sama membuka celah account-takeover: penyerang mendaftar duluan pakai
+      // email korban + password miliknya, lalu korban login via Google ter-link ke akun
+      // yang sudah dikuasai penyerang. `false` memaksa NextAuth menolak login dengan error
+      // OAuthAccountNotLinked jika email sudah terdaftar via provider lain — aman by default.
+      allowDangerousEmailAccountLinking: false
     })
   ]
 } satisfies NextAuthConfig

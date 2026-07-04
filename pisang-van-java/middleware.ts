@@ -256,6 +256,17 @@ export const config = {
     '/api/cart/:path*',
     '/menu-spesial/:path*',
     '/kitchen/:path*',
-    '/kasir/:path*'
+    '/kasir/:path*',
+    // Previously unmatched public API surface — was reachable with zero
+    // rate limiting despite globalRateLimit already being wired up above.
+    // Webhook routes intentionally excluded: those are server-to-server
+    // calls verified by signature, not IP, and share the traffic profile
+    // of the payment/logistics provider rather than a public visitor.
+    '/api/menu/:path*',
+    '/api/orders/:path*',
+    '/api/upload/:path*',
+    '/api/reviews/:path*',
+    '/api/og/:path*',
+    '/api/openapi/:path*'
   ]
 }

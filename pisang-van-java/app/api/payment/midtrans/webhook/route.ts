@@ -1,12 +1,13 @@
 import { OrderStatus, PaymentStatus, Prisma } from '@prisma/client'
 import * as Sentry from '@sentry/nextjs'
-import { revalidatePath, revalidateTag } from 'next/cache'
+import { revalidatePath } from 'next/cache'
 import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { redis } from '@/lib/redis'
 import { inngest } from '@/src/lib/inngest'
 import { mapMidtransStatusToPaymentStatus } from '@/src/features/payment/payment-status.mapper'
 import { verifyMidtransSignature } from '@/src/features/payment/service'
+import { CACHE_PATHS } from '@/src/lib/cache-keys'
 import { logger } from '@/src/lib/logger'
 
 
@@ -234,13 +235,9 @@ export async function POST(req: NextRequest) {
     // Force real-time Edge Cache purge for Storefront and Dashboard
     // This allows UI to show accurate stock and soldCount instantly without a hard reload.
     try {
-      revalidatePath('/', 'layout')
-      revalidatePath('/(user)/menu-spesial', 'page')
-      revalidatePath('/(admin)', 'layout')
-      // @ts-expect-error Next.js Canary type requires 2 args
-      revalidateTag('menu')
-      // @ts-expect-error Next.js Canary type requires 2 args
-      revalidateTag('menu-spesial-all-products')
+      revalidatePath(CACHE_PATHS.ROOT, 'layout')
+      revalidatePath(CACHE_PATHS.MENU_SPESIAL_PAGE_GROUP, 'page')
+      revalidatePath(CACHE_PATHS.ADMIN_LAYOUT_GROUP, 'layout')
     } catch (e) {
       logger.warn(e as Error, '[Midtrans Webhook] Failed to revalidate Next.js cache')
     }

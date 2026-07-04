@@ -77,6 +77,7 @@ model User {
   sessions    Session[]
   resetTokens ResetToken[]
   favorites   Favorite[]
+  notifications Notification[] // Back-relation for Notification.user @relation — required by Prisma, was left as a manual TODO comment
   reviews     Review[]
   cart        UserCart?
   orders      Order[]
@@ -522,22 +523,5 @@ model Notification {
 
   @@index([userId])
   @@index([userId, isRead]) // powers both "list mine" and "unread count" queries without a second index
-}
-
-// --- Required: one relation line on the existing User model (additive only) ---
-// Add next to the existing `favorites Favorite[]` line:
-//
-//   model User {
-//     ...unchanged...
-//     favorites     Favorite[]      // existing
-//     notifications Notification[]  // NEW
-//     ...unchanged...
-//   }
-
-// ============================================================
-// Migration: CREATE TABLE — additive, non-destructive, but still a schema
-// migration requiring a human-run `prisma migrate dev --name add_notifications`.
-// ============================================================
-
 }
 

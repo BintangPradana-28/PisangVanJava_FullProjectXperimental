@@ -45,7 +45,11 @@ export async function POST(req: Request) {
     }
 
     const { level, message, context } = parsed.data
-    console.info(`[CLIENT_LOG][${level}][user:${session.user.id}] ${message}`, context ?? {})
+    // Semgrep: unsafe-formatstring — first arg must stay a constant literal so
+    // Node's util.format never treats attacker-controlled `message` content as
+    // containing format specifiers (%s/%d/%j). Dynamic values go in the second
+    // (object) argument instead of being interpolated into the template string.
+    console.info('[CLIENT_LOG]', { level, userId: session.user.id, message, context: context ?? {} })
 
     return NextResponse.json({ success: true })
   } catch (_error) {

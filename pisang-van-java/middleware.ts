@@ -32,7 +32,9 @@ const PROTECTED: Record<string, AllowedRoles> = {
 
   // CUSTOMER BOUNDARY
   '/checkout': ['CUSTOMER', 'RESELLER', 'SUPER_ADMIN', 'ADMIN'],
-  '/profile': ['CUSTOMER', 'RESELLER', 'SUPER_ADMIN', 'ADMIN'],
+  // KITCHEN & CASHIER ditambahkan agar staff punya jalur untuk mengatur akun mereka
+  // sendiri (termasuk setup 2FA wajib — lihat blok enforcement di bawah).
+  '/profile': ['CUSTOMER', 'RESELLER', 'SUPER_ADMIN', 'ADMIN', 'KITCHEN', 'CASHIER'],
   '/track-order': ['CUSTOMER', 'RESELLER', 'SUPER_ADMIN', 'ADMIN'],
   '/api/cart': ['CUSTOMER', 'RESELLER', 'SUPER_ADMIN', 'ADMIN']
 }
@@ -184,6 +186,25 @@ const authMiddleware = auth(async (req) => {
     return NextResponse.redirect(new URL('/', req.url)) // Send back to home or a 403 page
   }
 
+  // ── 5.5. Mandatory 2FA for staff roles ──────────────────────────────────────
+  // ADDITION (QA & Security): akun staff (SUPER_ADMIN/ADMIN/KITCHEN/CASHIER) punya
+  // akses ke operasi sensitif (override harga POS, adjust koin, ubah menu, status
+  // pesanan) — sebelumnya 2FA murni opt-in per-user tanpa syarat role sama sekali.
+  // Login TETAP diizinkan (tidak di-hard-block di src/auth.ts) untuk menghindari staff
+  // yang sedang aktif mendadak terkunci begitu deploy — sebagai gantinya, request
+  // diarahkan paksa ke halaman setup 2FA (/profile/keamanan) untuk rute apa pun selain
+  // halaman profil itu sendiri, sampai twoFactorEnabled bernilai true.
+  const STAFF_ROLES_REQUIRING_2FA: AllowedRoles = ['SUPER_ADMIN', 'ADMIN', 'KITCHEN', 'CASHIER']
+  if (
+    STAFF_ROLES_REQUIRING_2FA.includes(userRole) &&
+    !token.twoFactorEnabled &&
+    !pathname.startsWith('/profile')
+  ) {
+    const setupUrl = new URL('/profile/keamanan', req.url)
+    setupUrl.searchParams.set('require2fa', '1')
+    return NextResponse.redirect(setupUrl)
+  }
+
   return NextResponse.next()
 })
 
@@ -256,17 +277,6 @@ export const config = {
     '/api/cart/:path*',
     '/menu-spesial/:path*',
     '/kitchen/:path*',
-    '/kasir/:path*',
-    // Previously unmatched public API surface — was reachable with zero
-    // rate limiting despite globalRateLimit already being wired up above.
-    // Webhook routes intentionally excluded: those are server-to-server
-    // calls verified by signature, not IP, and share the traffic profile
-    // of the payment/logistics provider rather than a public visitor.
-    '/api/menu/:path*',
-    '/api/orders/:path*',
-    '/api/upload/:path*',
-    '/api/reviews/:path*',
-    '/api/og/:path*',
-    '/api/openapi/:path*'
+    '/kasir/:path*'
   ]
 }

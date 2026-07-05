@@ -9,6 +9,8 @@ declare module 'next-auth' {
       id: string
       role: 'SUPER_ADMIN' | 'ADMIN' | 'KITCHEN' | 'CASHIER' | 'CUSTOMER' | 'RESELLER'
       isBanned: boolean
+      // Ditambahkan untuk enforcement 2FA wajib staff di middleware.ts
+      twoFactorEnabled: boolean
     } & DefaultSession['user']
   }
 
@@ -16,6 +18,7 @@ declare module 'next-auth' {
     id: string
     role: 'SUPER_ADMIN' | 'ADMIN' | 'KITCHEN' | 'CASHIER' | 'CUSTOMER' | 'RESELLER'
     isBanned: boolean
+    twoFactorEnabled: boolean
   }
 }
 
@@ -25,5 +28,6 @@ declare module 'next-auth/jwt' {
     id: string
     role: 'SUPER_ADMIN' | 'ADMIN' | 'KITCHEN' | 'CASHIER' | 'CUSTOMER' | 'RESELLER'
     isBanned: boolean
+    twoFactorEnabled: boolean
   }
 }

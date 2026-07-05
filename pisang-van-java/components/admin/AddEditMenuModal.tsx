@@ -55,230 +55,233 @@ export default function AddEditMenuModal({ open, editItem, onClose, onSaved }: P
       toast.error('Nama varian wajib diisi')
       return
     }
-    const invalidPrices = [form.priceKembung, form.priceLumpia, form.priceKrispy].some(
-      (price) => !Number.isFinite(price) || price <= 0
-    )
-    if (invalidPrices) {
-      toast.error('Semua harga wajib lebih dari 0')
+    if (!form.priceKembung || !form.priceLumpia || !form.priceKrispy) {
+      toast.error('Semua harga wajib diisi')
       return
     }
 
-  }
+    setLoading(true)
+    try {
+      const url = editItem ? `/api/menu/${editItem.id}` : '/api/menu'
+      const method = editItem ? 'PUT' : 'POST'
 
-  setLoading(true)
-  try {
-    const url = editItem ? `/api/menu/${editItem.id}` : '/api/menu'
-    const method = editItem ? 'PUT' : 'POST'
-
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        flavorName: form.flavorName,
-        priceKembung: Number(form.priceKembung),
-        priceLumpia: Number(form.priceLumpia),
-        priceKrispy: Number(form.priceKrispy),
-        description: form.description || null,
-        imageUrl: form.imageUrl || null,
-        isActive: form.isActive,
-        sortOrder: Number(form.sortOrder)
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          flavorName: form.flavorName,
+          priceKembung: Number(form.priceKembung),
+          priceLumpia: Number(form.priceLumpia),
+          priceKrispy: Number(form.priceKrispy),
+          description: form.description || null,
+          imageUrl: form.imageUrl || null,
+          isActive: form.isActive,
+          sortOrder: Number(form.sortOrder)
+        })
       })
-    })
-    const data = await res.json()
+      const data = await res.json()
 
-    if (data.success) {
-      toast.success(editItem ? 'Menu berhasil diupdate!' : 'Menu baru ditambahkan!')
-      // Map DB shape → MenuVariant
-      const raw = data.data
-      const saved: MenuVariant = {
-        id: raw.id,
-        flavorName: raw.flavorName,
-        prices: {
-          kembung: raw.priceKembung,
-          lumpia: raw.priceLumpia,
-          krispy: raw.priceKrispy
-        },
-        imageUrl: raw.imageUrl,
-        description: raw.description,
-        isActive: raw.isActive,
-        isAvailable: raw.isAvailable,
-        sortOrder: raw.sortOrder
+      if (data.success) {
+        toast.success(editItem ? 'Menu berhasil diupdate!' : 'Menu baru ditambahkan!')
+        // Map DB shape → MenuVariant
+        const raw = data.data
+        const saved: MenuVariant = {
+          id: raw.id,
+          flavorName: raw.flavorName,
+          prices: {
+            kembung: raw.priceKembung,
+            lumpia: raw.priceLumpia,
+            krispy: raw.priceKrispy
+          },
+          imageUrl: raw.imageUrl,
+          description: raw.description,
+          isActive: raw.isActive,
+          isAvailable: raw.isAvailable,
+          sortOrder: raw.sortOrder
+        }
+        onSaved(saved)
+        onClose()
+      } else {
+        toast.error(data.error || 'Gagal menyimpan')
       }
-      onSaved(saved)
-      onClose()
-    } else {
-      toast.error(data.error || 'Gagal menyimpan')
+    } catch {
+      toast.error('Koneksi bermasalah')
+    } finally {
+      setLoading(false)
     }
-  } catch {
-    toast.error('Koneksi bermasalah')
-  } finally {
-    setLoading(false)
   }
-}
 
-return (
-  <AnimatePresence>
-    {open && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.92, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.92, y: 20 }}
-          transition={{ duration: 0.25 }}
-          className="bg-cream-100 rounded-[4px] p-6 sm:p-8 w-full max-w-lg shadow-sm max-h-[90vh] overflow-y-auto"
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="font-serif text-xl font-bold text-brown-700">
-              {editItem ? '✏️ Edit Menu' : '➕ Tambah Menu Baru'}
-            </h2>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-[4px] bg-cream-200 hover:bg-cream-300 flex items-center justify-center
+  return (
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: 20 }}
+            transition={{ duration: 0.25 }}
+            className="bg-cream-100 rounded-[4px] p-6 sm:p-8 w-full max-w-lg shadow-sm max-h-[90vh] overflow-y-auto"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="font-serif text-xl font-bold text-brown-700">
+                {editItem ? '✏️ Edit Menu' : '➕ Tambah Menu Baru'}
+              </h2>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-[4px] bg-cream-200 hover:bg-cream-300 flex items-center justify-center
                            text-brown-500 text-lg transition-colors"
-            >
-              ✕
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Flavor Name */}
-            <div>
-              <label className="block text-xs font-semibold text-brown-400 uppercase tracking-wider mb-1.5">
-                Nama Varian Rasa *
-              </label>
-              <input
-                type="text"
-                value={form.flavorName}
-                onChange={(e) => set('flavorName', e.target.value)}
-                placeholder="e.g. Matcha Milky"
-                className="form-input"
-                required
-              />
-            </div>
-
-            {/* Prices */}
-            <div>
-              <label className="block text-xs font-semibold text-brown-400 uppercase tracking-wider mb-2">
-                Harga per Tipe (IDR) *
-              </label>
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { key: 'priceKembung', label: 'Kembung (Isi 15)' },
-                  { key: 'priceLumpia', label: 'Lumpia (Isi 6)' },
-                  { key: 'priceKrispy', label: 'Krispy (Isi 5)' }
-                ].map(({ key, label }) => (
-                  <div key={key}>
-                    <label className="block text-xs text-brown-400 mb-1">{label}</label>
-                    <input
-                      type="number"
-                      value={form[key as keyof MenuVariantFormData] as number}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, [key]: Number(e.target.value) }))
-                      }
-                      min={5000}
-                      step={1000}
-                      className="form-input"
-                      required
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="block text-xs font-semibold text-brown-400 uppercase tracking-wider mb-1.5">
-                Deskripsi Topping
-              </label>
-              <textarea
-                value={form.description}
-                onChange={(e) => set('description', e.target.value)}
-                placeholder="Deskripsi singkat menu..."
-                rows={3}
-                className="form-input resize-none"
-              />
-            </div>
-
-            {/* Image URL */}
-            <div>
-              <label className="block text-xs font-semibold text-brown-400 uppercase tracking-wider mb-1.5">
-                URL Gambar
-              </label>
-              <input
-                type="url"
-                value={form.imageUrl}
-                onChange={(e) => set('imageUrl', e.target.value)}
-                placeholder="https://example.com/gambar.jpg"
-                className="form-input"
-              />
-              {/* Upload placeholder box */}
-              <div
-                className="mt-2 w-full h-24 border-2 border-dashed border-cream-200 rounded-[4px]
-                                flex flex-col items-center justify-center text-brown-300 cursor-pointer
-                                hover:border-amber-brand hover:text-amber-brand transition-colors text-sm"
               >
-                <span className="text-2xl mb-1">📷</span>
-                <span>Upload Gambar (coming soon)</span>
-              </div>
+                ✕
+              </button>
             </div>
 
-            {/* Active toggle + Sort order */}
-            <div className="flex items-center gap-6">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <div
-                  onClick={() => set('isActive', !form.isActive)}
-                  className={`w-11 h-6 rounded-[4px] transition-colors relative ${form.isActive ? 'bg-green-wa' : 'bg-cream-200'
-                    }`}
-                >
-                  <div
-                    className={`w-4 h-4 bg-white rounded-[4px] absolute top-1 transition-transform shadow ${form.isActive ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                  />
-                </div>
-                <span className="text-sm font-medium text-brown-600">
-                  {form.isActive ? 'Aktif' : 'Nonaktif'}
-                </span>
-              </label>
-
-              <div className="flex items-center gap-2">
-                <label className="text-xs font-semibold text-brown-400 uppercase tracking-wider">
-                  Urutan
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Flavor Name */}
+              <div>
+                <label className="block text-xs font-semibold text-brown-400 uppercase tracking-wider mb-1.5">
+                  Nama Varian Rasa *
                 </label>
                 <input
-                  type="number"
-                  value={form.sortOrder}
-                  onChange={(e) => set('sortOrder', Number(e.target.value))}
-                  min={0}
-                  className="form-input w-20"
+                  type="text"
+                  value={form.flavorName}
+                  onChange={(e) => set('flavorName', e.target.value)}
+                  placeholder="e.g. Matcha Milky"
+                  className="form-input"
+                  required
                 />
               </div>
-            </div>
 
-            {/* Buttons */}
-            <div className="flex gap-3 pt-2">
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-1 py-3 bg-green-wa text-white font-semibold rounded-[4px]
+              {/* Prices */}
+              <div>
+                <label className="block text-xs font-semibold text-brown-400 uppercase tracking-wider mb-2">
+                  Harga per Tipe (IDR) *
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { key: 'priceKembung', label: 'Kembung (Isi 15)' },
+                    { key: 'priceLumpia', label: 'Lumpia (Isi 6)' },
+                    { key: 'priceKrispy', label: 'Krispy (Isi 5)' }
+                  ].map(({ key, label }) => (
+                    <div key={key}>
+                      <label htmlFor={`input-${key}`} className="block text-xs text-brown-400 mb-1">{label}</label>
+                      <input
+                        id={`input-${key}`}
+                        type="number"
+                        value={form[key as keyof MenuVariantFormData] as number}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, [key]: Number(e.target.value) }))
+                        }
+                        min={5000}
+                        step={1000}
+                        placeholder="Harga"
+                        title={`Harga ${label}`}
+                        className="form-input"
+                        required
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-xs font-semibold text-brown-400 uppercase tracking-wider mb-1.5">
+                  Deskripsi Topping
+                </label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => set('description', e.target.value)}
+                  placeholder="Deskripsi singkat menu..."
+                  rows={3}
+                  className="form-input resize-none"
+                />
+              </div>
+
+              {/* Image URL */}
+              <div>
+                <label className="block text-xs font-semibold text-brown-400 uppercase tracking-wider mb-1.5">
+                  URL Gambar
+                </label>
+                <input
+                  type="url"
+                  value={form.imageUrl}
+                  onChange={(e) => set('imageUrl', e.target.value)}
+                  placeholder="https://example.com/gambar.jpg"
+                  className="form-input"
+                />
+                {/* Upload placeholder box */}
+                <div
+                  className="mt-2 w-full h-24 border-2 border-dashed border-cream-200 rounded-[4px]
+                                flex flex-col items-center justify-center text-brown-300 cursor-pointer
+                                hover:border-amber-brand hover:text-amber-brand transition-colors text-sm"
+                >
+                  <span className="text-2xl mb-1">📷</span>
+                  <span>Upload Gambar (coming soon)</span>
+                </div>
+              </div>
+
+              {/* Active toggle + Sort order */}
+              <div className="flex items-center gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <div
+                    onClick={() => set('isActive', !form.isActive)}
+                    className={`w-11 h-6 rounded-[4px] transition-colors relative ${
+                      form.isActive ? 'bg-green-wa' : 'bg-cream-200'
+                    }`}
+                  >
+                    <div
+                      className={`w-4 h-4 bg-white rounded-[4px] absolute top-1 transition-transform shadow ${
+                        form.isActive ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </div>
+                  <span className="text-sm font-medium text-brown-600">
+                    {form.isActive ? 'Aktif' : 'Nonaktif'}
+                  </span>
+                </label>
+
+                <div className="flex items-center gap-2">
+                  <label htmlFor="input-sortOrder" className="text-xs font-semibold text-brown-400 uppercase tracking-wider">
+                    Urutan
+                  </label>
+                  <input
+                    id="input-sortOrder"
+                    type="number"
+                    value={form.sortOrder}
+                    onChange={(e) => set('sortOrder', Number(e.target.value))}
+                    min={0}
+                    placeholder="0"
+                    title="Urutan Tampilan Menu"
+                    className="form-input w-20"
+                  />
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 py-3 bg-green-wa text-white font-semibold rounded-[4px]
                              hover:bg-green-wa-light transition-colors active:scale-95
                              disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Menyimpan...' : '✓ Simpan'}
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 py-3 bg-brown-700 text-cream-100 font-semibold rounded-[4px]
+                >
+                  {loading ? 'Menyimpan...' : '✓ Simpan'}
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 py-3 bg-brown-700 text-cream-100 font-semibold rounded-[4px]
                              hover:bg-brown-600 transition-colors active:scale-95"
-              >
-                ✕ Batal
-              </button>
-            </div>
-          </form>
-        </motion.div>
-      </div>
-    )}
-  </AnimatePresence>
-)
+                >
+                  ✕ Batal
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  )
 }

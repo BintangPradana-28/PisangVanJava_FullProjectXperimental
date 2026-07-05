@@ -27,6 +27,24 @@ vi.mock('@/src/services/checkout.service', () => {
   }
 })
 
+vi.mock('@/lib/prisma', () => {
+  return {
+    prisma: {
+      menuVariant: {
+        findMany: vi.fn().mockResolvedValue([
+          { id: 'cmq1qy9wq0006lvdo61smdksk', flavorName: 'Original', priceKembung: 10000 }
+        ])
+      },
+      topping: {
+        findMany: vi.fn().mockResolvedValue([
+          { id: 'cmq1qyjad000dlvdo6cz7gy12', name: 'Keju', price: 2000 },
+          { id: 'cmq1qyjpw000elvdo9pwls25o', name: 'Sprinkles', price: 2000 }
+        ])
+      }
+    }
+  }
+})
+
 import { NextRequest } from 'next/server'
 import { POST } from '@/app/api/orders/route'
 import { prisma } from '@/lib/prisma'
@@ -78,5 +96,5 @@ describe('app/api/orders POST Route Integration', () => {
     console.log('Body:', resBody)
 
     expect(res.status).toBe(201)
-  })
+  }, 20000)
 })

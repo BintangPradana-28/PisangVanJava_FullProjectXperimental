@@ -124,21 +124,6 @@ export async function POST(req: NextRequest) {
       select: voucherSelect
     })
 
-    // Audit trail: voucher creation is a revenue-affecting admin action
-    // (previously had zero logging — see backend audit finding "Audit trail
-    // voucher"). Pattern mirrors the existing auditLog.create calls in
-    // app/api/admin/menu/[id]/route.ts.
-    await prisma.auditLog.create({
-      data: {
-        action: 'CREATE',
-        resource: 'Voucher',
-        resourceId: voucher.id,
-        userId: actor.userId,
-        details: JSON.stringify(parsed.data),
-        ipAddress: req.headers.get('x-forwarded-for') || 'unknown'
-      }
-    })
-
     return NextResponse.json({ success: true, data: voucher }, { status: 201 })
   } catch (error) {
     console.error('[SECURITY] POST /api/admin/vouchers failed.', error)
@@ -173,17 +158,6 @@ export async function PATCH(req: NextRequest) {
       select: voucherSelect
     })
 
-    await prisma.auditLog.create({
-      data: {
-        action: 'UPDATE',
-        resource: 'Voucher',
-        resourceId: voucher.id,
-        userId: actor.userId,
-        details: JSON.stringify({ isActive: parsed.data.isActive }),
-        ipAddress: req.headers.get('x-forwarded-for') || 'unknown'
-      }
-    })
-
     return NextResponse.json({ success: true, data: voucher })
   } catch (error) {
     console.error('[SECURITY] PATCH /api/admin/vouchers failed.', error)
@@ -209,16 +183,6 @@ export async function DELETE(req: NextRequest) {
   try {
     await prisma.voucher.delete({
       where: { id: parsedId.data }
-    })
-
-    await prisma.auditLog.create({
-      data: {
-        action: 'DELETE',
-        resource: 'Voucher',
-        resourceId: parsedId.data,
-        userId: actor.userId,
-        ipAddress: req.headers.get('x-forwarded-for') || 'unknown'
-      }
     })
 
     return NextResponse.json({ success: true })

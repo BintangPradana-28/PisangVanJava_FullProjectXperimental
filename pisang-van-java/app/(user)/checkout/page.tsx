@@ -25,20 +25,8 @@ import { getShippingRates, validateVoucher } from '@/src/features/checkout/actio
 import { api } from '@/src/lib/api'
 import { isStoreOpen } from '@/src/lib/time'
 import type { CourierOption } from '@/src/services/shipping.service'
-import { Loader2 } from 'lucide-react'
 
-// ARCHITECTURE FIX: now points at the consolidated MapPicker (see
-// components/shared/MapPicker.tsx) instead of the checkout-only copy that used
-// to live at components/user/MapPicker.tsx.
-const MapPicker = dynamic(() => import('@/components/shared/MapPicker'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-[320px] bg-zinc-100 dark:bg-zinc-800 animate-pulse rounded-[4px] flex flex-col items-center justify-center gap-3">
-      <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
-      <span className="text-sm text-zinc-500 font-medium">Memuat Peta...</span>
-    </div>
-  )
-})
+const MapPicker = dynamic(() => import('@/components/shared/MapPicker'), { ssr: false })
 
 // ── Response Schema ─────────────────────────────────────────────────────────
 const orderResponseSchema = z.discriminatedUnion('success', [

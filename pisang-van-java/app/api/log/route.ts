@@ -1,56 +1,46 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { globalRateLimit } from '@/lib/redis'
-import { auth } from '@/src/auth'
+import { rateLimit } from '@/lib/redis'
+import { logger } from '@/src/lib/logger'
 
-// SECURITY FIX: this endpoint previously had NO auth check, NO Zod validation, and
-// NO body size limit, while writing every request body straight to disk via
-// fs.appendFileSync('client-log.txt', ...). That combination is a disk-exhaustion
-// DoS vector (unbounded, unauthenticated, unlimited POSTs) and a log-injection risk
-// (arbitrary attacker-controlled content written verbatim to a file). It also never
-// actually worked as intended in production: serverless/Vercel filesystems are
-// ephemeral, so appendFileSync wrote to a throwaway /tmp that nothing ever reads.
-//
-// Fix: require an authenticated session, rate-limit per user, cap payload size via
-// Zod, and route through console.info (captured by the platform's log pipeline)
-// instead of an unbounded local file.
-
-const clientLogSchema = z
-  .object({
-    level: z.enum(['info', 'warn', 'error']).default('info'),
-    message: z.string().min(1).max(500),
-    context: z.record(z.string(), z.unknown()).optional()
-  })
-  .strict()
+// SECURITY FIX (audit QA & Security):
+// Endpoint ini sebelumnya (1) tanpa rate limit sama sekali (tidak termasuk matcher
+// middleware.ts, jadi globalRateLimit middleware tidak berlaku di sini), (2) tanpa batas
+// ukuran body, dan (3) menulis lewat fs.appendFileSync ke file lokal — di lingkungan
+// serverless ini biasanya gagal senyap (filesystem read-only), tapi proyek ini juga
+// menyediakan Dockerfile untuk self-hosting, di mana filesystem container BISA ditulis —
+// menjadikannya vektor DoS "disk-fill" yang bisa dipicu siapa saja tanpa autentikasi.
+// Sekarang: rate-limited per IP, body divalidasi & dibatasi ukurannya, dan dicatat lewat
+// structured logger (pino, ke stdout) alih-alih menulis file — konsisten dengan cara
+// logging di seluruh bagian aplikasi lain, dan tidak lagi bisa dipakai untuk disk-fill.
+const clientLogSchema = z.object({
+  level: z.enum(['error', 'warn', 'info']).optional().default('error'),
+  message: z.string().max(2000),
+  stack: z.string().max(4000).optional(),
+  url: z.string().max(500).optional(),
+  context: z.record(z.string(), z.unknown()).optional()
+})
 
 export async function POST(req: Request) {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1'
+  const { success: withinLimit } = await rateLimit.limit(`client_log_${ip}`)
+  if (!withinLimit) {
+    return NextResponse.json({ success: false }, { status: 429 })
+  }
+
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    const rawBody = await req.text()
+    // Batas ukuran kasar (8KB cukup untuk pesan error + stack ringkas dari klien).
+    if (rawBody.length > 8_000) {
+      return NextResponse.json({ success: false, error: 'Payload too large' }, { status: 413 })
     }
 
-    const { success: limitSuccess } = await globalRateLimit.limit(`client_log_${session.user.id}`)
-    if (!limitSuccess) {
-      return NextResponse.json(
-        { success: false, error: 'Terlalu banyak permintaan.' },
-        { status: 429 }
-      )
-    }
-
-    const rawBody = await req.json()
-    const parsed = clientLogSchema.safeParse(rawBody)
+    const parsed = clientLogSchema.safeParse(JSON.parse(rawBody))
     if (!parsed.success) {
       return NextResponse.json({ success: false, error: 'Invalid payload' }, { status: 400 })
     }
 
-    const { level, message, context } = parsed.data
-    // Semgrep: unsafe-formatstring — first arg must stay a constant literal so
-    // Node's util.format never treats attacker-controlled `message` content as
-    // containing format specifiers (%s/%d/%j). Dynamic values go in the second
-    // (object) argument instead of being interpolated into the template string.
-    console.info('[CLIENT_LOG]', { level, userId: session.user.id, message, context: context ?? {} })
-
+    logger.warn({ source: 'client', ...parsed.data }, 'Client-reported log')
     return NextResponse.json({ success: true })
   } catch (_error) {
     return NextResponse.json({ success: false }, { status: 400 })

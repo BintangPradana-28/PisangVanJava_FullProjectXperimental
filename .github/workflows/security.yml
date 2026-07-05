@@ -2,14 +2,16 @@ name: Security Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   secret-scanning:
     name: GitLeaks Secret Scanner
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -18,10 +20,12 @@ jobs:
         uses: gitleaks/gitleaks-action@v2 # nosemgrep
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
+
   sast-scanning:
     name: Semgrep SAST
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     container:
       image: semgrep/semgrep
     steps:

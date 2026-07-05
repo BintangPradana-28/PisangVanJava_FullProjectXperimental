@@ -4,7 +4,7 @@ import { headers } from 'next/headers'
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/prisma'
-import { rateLimit } from '@/lib/redis'
+import { rateLimit, redis } from '@/lib/redis'
 import { loginSchema } from '@/src/features/auth/schemas'
 import { verifyPassword } from '@/src/lib/password'
 import { authConfig } from './auth.config'
@@ -70,6 +70,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           throw new Error('Akun Anda telah ditangguhkan. Hubungi admin.')
         }
 
+        // 3.5. ADDITION (QA & Security): persistent per-account lockout.
+        // login_ip_${ip} rate limit di atas membatasi kecepatan per-IP, tapi tidak
+        // menghentikan penyerang yang menyebar percobaan ke banyak IP/proxy untuk satu
+        // akun yang sama. Ini menambah lapisan kedua: kunci AKUN (bukan IP) setelah
+        // beberapa kali gagal berturut-turut, terlepas dari IP asalnya.
+        const lockoutKey = `account_lockout:${user.id}`
+        const failedAttemptsKey = `failed_login_count:${user.id}`
+        try {
+          const isLockedOut = await redis.get(lockoutKey)
+          if (isLockedOut) {
+            throw new Error(
+              'Akun sementara dikunci karena terlalu banyak percobaan gagal. Coba lagi dalam 15 menit atau reset password.'
+            )
+          }
+        } catch (error) {
+          if (error instanceof Error && error.message.startsWith('Akun sementara dikunci')) {
+            throw error
+          }
+          // Redis unreachable saat cek lockout — jangan blokir login sah hanya karena
+          // Redis down; rate limiter IP di atas tetap berjalan sebagai lapisan pertama.
+          Sentry.captureException(error)
+        }
+
         // 4. ARGON2ID VERIFICATION
         let isPasswordValid = false
         try {
@@ -88,7 +111,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               userAgent: headerStore.get('user-agent') || 'unknown'
             }
           })
+
+          try {
+            const attempts = await redis.incr(failedAttemptsKey)
+            if (attempts === 1) {
+              await redis.expire(failedAttemptsKey, 30 * 60) // window 30 menit
+            }
+            const MAX_FAILED_ATTEMPTS = 5
+            if (attempts >= MAX_FAILED_ATTEMPTS) {
+              await redis.setex(lockoutKey, 15 * 60, '1') // kunci 15 menit
+              await redis.del(failedAttemptsKey)
+              Sentry.captureMessage(
+                `[SECURITY] Account locked out after ${attempts} failed attempts: ${user.email}`,
+                'warning'
+              )
+            }
+          } catch (redisError) {
+            Sentry.captureException(redisError)
+          }
+
           throw new Error('Email atau Sandi tidak valid.')
+        }
+
+        // Login password berhasil — reset counter percobaan gagal untuk akun ini.
+        try {
+          await redis.del(failedAttemptsKey)
+        } catch {
+          // non-fatal
         }
 
         if (user.twoFactorEnabled) {
@@ -124,7 +173,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name,
           email: user.email,
           role: user.role,
-          isBanned: user.isBanned
+          isBanned: user.isBanned,
+          twoFactorEnabled: user.twoFactorEnabled
         }
       }
     })

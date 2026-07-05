@@ -3,13 +3,15 @@ name: Database Backup Automation
 on:
   schedule:
     # Run daily at 17:00 UTC (which is 00:00 WIB/Western Indonesian Time)
-    - cron: '0 17 * * *'
+    - cron: "0 17 * * *"
   workflow_dispatch: # Allows manual trigger from GitHub Actions tab
 
 jobs:
   backup:
     name: Create Encrypted Database Backup
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout Code

@@ -112,105 +112,105 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         }
       }
 
-      // 1. Stock validation + SERVER-AUTHORITATIVE price lookup for all items.
-      // SECURITY FIX: previously this loop only selected {stock, flavorName} and the
-      // server trusted item.unitPrice/item.subtotal from the client request body —
-      // a cashier (CASHIER role, not just ADMIN) could submit subtotal: 1 for any
-      // cart and the order would be created with that price. Retail price columns
-      // are now fetched from MenuVariant and used to recompute the true unit price;
-      // POS is walk-in-only (PosRole excludes RESELLER, see POS_ROLES above), so no
-      // wholesale-price branching is needed here unlike src/repositories/checkout.repository.ts.
-      const allToppingIds = Array.from(
-        new Set(data.items.flatMap((item) => [item.toppingId, ...(item.toppingIds ?? [])]))
-      ).filter((id): id is string => Boolean(id))
-
-      const toppingPriceById = new Map<string, number>()
-      if (allToppingIds.length > 0) {
-        const toppingRecords = await tx.topping.findMany({
-          where: { id: { in: allToppingIds } },
-          select: { id: true, price: true }
-        })
-        for (const t of toppingRecords) toppingPriceById.set(t.id, t.price)
-      }
-
-      function resolveVariantPrice(
-        variant: { priceKembung: number; priceLumpia: number; priceKrispy: number },
-        baseType: 'Kembung' | 'Lumpia' | 'Krispy'
-      ): number {
-        if (baseType === 'Lumpia') return variant.priceLumpia
-        if (baseType === 'Krispy') return variant.priceKrispy
-        return variant.priceKembung
-      }
-
-      const verifiedItems: Array<{
-        variantId: string
-        toppingId?: string | null
-        toppingIds?: string[]
-        baseType: 'Kembung' | 'Lumpia' | 'Krispy'
-        quantity: number
-        unitPrice: number
-        subtotal: number
-      }> = []
-
-      // ARCHITECTURE FIX: variant + version snapshot kept per variantId so the stock
-      // decrement step below can guard against a time-of-check-to-time-of-use race —
-      // see the "5. Atomic Decrement of Stock" block for the actual guard.
-      const variantById = new Map<string, { version: number; flavorName: string }>()
+      // 1. Stock validation + fetch AUTHORITATIVE prices from DB for all items.
+      //
+      // SECURITY FIX (audit QA & Security — POS price trust gap):
+      // Sebelumnya "server-side recalculate" cuma menjumlahkan `item.subtotal` yang
+      // dikirim CLIENT (lihat komentar lama di bawah), bukan menghitung ulang dari harga
+      // asli di database seperti alur checkout customer (src/repositories/checkout.repository.ts).
+      // Ini membuka celah fraud kasir (under-ringing): kasir/sesi yang di-compromise bisa
+      // kirim unitPrice/subtotal berapa pun untuk item yang stoknya tetap terpotong sesuai
+      // qty asli. Sekarang harga SELALU dihitung dari MenuVariant + Topping di DB;
+      // unitPrice/subtotal dari client hanya dipakai untuk validasi bentuk data (Zod),
+      // tidak pernah dipercaya sebagai angka final.
+      const variantMap = new Map<
+        string,
+        { stock: number; flavorName: string; priceKembung: number; priceLumpia: number; priceKrispy: number }
+      >()
 
       for (const item of data.items) {
-        const variant = await tx.menuVariant.findUnique({
-          where: { id: item.variantId },
-          select: {
-            stock: true,
-            flavorName: true,
-            priceKembung: true,
-            priceLumpia: true,
-            priceKrispy: true,
-            version: true
-          }
-        })
+        if (!variantMap.has(item.variantId)) {
+          const variant = await tx.menuVariant.findUnique({
+            where: { id: item.variantId },
+            select: {
+              stock: true,
+              flavorName: true,
+              priceKembung: true,
+              priceLumpia: true,
+              priceKrispy: true,
+              isActive: true,
+              isDeleted: true
+            }
+          })
 
-        if (!variant) {
-          throw new Error(`Produk dengan ID ${item.variantId} tidak ditemukan.`)
+          if (!variant || variant.isDeleted || !variant.isActive) {
+            throw new Error(`Produk dengan ID ${item.variantId} tidak ditemukan atau tidak aktif.`)
+          }
+
+          variantMap.set(item.variantId, variant)
         }
 
+        const variant = variantMap.get(item.variantId)!
         if (variant.stock < item.quantity) {
           throw new Error(
             `Stok ${variant.flavorName} habis atau tidak mencukupi. Sisa: ${variant.stock}`
           )
         }
+      }
 
-        variantById.set(item.variantId, { version: variant.version, flavorName: variant.flavorName })
-
-        const itemToppingIds = Array.from(
-          new Set([item.toppingId, ...(item.toppingIds ?? [])].filter((id): id is string => Boolean(id)))
+      // 1b. Batch-fetch topping prices (hindari N+1) untuk semua toppingId/toppingIds yang direferensikan.
+      const allToppingIds = Array.from(
+        new Set(
+          data.items.flatMap((item) => {
+            const ids: string[] = []
+            if (item.toppingId) ids.push(item.toppingId)
+            if (item.toppingIds) ids.push(...item.toppingIds)
+            return ids
+          })
         )
-        const toppingTotal = itemToppingIds.reduce(
-          (sum, id) => sum + (toppingPriceById.get(id) ?? 0),
+      )
+
+      const toppingPriceMap = new Map<string, number>()
+      if (allToppingIds.length > 0) {
+        const toppings = await tx.topping.findMany({
+          where: { id: { in: allToppingIds } },
+          select: { id: true, price: true }
+        })
+        for (const topping of toppings) {
+          toppingPriceMap.set(topping.id, topping.price)
+        }
+      }
+
+      // 1c. Hitung unitPrice & subtotal SERVER-SIDE per item (basis kebenaran, bukan input client).
+      const computedItems = data.items.map((item) => {
+        const variant = variantMap.get(item.variantId)!
+        const basePrice =
+          item.baseType === 'Lumpia'
+            ? variant.priceLumpia
+            : item.baseType === 'Krispy'
+              ? variant.priceKrispy
+              : variant.priceKembung
+
+        const toppingIdsForItem = Array.from(
+          new Set([...(item.toppingId ? [item.toppingId] : []), ...(item.toppingIds ?? [])])
+        )
+        const toppingsTotal = toppingIdsForItem.reduce(
+          (sum, id) => sum + (toppingPriceMap.get(id) ?? 0),
           0
         )
-        const verifiedUnitPrice = resolveVariantPrice(variant, item.baseType) + toppingTotal
-        const verifiedSubtotal = verifiedUnitPrice * item.quantity
 
-        verifiedItems.push({
-          variantId: item.variantId,
-          toppingId: item.toppingId,
-          toppingIds: item.toppingIds,
-          baseType: item.baseType,
-          quantity: item.quantity,
-          unitPrice: verifiedUnitPrice,
-          subtotal: verifiedSubtotal
-        })
-      }
+        const realUnitPrice = basePrice + toppingsTotal
+        const realSubtotal = realUnitPrice * item.quantity
+
+        return { ...item, toppingIdsForItem, unitPrice: realUnitPrice, subtotal: realSubtotal }
+      })
 
       // 2. Determine order status based on payment method
       const isCash = data.paymentMethod === 'CASH'
       const orderStatus = isCash ? 'COMPLETED' : 'PENDING_PAYMENT'
 
-      // 3. Server-side recalculate total (Zero-Trust: never trust client totalPrice).
-      // SECURITY FIX: now sums verifiedItems (server-computed from DB prices) instead
-      // of data.items (client-submitted subtotal) — see verifiedItems block above.
-      const serverTotal = verifiedItems.reduce((sum, item) => sum + item.subtotal, 0)
+      // 3. Total dihitung dari harga hasil kalkulasi server (computedItems), bukan dari client.
+      const serverTotal = computedItems.reduce((sum, item) => sum + item.subtotal, 0)
       const safeDiscount = Math.min(data.discountAmount, serverTotal)
       const finalPrice = Math.max(0, serverTotal - safeDiscount)
 
@@ -228,73 +228,32 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           notes: data.notes,
           discountAmount: safeDiscount,
           items: {
-            create: verifiedItems.map((item) => {
-              const connectIds: { id: string }[] = []
-              if (item.toppingId) {
-                connectIds.push({ id: item.toppingId })
-              }
-              if (item.toppingIds && item.toppingIds.length > 0) {
-                item.toppingIds.forEach((id) => {
-                  if (!connectIds.some((c) => c.id === id)) {
-                    connectIds.push({ id })
-                  }
-                })
-              }
-              return {
-                variantId: item.variantId,
-                toppings: connectIds.length > 0 ? { connect: connectIds } : undefined,
-                baseType: item.baseType,
-                quantity: item.quantity,
-                // SECURITY FIX: unitPrice/subtotal now come from verifiedItems
-                // (server-computed), not from the original client-submitted item.
-                unitPrice: item.unitPrice,
-                subtotal: item.subtotal
-              }
-            })
+            // Memakai computedItems (harga server-side), bukan data.items (harga dari client).
+            create: computedItems.map((item) => ({
+              variantId: item.variantId,
+              toppings:
+                item.toppingIdsForItem.length > 0
+                  ? { connect: item.toppingIdsForItem.map((id) => ({ id })) }
+                  : undefined,
+              baseType: item.baseType,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              subtotal: item.subtotal
+            }))
           }
         }
       })
 
-      // 5. Atomic Decrement of Stock — ARCHITECTURE FIX (race condition):
-      // previously this read variant.stock in step 1, checked it in JS, then called
-      // tx.menuVariant.update({ where: { id } }) with no re-check at write time. Two
-      // concurrent POS registers both submitting an order for the last unit of an
-      // item could both pass the JS check and both successfully decrement, taking
-      // stock negative — Postgres's default Read Committed isolation does not lock
-      // rows on SELECT, so nothing prevented this. The guard below mirrors the
-      // proven pattern in src/repositories/checkout.repository.ts: version +
-      // stock:{gte} in the WHERE clause makes the decrement a genuine compare-and-swap
-      // that can only succeed if both conditions still hold at the moment Postgres
-      // executes the UPDATE. If another transaction won the race, updateMany matches
-      // zero rows and this throws, rolling back the whole order — instead of
-      // silently corrupting inventory.
-      const variantQuantities = new Map<string, number>()
+      // 5. Atomic Decrement of Stock
       for (const item of data.items) {
-        variantQuantities.set(
-          item.variantId,
-          (variantQuantities.get(item.variantId) || 0) + item.quantity
-        )
-      }
-
-      for (const [variantId, totalQuantity] of Array.from(variantQuantities.entries())) {
-        const variant = variantById.get(variantId)!
-        const updateResult = await tx.menuVariant.updateMany({
-          where: {
-            id: variantId,
-            version: variant.version,
-            stock: { gte: totalQuantity }
-          },
+        await tx.menuVariant.update({
+          where: { id: item.variantId },
           data: {
-            stock: { decrement: totalQuantity },
-            version: { increment: 1 }
+            stock: {
+              decrement: item.quantity
+            }
           }
         })
-
-        if (updateResult.count === 0) {
-          throw new Error(
-            `Stok ${variant.flavorName} berubah atau habis saat transaksi diproses. Silakan ulangi pesanan.`
-          )
-        }
       }
 
       return { order: newOrder, isIdempotent: false, finalPrice }

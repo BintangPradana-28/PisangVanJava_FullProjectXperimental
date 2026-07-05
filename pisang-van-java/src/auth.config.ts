@@ -29,6 +29,7 @@ export const authConfig = {
         token.id = user.id
         token.role = (user as any).role
         token.isBanned = (user as any).isBanned
+        token.twoFactorEnabled = (user as any).twoFactorEnabled ?? false
 
         // Inject sessionId
         const { nanoid } = await import('nanoid')
@@ -64,11 +65,12 @@ export const authConfig = {
           const { prisma } = await import('@/lib/prisma')
           const dbUser = await prisma.user.findUnique({
             where: { id: token.id as string },
-            select: { role: true, isBanned: true }
+            select: { role: true, isBanned: true, twoFactorEnabled: true }
           })
           if (dbUser) {
             token.role = dbUser.role
             token.isBanned = dbUser.isBanned
+            token.twoFactorEnabled = dbUser.twoFactorEnabled
           }
           token.lastChecked = now
         } catch (e) {
@@ -83,6 +85,7 @@ export const authConfig = {
         session.user.id = (token.id as string) || (token.sub as string)
         session.user.role = (token.role as any) || 'CUSTOMER'
         session.user.isBanned = token.isBanned as boolean
+        session.user.twoFactorEnabled = (token.twoFactorEnabled as boolean) ?? false
         session.user.sessionId = token.sessionId as string
 
         // ─── SUPABASE JOSE JWT BRIDGE ──────────────────────────────────────

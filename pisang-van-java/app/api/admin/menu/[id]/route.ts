@@ -2,14 +2,24 @@ import { revalidatePath } from 'next/cache'
 import { type NextRequest, NextResponse } from 'next/server'
 import { sseEmitter } from '@/lib/eventEmitter'
 import { prisma } from '@/lib/prisma'
-import DOMPurify from '@/lib/sanitize'
+import { stripHtmlTags } from '@/lib/sanitize'
 import { auth } from '@/src/auth'
 import { updateMenuVariantSchema } from '@/src/features/menu/schemas'
-import { CACHE_PATHS } from '@/src/lib/cache-keys'
 import { StockManager } from '@/src/lib/stock-manager'
 // GET /api/admin/menu/[id]
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    // SECURITY FIX (audit QA & Security): endpoint saudara ini (GET /api/admin/menu
+    // collection) sebelumnya punya celah yang sama — percaya middleware sepenuhnya tanpa
+    // cek independen. Diselaraskan di sini juga untuk konsistensi defense-in-depth.
+    const session = await auth()
+    if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user?.role || '')) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized: Admin access required' },
+        { status: 403 }
+      )
+    }
+
     const { id } = await params
     const variant = await prisma.menuVariant.findUnique({
       where: { id, isDeleted: false }
@@ -71,11 +81,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     const dataToUpdate = { ...parsedData.data }
-    if (dataToUpdate.flavorName)
-      dataToUpdate.flavorName = DOMPurify.sanitize(dataToUpdate.flavorName)
+    if (dataToUpdate.flavorName) dataToUpdate.flavorName = stripHtmlTags(dataToUpdate.flavorName)
     if (dataToUpdate.deskripsi_topping)
-      dataToUpdate.deskripsi_topping = DOMPurify.sanitize(dataToUpdate.deskripsi_topping)
-    if (dataToUpdate.imageUrl) dataToUpdate.imageUrl = DOMPurify.sanitize(dataToUpdate.imageUrl)
+      dataToUpdate.deskripsi_topping = stripHtmlTags(dataToUpdate.deskripsi_topping)
+    if (dataToUpdate.imageUrl) dataToUpdate.imageUrl = stripHtmlTags(dataToUpdate.imageUrl)
 
     const updatedVariant = await prisma.menuVariant.update({
       where: { id },
@@ -105,8 +114,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     sseEmitter.emit('menuUpdated', { action: 'UPDATE', data: updatedVariant })
 
     // 🛡️ ZERO-TRUST REVALIDATION
-    revalidatePath(CACHE_PATHS.ROOT)
-    revalidatePath(CACHE_PATHS.MENU_SPESIAL)
+    revalidatePath('/')
+    revalidatePath('/menu-spesial')
+    // revalidateTag("menu-data");
 
     return NextResponse.json({ success: true, data: updatedVariant })
   } catch (error) {
@@ -163,8 +173,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     sseEmitter.emit('menuUpdated', { action: 'DELETE', data: { id } })
 
     // 🛡️ ZERO-TRUST REVALIDATION
-    revalidatePath(CACHE_PATHS.ROOT)
-    revalidatePath(CACHE_PATHS.MENU_SPESIAL)
+    revalidatePath('/')
+    revalidatePath('/menu-spesial')
+    // revalidateTag("menu-data");
 
     return NextResponse.json({ success: true, message: 'Variant berhasil dihapus' })
   } catch (error) {

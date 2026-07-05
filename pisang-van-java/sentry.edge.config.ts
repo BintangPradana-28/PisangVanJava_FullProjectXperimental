@@ -6,12 +6,13 @@
 import * as Sentry from '@sentry/nextjs'
 
 Sentry.init({
-  dsn: 'https://25061a893fc72afab9980dee8176f341@o4511473006084096.ingest.us.sentry.io/4511473128833024',
+  // Use environment variable for Sentry DSN
+  dsn: process.env.SENTRY_DSN,
 
   // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1,
+  tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
 
-  // Enable sending user PII (Personally Identifiable Information)
+  // Disable sending user PII (Personally Identifiable Information) in compliance with UU PDP / UU ITE
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
-  sendDefaultPii: true
+  sendDefaultPii: false
 })

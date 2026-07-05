@@ -1,25 +1,21 @@
+import crypto from 'node:crypto'
 import { OrderStatus, type Prisma } from '@prisma/client'
 import * as Sentry from '@sentry/nextjs'
-import crypto from 'node:crypto'
 import { type NextRequest, NextResponse } from 'next/server'
 import { sendWhatsAppNotification } from '@/lib/notifications'
 import { prisma } from '@/lib/prisma'
 import { buildOrderStatusPushPayload, sendPushNotification } from '@/lib/push'
 import { redis } from '@/lib/redis'
 import { sendOrderStatusEmail } from '@/src/features/payment/email'
-import { env } from '@/src/env'
 
-// SECURITY FIX: a plain `token !== expectedToken` string comparison is vulnerable to
-// a timing attack — JS string inequality short-circuits at the first mismatched
-// character, so response time leaks how many leading characters were guessed
-// correctly, letting an attacker recover the token byte-by-byte over many requests.
-// crypto.timingSafeEqual() takes constant time regardless of where strings diverge.
-// Mirrors the same pattern already used in src/features/pos/utils/verifyApprovalToken.ts.
-function timingSafeTokenEqual(provided: string, expected: string): boolean {
-  const providedBuffer = Buffer.from(provided)
-  const expectedBuffer = Buffer.from(expected)
-  if (providedBuffer.length !== expectedBuffer.length) return false
-  return crypto.timingSafeEqual(providedBuffer, expectedBuffer)
+/**
+ * Timing-safe token comparison. Returns false (never throws) on any length mismatch.
+ */
+function safeTokenEquals(a: string, b: string): boolean {
+  const bufA = Buffer.from(a)
+  const bufB = Buffer.from(b)
+  if (bufA.length !== bufB.length) return false
+  return crypto.timingSafeEqual(bufA, bufB)
 }
 
 // Allowed status mapping from Biteship to DB OrderStatus
@@ -35,11 +31,7 @@ const STATUS_MAP: Record<string, OrderStatus> = {
 export async function POST(req: NextRequest) {
   try {
     const payload = await req.json()
-    // SECURITY FIX: previously logged the ENTIRE raw payload via JSON.stringify,
-    // which can include customer name/phone and delivery address through the
-    // `courier`/destination fields. That data was flowing into server logs and
-    // Sentry breadcrumbs. Only non-PII identifiers are logged now.
-    console.info('[BITESHIP WEBHOOK] Received event:', payload?.event, 'order_id:', payload?.order_id)
+    console.info('[BITESHIP WEBHOOK] Received payload:', JSON.stringify(payload))
 
     const { event, order_id, status, courier } = payload
 
@@ -50,10 +42,35 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Zero-Trust Security: Optional token authentication via URL query parameter or header
-    const token = req.nextUrl.searchParams.get('token') || req.headers.get('x-biteship-token')
-    const expectedToken = env.BITESHIP_WEBHOOK_TOKEN
-    if (expectedToken && (!token || !timingSafeTokenEqual(token, expectedToken))) {
+    // SECURITY FIX (audit QA & Security): sebelumnya `if (expectedToken && token !== expectedToken)`
+    // — kalau BITESHIP_WEBHOOK_TOKEN tidak di-set, verifikasi ini otomatis DILEWATI dan webhook
+    // jadi terbuka untuk siapa pun (bisa memalsukan status order jadi DELIVERED/CANCELED,
+    // memicu notifikasi WA/email palsu ke pelanggan asli). Sekarang fail-closed: token WAJIB
+    // dikonfigurasi di server, dan dibandingkan dengan timing-safe comparison (bukan `!==`).
+    // Header lebih diutamakan; query-param dipertahankan sebagai fallback kompatibilitas
+    // (beberapa provider webhook hanya bisa dikonfigurasi lewat URL), tapi header disarankan
+    // karena query string bisa tercatat di access log / proxy log.
+    const expectedToken = process.env.BITESHIP_WEBHOOK_TOKEN
+    if (!expectedToken) {
+      // ADDITION (QA & Security): sebelumnya cuma console.error, gampang terlewat di
+      // stdout. Sentry.captureMessage memastikan misconfiguration ini benar-benar
+      // memicu alert, bukan diam-diam bikin update status pengiriman berhenti bekerja
+      // tanpa disadari siapa pun sampai ada pelanggan komplain.
+      Sentry.captureMessage(
+        '[SECURITY][MISCONFIG] BITESHIP_WEBHOOK_TOKEN belum di-set — semua webhook Biteship ditolak.',
+        'error'
+      )
+      console.error(
+        '[SECURITY] BITESHIP_WEBHOOK_TOKEN belum dikonfigurasi di server — menolak semua webhook demi keamanan.'
+      )
+      return NextResponse.json(
+        { success: false, error: 'Webhook not configured' },
+        { status: 503 }
+      )
+    }
+
+    const token = req.headers.get('x-biteship-token') || req.nextUrl.searchParams.get('token')
+    if (!token || !safeTokenEquals(token, expectedToken)) {
       console.warn('[SECURITY] Unauthorized Biteship webhook attempt detected')
       return NextResponse.json(
         { success: false, error: 'Unauthorized: Invalid token' },

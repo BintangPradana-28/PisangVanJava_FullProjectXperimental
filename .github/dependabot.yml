@@ -1,39 +1,44 @@
-# .github/dependabot.yml
-# RAG Source: package.json (pisang-van-java) — 91 dependencies with no automated
-# update mechanism found during the DevOps audit. Weekly cadence chosen over daily
-# to avoid PR spam on a project this size; grouped patch/minor updates into a single
-# PR per ecosystem so review isn't 20 separate notifications every week.
+# ADDITION (QA & Security audit): sebelumnya tidak ada bot update dependency otomatis —
+# kerentanan di package pihak ketiga hanya akan diketahui kalau ada yang audit manual.
 version: 2
 updates:
-  # Main application dependencies
-  - package-ecosystem: 'npm'
-    directory: '/pisang-van-java'
+  # npm/pnpm dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
     schedule:
-      interval: 'weekly'
-      day: 'monday'
+      interval: "weekly"
+      day: "monday"
     open-pull-requests-limit: 10
     groups:
+      # Kelompokkan patch/minor update non-major jadi satu PR supaya tidak membanjiri,
+      # tapi tetap pisahkan major version update (breaking change) jadi PR sendiri-sendiri
+      # agar bisa direview lebih hati-hati.
       minor-and-patch:
         update-types:
-          - 'minor'
-          - 'patch'
-    ignore:
-      # Major version bumps reviewed manually — Next.js/React/Prisma major upgrades
-      # typically need migration steps that shouldn't land via an automated PR.
-      - dependency-name: 'next'
-        update-types: ['version-update:semver-major']
-      - dependency-name: 'react'
-        update-types: ['version-update:semver-major']
-      - dependency-name: 'react-dom'
-        update-types: ['version-update:semver-major']
-      - dependency-name: '@prisma/client'
-        update-types: ['version-update:semver-major']
-      - dependency-name: 'prisma'
-        update-types: ['version-update:semver-major']
+          - "minor"
+          - "patch"
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "chore(deps)"
 
-  # GitHub Actions versions used across ci.yml, security.yml, codeql.yml, backup.yml
-  - package-ecosystem: 'github-actions'
-    directory: '/'
+  # GitHub Actions versions (mis. actions/checkout, github/codeql-action)
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
-      interval: 'weekly'
-      day: 'monday'
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "ci"
+
+  # Docker base image (node:20-alpine di Dockerfile)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "docker"

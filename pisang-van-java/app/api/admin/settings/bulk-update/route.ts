@@ -3,7 +3,6 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/src/auth'
-import { CACHE_PATHS } from '@/src/lib/cache-keys'
 
 // ABSOLUTE QUARANTINE: Zod Schema to strictly validate inputs
 // Strips out script tags or highly suspicious HTML payloads as a basic XSS defense mechanism
@@ -67,7 +66,7 @@ export async function POST(req: NextRequest) {
     })
 
     // 🛡️ ZERO-TRUST REVALIDATION: Hancurkan cache lama agar perubahan instan
-    revalidatePath(CACHE_PATHS.ROOT, 'layout')
+    revalidatePath('/', 'layout')
 
     // DATA MASKING: Return generic success without leaking database structure
     return NextResponse.json(

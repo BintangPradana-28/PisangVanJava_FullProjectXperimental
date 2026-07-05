@@ -1,0 +1,8 @@
+# ADDITION (QA & Security audit): security.txt (RFC 9116).
+# TODO sebelum deploy: pastikan alamat email di bawah adalah inbox yang benar-benar
+# dipantau tim (ganti kalau bukan security@pisangvanjava.com), dan perbarui tanggal
+# "Expires" setiap tahun.
+Contact: mailto:security@pisangvanjava.com
+Expires: 2027-07-03T00:00:00.000Z
+Preferred-Languages: id, en
+Canonical: https://pisangvanjava.com/.well-known/security.txt

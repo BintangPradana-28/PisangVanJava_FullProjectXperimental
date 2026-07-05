@@ -24,8 +24,6 @@ interface SearchDialogProps {
 }
 
 let menuCache: Variant[] | null = null
-let menuCacheFetchedAt = 0
-const MENU_CACHE_TTL_MS = 90_000 // 90s — matches /api/menu's own ISR window (60s) + buffer
 
 export default function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
   const { t } = useLanguage()
@@ -54,9 +52,8 @@ export default function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
   useEffect(() => {
     if (!isOpen) return
 
-    const isCacheFresh = menuCache && Date.now() - menuCacheFetchedAt < MENU_CACHE_TTL_MS
-    if (isCacheFresh) {
-      setVariants(menuCache as Variant[])
+    if (menuCache) {
+      setVariants(menuCache)
       return
     }
 
@@ -67,7 +64,6 @@ export default function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
         const json = await res.json()
         if (json.success && json.data?.variants) {
           menuCache = json.data.variants
-          menuCacheFetchedAt = Date.now()
           setVariants(json.data.variants)
         }
       } catch (err) {

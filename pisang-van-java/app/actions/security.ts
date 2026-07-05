@@ -206,6 +206,77 @@ export async function deleteAccount(formData: FormData) {
 }
 
 /**
+ * 6. Ekspor Data Pribadi (Hak Portabilitas Data — UU PDP Pasal 8)
+ *
+ * ADDITION (audit QA & Security): deleteAccount() di atas sudah mengimplementasikan hak
+ * hapus/lupakan data, tapi belum ada jalur untuk hak portabilitas data (mengunduh salinan
+ * data pribadi milik sendiri dalam format yang bisa dibaca). Mengembalikan objek JSON,
+ * bukan file — pemicu download file dilakukan di sisi client (SecurityClient.tsx) memakai
+ * Blob, supaya server action tetap sederhana dan tidak menyentuh filesystem server.
+ */
+export async function exportUserData() {
+  const session = await auth()
+  if (!session?.user?.id) throw new Error('UNAUTHORIZED')
+
+  const userId = session.user.id
+
+  const [user, addresses, favorites, reviews, orders] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        koinPisang: true,
+        referralCode: true,
+        referredBy: true,
+        createdAt: true,
+        notificationPrefs: true
+        // Sengaja TIDAK menyertakan passwordHash, twoFactorSecret, atau field sensitif
+        // internal lain — ekspor ini untuk pemilik data, bukan salinan kredensial auth.
+      }
+    }),
+    prisma.address.findMany({ where: { userId } }),
+    prisma.favorite.findMany({
+      where: { userId },
+      include: { variant: { select: { flavorName: true } } }
+    }),
+    prisma.review.findMany({ where: { userId } }),
+    prisma.order.findMany({
+      where: { userId },
+      select: {
+        id: true,
+        createdAt: true,
+        status: true,
+        totalPrice: true,
+        deliveryMethod: true,
+        items: {
+          select: {
+            baseType: true,
+            quantity: true,
+            unitPrice: true,
+            variant: { select: { flavorName: true } }
+          }
+        }
+      }
+    })
+  ])
+
+  if (!user) throw new Error('USER_NOT_FOUND')
+
+  return {
+    exportedAt: new Date().toISOString(),
+    profile: user,
+    addresses,
+    favorites,
+    reviews,
+    orderHistory: orders
+  }
+}
+
+/**
  * 5. Update Preferensi Notifikasi
  */
 export async function updateNotificationPrefs(prefs: any) {

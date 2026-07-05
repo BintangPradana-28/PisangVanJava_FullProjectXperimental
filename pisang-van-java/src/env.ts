@@ -6,20 +6,7 @@ import { z } from 'zod'
 
 export const env = createEnv({
   server: {
-    // ARCHITECTURE FIX (audit item #7): DATABASE_URL is the one variable in this
-    // file with zero graceful-degradation path anywhere in the codebase — Prisma
-    // throws a raw, unhelpful connection error, and unlike MIDTRANS_SERVER_KEY
-    // (which has a dedicated setup-instructions page at
-    // app/(user)/payment/[orderId]/page.tsx) there's no equivalent friendly
-    // fallback UI for a missing database. Making it required means the app fails
-    // fast and clearly at boot instead of failing confusingly on the first request
-    // that touches Prisma. Everything else below is left .optional() deliberately:
-    // this project's convention (see e.g. src/services/shipping.service.ts,
-    // lib/notifications.ts) is that third-party integrations detect a missing key
-    // and no-op / show a setup message rather than crash — flipping those to
-    // required would fight that intentional "clone and run without every secret
-    // configured yet" design, not fix a bug.
-    DATABASE_URL: z.string().min(1, 'DATABASE_URL wajib diisi — aplikasi tidak bisa boot tanpa koneksi database'),
+    DATABASE_URL: z.string().optional(),
     DIRECT_URL: z.string().optional(),
     AUTH_SECRET: z.string().optional(),
     MIDTRANS_SERVER_KEY: z.string().optional(),
@@ -39,11 +26,6 @@ export const env = createEnv({
     CLOUDINARY_API_KEY: z.string().min(1).optional(),
     CLOUDINARY_CLOUD_NAME: z.string().min(1).optional(),
     BITESHIP_API_KEY: z.string().optional(),
-    // ARCHITECTURE FIX (audit item #7): was read directly via raw process.env in
-    // app/api/webhooks/biteship/route.ts, bypassing this validated env layer
-    // entirely. Declared here so it goes through the same validation/typing as
-    // every other secret in the project.
-    BITESHIP_WEBHOOK_TOKEN: z.string().min(16).optional(),
 
     // ✅ Web Push VAPID (server-side only)
     // RAG Source: lib/push.ts — VAPID keys consumed server-side by web-push library
@@ -87,7 +69,6 @@ export const env = createEnv({
     CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
     CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
     BITESHIP_API_KEY: process.env.BITESHIP_API_KEY,
-    BITESHIP_WEBHOOK_TOKEN: process.env.BITESHIP_WEBHOOK_TOKEN,
 
     // Web Push VAPID
     VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
@@ -106,3 +87,32 @@ export const env = createEnv({
   skipValidation: !!process.env.SKIP_ENV_VALIDATION || process.env.npm_lifecycle_event === 'lint',
   emptyStringAsUndefined: true
 })
+
+/**
+ * Zero-Trust secret resolver untuk AUTH_SECRET.
+ *
+ * SECURITY FIX: sebelumnya beberapa file (src/auth.config.ts,
+ * src/features/pos/utils/verifyApprovalToken.ts, app/api/pos/auth-pin/route.ts)
+ * masing-masing membaca `process.env.NEXTAUTH_SECRET` secara langsung dengan fallback
+ * ke string hardcoded ('default_secret_key_change_me_in_production' /
+ * 'fallback_secret_for_local_only'). Karena .env.example mendokumentasikan nama
+ * AUTH_SECRET (bukan NEXTAUTH_SECRET), deployment yang mengikuti .env.example akan
+ * selalu jatuh ke fallback publik tersebut — melemahkan signing session JWT DAN
+ * token approval PIN Manager POS.
+ *
+ * Fungsi ini adalah SATU-SATUNYA sumber resolusi secret: menerima AUTH_SECRET atau
+ * NEXTAUTH_SECRET (kompatibilitas mundur), dan fail-closed (throw) jika keduanya
+ * kosong — bukan diam-diam memakai nilai default yang bisa ditebak siapa pun.
+ */
+export function getAuthSecret(): string {
+  const secret = env.AUTH_SECRET
+  if (!secret) {
+    throw new Error(
+      '[SECURITY] AUTH_SECRET (atau NEXTAUTH_SECRET) belum di-set di environment. ' +
+        'Aplikasi tidak boleh berjalan tanpa secret ini karena dipakai untuk menandatangani ' +
+        'session JWT dan token approval PIN Manager POS. Generate dengan: ' +
+        'openssl rand -base64 32, lalu set sebagai AUTH_SECRET.'
+    )
+  }
+  return secret
+}

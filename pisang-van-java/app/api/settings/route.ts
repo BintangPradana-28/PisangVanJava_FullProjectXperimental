@@ -5,7 +5,6 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { logAudit } from '@/lib/audit'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/src/auth'
-import { CACHE_PATHS } from '@/src/lib/cache-keys'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,7 +28,7 @@ export async function PUT(req: NextRequest) {
   await logAudit('UPDATE_SETTINGS', 'SiteSetting', 'bulk', updates)
 
   // 🛡️ ZERO-TRUST REVALIDATION: Hancurkan seluruh static cache layout dan halaman depan
-  revalidatePath(CACHE_PATHS.ROOT, 'layout')
+  revalidatePath('/', 'layout')
 
   return NextResponse.json({ success: true, data: results })
 }

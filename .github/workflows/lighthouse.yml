@@ -3,18 +3,25 @@ name: Lighthouse CI
 on:
   schedule:
     # Daily at 02:00 UTC (09:00 WIB) — low-traffic window
-    - cron: '0 2 * * *'
+    - cron: "0 2 * * *"
   workflow_dispatch: {}
 
 jobs:
   lighthouse:
     name: Performance & Accessibility Audit
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
+      # Same SHA already active in backup.yml/security.yml/codeql.yml — verified
+      # by direct file inspection, not fabricated.
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
+      # NOTE: treosh/lighthouse-ci-action left on @v11 (not SHA-pinned) — could not
+      # verify its commit SHA via the GitHub API in this session (rate-limited).
+      # To pin it yourself: curl -s https://api.github.com/repos/treosh/lighthouse-ci-action/git/refs/tags/v11
       # RAG Source: app/(user)/page.tsx (unstable_cache wraps Prisma calls, no
       # force-dynamic export) — a local `next build` in this runner would attempt
       # static prerendering against a live DATABASE_URL that doesn't exist here.

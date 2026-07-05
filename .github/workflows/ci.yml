@@ -20,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
@@ -53,11 +53,53 @@ jobs:
       - name: TypeScript Type Check
         run: npx tsc --noEmit
 
-      - name: Security & Unit Tests
-        run: pnpm test
+      # ── ADDITION (QA & Security): step di bawah ini sebelumnya TIDAK ADA meski job
+      # ini sudah dinamai "Security Audit & Unit Tests" — tool-nya (pnpm audit, depcheck,
+      # secretlint) sudah ada di package.json tapi tidak pernah benar-benar dipanggil di CI.
+      - name: Dependency Vulnerability Audit
+        run: pnpm audit --audit-level=high
+
+      - name: Unused/Phantom Dependency Check
+        run: pnpm depcheck
+
+      - name: Secret Scanning (CI backstop)
+        # Backstop di CI karena pre-commit hook (.husky/pre-commit) bisa dilewati dengan
+        # `git commit --no-verify` atau kalau seseorang clone tanpa install husky.
+        run: pnpm secretlint
+
+      - name: Security & Unit Tests (with coverage)
+        run: pnpm test:coverage
+
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
       - name: E2E Tests (Playwright)
         run: pnpm test:e2e
+
+  container-scan:
+    name: Container Image Vulnerability Scan
+    runs-on: ubuntu-latest
+    # ADDITION (QA & Security): Dockerfile ada di repo untuk self-hosting, tapi image-nya
+    # sebelumnya tidak pernah di-scan untuk CVE pada base image / OS packages.
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        run: docker build -t pisang-van-java:ci-scan .
+
+      - name: Scan Image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: "pisang-van-java:ci-scan"
+          format: "table"
+          severity: "CRITICAL,HIGH"
+          exit-code: "1"
+          ignore-unfixed: true

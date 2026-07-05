@@ -2,6 +2,7 @@ import crypto from 'node:crypto'
 import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { OrderStatus, Prisma } from '@prisma/client'
+import * as Sentry from '@sentry/nextjs'
 import { logger } from '@/src/lib/logger'
 
 function safeSecretEquals(a: string, b: string): boolean {
@@ -20,6 +21,10 @@ export async function GET(req: NextRequest) {
   const cronSecret = process.env.CRON_SECRET
   if (!cronSecret) {
     logger.error(new Error('CRON_SECRET missing'), '[SECURITY] CRON_SECRET belum dikonfigurasi — menolak semua request cron demi keamanan.')
+    Sentry.captureMessage(
+      '[SECURITY][MISCONFIG] CRON_SECRET belum di-set — semua cron job (expire order, cleanup log) berhenti berjalan.',
+      'error'
+    )
     return NextResponse.json({ success: false, error: 'Cron not configured' }, { status: 503 })
   }
 

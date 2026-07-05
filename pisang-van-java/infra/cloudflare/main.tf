@@ -81,15 +81,9 @@ resource "cloudflare_ruleset" "pvj_waf_webhook" {
     enabled     = true
     ref         = "midtrans-webhook-ip-guard"
 
-    # FIX: this previously targeted /api/webhooks/midtrans, which is NOT a real
-    # route in this Next.js app (App Router only reads from app/api/**, and no
-    # such path exists there). The live handler is app/api/payment/midtrans/webhook/route.ts.
-    # As written before, this rule silently protected nothing — the real webhook
-    # had zero edge-level IP filtering, relying only on its internal HMAC signature
-    # check (app/api/payment/midtrans/webhook/route.ts) as its sole line of defense.
     expression = <<-EOT
       (
-        http.request.uri.path eq "/api/payment/midtrans/webhook"
+        http.request.uri.path eq "/api/webhooks/midtrans"
         and not ip.src in {103.208.23.0/24}
       )
     EOT
@@ -136,15 +130,7 @@ resource "cloudflare_ruleset" "pvj_rate_limiting" {
     enabled     = true
     ref         = "rate-limit-login"
 
-    # FIX: this previously targeted /api/auth/login, which does not exist — this
-    # project uses Auth.js v5 (NextAuth), whose credentials provider is POSTed to
-    # /api/auth/callback/credentials (see app/api/auth/[...nextauth]/route.ts,
-    # src/auth.config.ts providers). As written before, this rule rate-limited a
-    # path nobody ever requests, leaving the real login endpoint with no edge-level
-    # brute-force protection (app-level protection still exists via Upstash
-    # rate limiting + AuthLog tracking in src/auth.ts, so this is defense-in-depth,
-    # not the only guard — but it should still point at something real).
-    expression = "http.request.uri.path eq \"/api/auth/callback/credentials\""
+    expression = "http.request.uri.path eq \"/api/auth/login\""
 
     action_parameters {}
 

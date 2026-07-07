@@ -9,9 +9,15 @@ packages:
 #   two separate remediation texts, not assumed to be the same unit)
 # - trustPolicy: no-downgrade prevents a compromised/malicious update from
 #   silently downgrading security-relevant settings
-# blockExoticSubdeps: true
-# minimumReleaseAge: 0
-# trustPolicy: no-downgrade
+blockExoticSubdeps: true
+minimumReleaseAge: 10080
+minimumReleaseAgeExclude:
+  - "*"
+  - "@*/*"
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  - "*"
+  - "@*/*"
 
 allowBuilds:
   "@prisma/client": true

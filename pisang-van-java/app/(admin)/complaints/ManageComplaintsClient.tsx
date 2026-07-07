@@ -157,10 +157,11 @@ export default function ManageComplaintsClient({
 
             <form onSubmit={handleResolve} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
+                <label htmlFor="adminResponse" className="block text-xs font-bold text-gray-700 mb-1">
                   Pesan Tanggapan (Terlihat oleh pelanggan)
                 </label>
                 <textarea
+                  id="adminResponse"
                   value={adminResponse}
                   onChange={(e) => setAdminResponse(e.target.value)}
                   className="w-full border rounded-[4px] px-4 py-3 focus:ring-2 focus:ring-brown-500 outline-none h-32 resize-none text-sm"
@@ -169,15 +170,17 @@ export default function ManageComplaintsClient({
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
+                <label htmlFor="compensationKoin" className="block text-xs font-bold text-gray-700 mb-1">
                   Kompensasi Koin Pisang (Opsional)
                 </label>
                 <input
+                  id="compensationKoin"
                   type="number"
                   value={compensationKoin}
                   onChange={(e) => setCompensationKoin(Number(e.target.value))}
                   className="w-full border rounded-[4px] px-4 py-3 focus:ring-2 focus:ring-orange-500 outline-none"
                   min="0"
+                  placeholder="0"
                 />
                 <p className="text-[10px] text-gray-500 mt-1">
                   Kosongkan (0) jika tidak ada kompensasi. Koin akan otomatis ditambahkan ke saldo

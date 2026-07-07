@@ -8,6 +8,8 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 10
     groups:
       # Kelompokkan patch/minor update non-major jadi satu PR supaya tidak membanjiri,
@@ -29,6 +31,8 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+    cooldown:
+      default-days: 7
     labels:
       - "dependencies"
       - "ci"
@@ -39,6 +43,8 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+    cooldown:
+      default-days: 7
     labels:
       - "dependencies"
       - "docker"

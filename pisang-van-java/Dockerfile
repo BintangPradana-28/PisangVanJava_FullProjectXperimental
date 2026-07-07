@@ -1,16 +1,16 @@
 FROM node:20-alpine AS base
 RUN apk add --no-cache libc6-compat
+RUN npm install -g pnpm
 WORKDIR /app
 
 FROM base AS deps
-COPY package.json ./
-RUN npm install
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npx prisma generate
-RUN npm run build
+RUN pnpm build
 
 FROM base AS runner
 ENV NODE_ENV=production

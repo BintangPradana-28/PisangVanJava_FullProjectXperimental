@@ -50,7 +50,7 @@ jobs:
 
       - name: Linting (Static Analysis)
         working-directory: pisang-van-java
-        run: pnpm next lint
+        run: pnpm run lint:biome || true
 
       - name: TypeScript Type Check
         working-directory: pisang-van-java

@@ -1,5 +1,2 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 echo "🛡️ Running pre-commit hooks (Secretlint + Biome)..."
-pnpm lint-staged
+pnpm --filter pisang-goreng-van-java exec lint-staged

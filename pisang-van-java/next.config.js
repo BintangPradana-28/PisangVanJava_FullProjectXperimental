@@ -1,3 +1,4 @@
+const path = require('path')
 const { withSentryConfig } = require('@sentry/nextjs')
 
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
@@ -7,6 +8,10 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+
+  turbopack: {
+    root: path.join(__dirname, '..')
+  },
 
   // High-performance image formats & Edge caching
   images: {

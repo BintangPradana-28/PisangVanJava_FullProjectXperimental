@@ -27,6 +27,19 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.1] - 2026-07-02
+
+### Added
+- **Observability Playbook**: Created `docs/observability-playbook.md` detailing alert routing, failure mode runbooks, production log access, and PostHog event recommendations.
+- **Security Policy**: Initial placeholder `SECURITY.md` added.
+- **ARCHITECTURE.md Updates**: Added Sentry and PostHog observability sections.
+
+### Fixed
+- **Password Hashing Docs**: Corrected password hashing description in `ARCHITECTURE.md` from `Bcrypt` to `@node-rs/argon2` to align with the source code.
+- **Sentry Server Config**: Calibrated `tracesSampleRate` to be environment-aware (0.1 in production) to control cloud costs.
+
+---
+
 ## [1.0.0] - 2026-06-15
 
 ### Added

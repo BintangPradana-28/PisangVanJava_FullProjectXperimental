@@ -5,7 +5,7 @@ Proyek ini dibangun dengan standar **Enterprise-Grade Engineering** untuk menceg
 ## 1. Feature-Sliced Design (Domain-Driven)
 Kami meninggalkan struktur folder monolitik berbasis tipe (seperti memisahkan semua UI di `components/` dan semua logika di `lib/`). Kode sekarang dikelompokkan berdasarkan **Fitur/Domain**:
 
-- `src/features/auth/`: Segala sesuatu tentang login, hashing (Bcrypt), *session*, dan *middleware* NextAuth.
+- `src/features/auth/`: Segala sesuatu tentang login, hashing (Argon2), *session*, dan *middleware* NextAuth.
 - `src/features/menu/`: Komponen katalog menu, UI Kartu, logika CRUD menu, dan *upload* gambar.
 - `src/features/settings/`: Konfigurasi warung, integrasi UI peta, dan WhatsApp.
 
@@ -14,7 +14,7 @@ Prinsip Karantina (Isolation): Komponen dalam satu fitur tidak boleh mengimpor *
 ## 2. Zero Trust Security & Validasi
 - **Validasi Zod:** Semua *input form* dan *URL Parameters* harus divalidasi dengan skema Zod sebelum diproses atau menyentuh *database*.
 - **Otorisasi Middleware:** Setiap akses *endpoint API* mutasi data (POST, PUT, DELETE) wajib melewati pengecekan token/sesi.
-- **Enkripsi:** Password selalu di-hash satu arah menggunakan `bcryptjs`. Tidak ada password *plain-text*.
+- **Enkripsi:** Password selalu di-hash satu arah menggunakan `@node-rs/argon2`. Tidak ada password *plain-text*.
 
 ## 3. Flawless Database (Prisma)
 - **Soft Deletes:** Tidak menggunakan perintah `DELETE`. Rekaman ditandai dengan flag `isDeleted = true`.
@@ -26,6 +26,8 @@ Prinsip Karantina (Isolation): Komponen dalam satu fitur tidak boleh mengimpor *
 - **Dumb UI Components:** Komponen UI murni (*stateless*) untuk menjaga modularitas.
 - **Skeleton Loading & Optimistic UI:** Menghindari layar kosong saat antarmuka menunggu balasan server.
 - **Global Error Handling:** Semua *error* ditangkap, dicatat di server, dan hanya mengembalikan pesan *"Terjadi kesalahan pada server"* kepada klien (tanpa *stack trace* bocor).
+- **APM & Error Tracking (Sentry):** Terpasang di client/server/edge. Server config eksplisit `sendDefaultPii: false` untuk kepatuhan UU PDP/UU ITE — data pribadi pelanggan tidak terkirim ke Sentry. Session Replay hanya aktif di panel internal (`/dashboard`, `/kasir`, `/kitchen`) dengan `maskAllText`/`maskAllInputs` aktif; *storefront* publik tidak kena overhead Replay.
+- **Product Analytics (PostHog):** Terpisah dari error tracking, dipakai untuk analitik perilaku pengguna via `posthog-node`/`posthog-js`.
 
 ## 5. Dual Storage Providers (Decoupled Architecture)
 Kami memisahkan penyimpanan aset berdasarkan jenis data dan kebutuhan optimasi:

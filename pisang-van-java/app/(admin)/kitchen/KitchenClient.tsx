@@ -578,6 +578,7 @@ export default function KitchenClient({ initialOrders }: KitchenClientProps) {
 
           {/* Audio Unlock control */}
           <button
+            type="button"
             onClick={handleUnlockAudio}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
               isAudioUnlocked
@@ -624,6 +625,7 @@ export default function KitchenClient({ initialOrders }: KitchenClientProps) {
             </span>
             {connectionStatus !== 'connected' && (
               <button
+                type="button"
                 onClick={handleReconnect}
                 className="text-[10px] bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold px-2.5 py-1 rounded transition-colors ml-1 active:scale-95 border border-amber-600/30"
               >
@@ -695,8 +697,10 @@ export default function KitchenClient({ initialOrders }: KitchenClientProps) {
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => setDispatchingOrder(null)}
                 className="text-zinc-400 hover:text-zinc-200 text-sm font-bold"
+                aria-label="Tutup dialog pengiriman"
               >
                 ✕
               </button>
@@ -926,6 +930,7 @@ function OrderCard({
       {nextAction && (
         <div className="px-4 pb-4 shrink-0">
           <button
+            type="button"
             onClick={() => onStatusUpdate(order.id, order.status)}
             disabled={isUpdating}
             className={`w-full py-3.5 rounded-lg font-black text-sm uppercase tracking-wider transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-wait shadow-sm ${
@@ -937,6 +942,7 @@ function OrderCard({
             {isUpdating ? (
               <span className="flex items-center justify-center gap-2">
                 <svg className="w-4 h-4 animate-spin text-zinc-950" fill="none" viewBox="0 0 24 24">
+                  <title>Memuat</title>
                   <circle
                     className="opacity-25"
                     cx="12"

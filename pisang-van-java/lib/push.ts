@@ -16,6 +16,7 @@ import 'server-only'
 import webpush from 'web-push'
 
 import { redis } from './redis'
+import { prisma } from './prisma'
 
 // ─── VAPID Init ───────────────────────────────────────────────────────────────
 // Sourced from process.env directly (same pattern as lib/redis.ts).
@@ -104,6 +105,20 @@ export async function sendPushNotification(
   userId: string,
   payload: PushNotificationPayload
 ): Promise<void> {
+  // NEW: in-app notification row — independent of push subscription state.
+  try {
+    await prisma.notification.create({
+      data: {
+        userId,
+        title: payload.title,
+        body: payload.body,
+        link: payload.url
+      }
+    })
+  } catch (err) {
+    console.error('[PUSH] Failed to write in-app notification row:', err)
+  }
+
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
     console.warn('[PUSH] VAPID keys not configured — skipping push notification.')
     return

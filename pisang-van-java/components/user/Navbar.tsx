@@ -17,6 +17,7 @@ import {
   useCartStore
 } from '@/src/features/cart/stores/cart.store'
 import SearchDialog from './SearchDialog'
+import NotificationBell from '@/components/notifications/NotificationBell'
 
 const ShoppingBagIcon = () => (
   <svg
@@ -249,6 +250,9 @@ export default function Navbar() {
             >
               <Search className="w-5 h-5" />
             </button>
+
+            {/* Notification Bell */}
+            {session?.user && <NotificationBell useSolidHeader={useSolidHeader} />}
 
             {/* Theme Toggle */}
             <button

@@ -2,6 +2,7 @@
   "name": "pisang-goreng-van-java",
   "version": "1.0.0",
   "private": true,
+  "license": "UNLICENSED",
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=11.0.0"
@@ -20,6 +21,7 @@
     "build:doppler": "doppler run -- prisma generate && doppler run -- next build",
     "start": "next start",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
@@ -35,6 +37,8 @@
     "secretlint": "secretlint \"**/*\"",
     "audit:fix": "pnpm audit --fix",
     "depcheck": "depcheck",
+    "depcruise": "depcruise app components lib src --config .dependency-cruiser.cjs",
+    "depcruise:graph": "depcruise app components lib src --config .dependency-cruiser.cjs --output-type dot | dot -T svg > docs/dependency-graph.svg",
     "env:check": "SKIP_ENV_VALIDATION=false node -e \"import('./src/env.ts').then(m => console.log('✅ Env valid:', Object.keys(m.env).length, 'variables'))\""
   },
   "lint-staged": {
@@ -120,6 +124,7 @@
     "@playwright/test": "^1.60.0",
     "@secretlint/secretlint-rule-no-dotenv": "^13.0.2",
     "@secretlint/secretlint-rule-preset-recommend": "^13.0.2",
+    "dependency-cruiser": "^17.0.1",
     "@storybook/addon-a11y": "^10.4.6",
     "@storybook/addon-essentials": "^8.6.14",
     "@storybook/nextjs": "^10.4.6",

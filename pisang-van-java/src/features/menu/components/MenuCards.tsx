@@ -12,25 +12,12 @@ import { useSession } from 'next-auth/react'
 import { useLanguage } from '@/context/LanguageContext'
 import { formatPrice, getFlavorDescriptionKey, getFallbackImage } from '@/lib/utils'
 
-export interface ProductType {
-  id: string
-  flavorName: string
-  priceKembung: number
-  priceLumpia: number
-  priceKrispy: number
-  wholesaleKembung: number
-  wholesaleLumpia: number
-  wholesaleKrispy: number
-  imageUrl: string | null
-  isAvailable: boolean
-  tags: string[]
-  deskripsi_topping?: string | null
-  rating?: number
-  reviewCount?: number
-  stock: number
-  soldCount?: number
-  isActive: boolean
-}
+// ARCHITECTURE FIX: ProductType moved to ../types.ts (see that file's comment
+// for why) — re-exported here so every other existing consumer's
+// `import type { ProductType } from '@/src/features/menu/components/MenuCards'`
+// keeps working unchanged.
+import type { ProductType } from '../types'
+export type { ProductType } from '../types'
 
 interface Props {
   products: ProductType[]

@@ -1,6 +1,6 @@
 'use client'
 import { useEffect } from 'react'
-import type { CartItem } from './PosCart'
+import type { CartItem } from '../types'
 import type { Topping } from './PosModifierModal'
 
 export interface ReceiptData {

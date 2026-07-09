@@ -67,6 +67,10 @@ jobs:
         working-directory: pisang-van-java
         run: pnpm depcheck
 
+      - name: Architecture boundaries (dependency-cruiser)
+        working-directory: pisang-van-java
+        run: pnpm depcruise
+
       - name: Secret Scanning (CI backstop)
         # Backstop di CI karena pre-commit hook (.husky/pre-commit) bisa dilewati dengan
         # `git commit --no-verify` atau kalau seseorang clone tanpa install husky.

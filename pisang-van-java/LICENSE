@@ -1,0 +1,38 @@
+PROPRIETARY SOFTWARE LICENSE
+
+Pisang Van Java — F&B Commerce & Operations Platform
+Copyright (c) 2026. All rights reserved.
+
+This repository and all its contents (source code, database schema, design
+assets, documentation, and configuration) are proprietary and confidential.
+
+NO LICENSE IS GRANTED to any party to use, copy, modify, merge, publish,
+distribute, sublicense, or sell copies of this software, in whole or in part,
+except under a separate written agreement executed by the copyright holder.
+
+This codebase is intended for transfer via a specific commercial sale or
+licensing agreement. Until such an agreement is executed and ownership (or a
+defined license scope) is formally transferred, all rights are reserved by
+the original author.
+
+---
+
+NOTE FOR PROSPECTIVE BUYERS / LICENSEES
+
+If you are evaluating this codebase for acquisition or licensing:
+
+- This file is a placeholder asserting ownership and is NOT a substitute for
+  a proper sale/licensing agreement. Terms of sale (exclusivity, scope of use,
+  source-code transfer vs. hosted-license, ongoing support commitments, and
+  the specific IP being transferred) should be defined in a separate contract
+  between buyer and seller before any code, credentials, or infrastructure
+  access changes hands.
+- Third-party services this project integrates with (Midtrans, Biteship,
+  Fonnte, Cloudinary, Resend, Supabase, Sentry, PostHog, Upstash) are each
+  under their own separate terms of service — this license does not grant,
+  transfer, or imply any rights to those third-party services. A buyer will
+  need their own accounts/API credentials with each provider they intend to
+  keep using post-transfer.
+- See ARCHITECTURE.md for a technical overview and BUYER_TECHNICAL_OVERVIEW.md
+  for a due-diligence-oriented summary of what's implemented, tested, and
+  known-incomplete as of the last audit.

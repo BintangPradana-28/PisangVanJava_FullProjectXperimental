@@ -10,26 +10,19 @@ import { FetchError } from 'ofetch'
 import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
-// Re-export for backwards compatibility with PosClient
-import type { ProductType } from '@/src/features/menu/components/MenuCards'
 import { usePosStore } from '@/src/features/pos/store/usePosStore'
 import { api } from '@/src/lib/api'
+import type { CartItem } from '../types'
 import { CashPaymentModal } from './CashPaymentModal'
 import { ManualDiscountModal } from './ManualDiscountModal'
 import { saveToOfflineQueue } from './OfflineSyncManager'
-import type { Topping } from './PosModifierModal'
 import PosReceiptModal from './PosReceiptModal'
 import { QrisPaymentModal } from './QrisPaymentModal'
 
-export interface CartItem {
-  id: string // temporary client-side id
-  product: ProductType
-  baseType: string
-  toppings: Topping[]
-  topping: Topping | null
-  quantity: number
-  subtotal: number
-}
+// ARCHITECTURE FIX: CartItem moved to ../types.ts (see that file's comment for
+// why) — re-exported here so PosClient.tsx's existing
+// `import type { CartItem } from './PosCart'` keeps working unchanged.
+export type { CartItem } from '../types'
 
 // ─── Formatting Utility ─────────────────────────────────────
 

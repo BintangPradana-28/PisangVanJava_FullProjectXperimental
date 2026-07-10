@@ -1,0 +1,55 @@
+name: Load Testing (k6)
+
+# SENGAJA manual-trigger saja (workflow_dispatch), TIDAK dijadwalkan (schedule).
+# Ini toko kecil sungguhan (bukan sistem besar) — load test rutin ke production
+# tanpa alasan jelas cuma buang kuota Vercel/Supabase tanpa manfaat sepadan.
+# Jalankan manual dari tab Actions sebelum momen yang diperkirakan ramai.
+#
+# Cakupan: HANYA endpoint publik read-only (homepage, menu, toppings, health).
+# TIDAK menyentuh checkout/cart/auth — lihat
+# pisang-van-java/load-testing/README.md bagian "Cakupan saat ini" untuk
+# alasan & syarat yang perlu disiapkan sebelum itu ditambahkan.
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: "URL target (tanpa trailing slash)"
+        required: true
+        default: "https://pisang-van-java-full-project-vg1z.vercel.app"
+      scenario:
+        description: "Script yang dijalankan"
+        required: true
+        type: choice
+        options:
+          - smoke
+          - storefront-browse
+        default: smoke
+
+jobs:
+  k6-load-test:
+    name: Run k6 (${{ github.event.inputs.scenario }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Run k6
+        uses: grafana/k6-action@e4714b734f2b0afaabeb7b4a69142745548ab9ec # v0.3.1
+        with:
+          filename: pisang-van-java/load-testing/k6/${{ github.event.inputs.scenario }}.js
+          flags: --summary-export=summary.json
+        env:
+          BASE_URL: ${{ github.event.inputs.target_url }}
+
+      - name: Upload k6 summary
+        if: always()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: k6-results-${{ github.event.inputs.scenario }}
+          path: summary.json
+          retention-days: 14
+          if-no-files-found: ignore

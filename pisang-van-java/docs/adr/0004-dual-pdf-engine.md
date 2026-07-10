@@ -1,8 +1,9 @@
-# 2. Dual PDF Generation Engines
+# 0004. Dual PDF Generation Engines
 
 * Status: accepted
 * Deciders: PVJ Core Team, AI Architect
 * Date: 2026-07-10
+* Konteks penulisan: Didokumentasikan retroaktif dari `ARCHITECTURE.md` §6.
 
 Technical Story: Enabling rapid receipt printing at the POS station while ensuring automated, scheduled invoicing on the server.
 
@@ -33,3 +34,9 @@ Chosen option: **Option C** (Dual PDF Generation), because:
 
 * Good: Extreme scalability for POS receipt generation. Background tasks are completely independent of UI interactions.
 * Bad: Duplication of styling definitions (POS receipt styles in jsPDF, Invoices in React-PDF).
+
+## Referensi
+
+- `ARCHITECTURE.md` §6
+- `app/api/orders/[id]/invoice/route.ts`
+- `components/pos/PosReceiptModal.tsx`

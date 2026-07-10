@@ -1,8 +1,9 @@
-# 3. Prisma db push vs migrate dev
+# 0005. Prisma db push vs migrate dev
 
 * Status: accepted
 * Deciders: PVJ Core Team, AI Developer
 * Date: 2026-07-10
+* Konteks penulisan: Didokumentasikan retroaktif untuk mencatat keputusan sinkronisasi database schema.
 
 Technical Story: Managing database schema updates in an experimental/rapid-development capstone environment.
 
@@ -32,3 +33,9 @@ Chosen option: **Option B** (`prisma db push`), because:
 
 * Good: Extreme development agility. Clean single source of truth (`schema.prisma`).
 * Bad: No migration history. Renaming columns or deleting fields requires manual coordination (or running scripts like `migrate-delivery-status.ts`) to avoid data loss.
+
+## Referensi
+
+- `GEMINI.md` §3
+- `package.json` scripts
+- `prisma/schema.prisma`

@@ -1,8 +1,9 @@
-# 4. Hashing Password via Argon2id over bcrypt
+# 0006. Hashing Password via Argon2id over bcrypt
 
 * Status: accepted
 * Deciders: PVJ Core Team, Security Auditor
 * Date: 2026-07-10
+* Konteks penulisan: Didokumentasikan retroaktif dari `ARCHITECTURE.md` §2.
 
 Technical Story: Ensuring secure user registration and login in compliance with Zero-Trust Security guidelines.
 
@@ -32,3 +33,9 @@ Chosen option: **Option B** (Argon2id), because:
 
 * Good: Standard-setting password security. High resistance to offline brute-force attacks.
 * Bad: Native bindings require platform-specific binaries during build. Resolved by listing it under `serverExternalPackages` in `next.config.js`.
+
+## Referensi
+
+- `ARCHITECTURE.md` §2
+- `package.json` dependencies
+- `src/features/auth/`

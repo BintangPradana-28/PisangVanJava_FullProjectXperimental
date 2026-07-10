@@ -40,8 +40,10 @@
     "depcruise": "depcruise app components lib src --config .dependency-cruiser.cjs",
     "depcruise:graph": "depcruise app components lib src --config .dependency-cruiser.cjs --output-type dot | dot -T svg > docs/dependency-graph.svg",
     "env:check": "SKIP_ENV_VALIDATION=false node -e \"import('./src/env.ts').then(m => console.log('✅ Env valid:', Object.keys(m.env).length, 'variables'))\"",
-    "test:load": "k6 run k6/checkout-stress.js",
-    "test:race": "k6 run k6/stock-race.js"
+    "test:load": "k6 run load-testing/k6/checkout-stress.js",
+    "test:race": "k6 run load-testing/k6/stock-race.js",
+    "test:smoke": "k6 run load-testing/k6/smoke.js",
+    "test:browse": "k6 run load-testing/k6/storefront-browse.js"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [

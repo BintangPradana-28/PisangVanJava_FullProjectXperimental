@@ -1,8 +1,9 @@
-# 5. CSP Nonce Generation at Edge Middleware
+# 0007. CSP Nonce Generation at Edge Middleware
 
 * Status: accepted
 * Deciders: PVJ Core Team, Security Auditor
 * Date: 2026-07-10
+* Konteks penulisan: Didokumentasikan retroaktif dari `ARCHITECTURE.md` §5 & §7.
 
 Technical Story: Implementing a strict Content Security Policy (CSP) with dynamic nonces while maintaining high-performance global delivery.
 
@@ -33,3 +34,9 @@ Chosen option: **Option C** (Edge Middleware), because:
 
 * Good: Bulletproof XSS defense. Zero impact on serverless cold starts.
 * Bad: Limited API surface in Edge runtime. Standard Node.js libraries cannot be imported directly in `middleware.ts`.
+
+## Referensi
+
+- `ARCHITECTURE.md` §7
+- `middleware.ts`
+- `next.config.js`

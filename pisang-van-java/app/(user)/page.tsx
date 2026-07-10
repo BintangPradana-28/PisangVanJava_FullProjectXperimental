@@ -46,8 +46,9 @@ const getCachedMenuRaw = unstable_cache(
     // Zero Trust & Flawless DB: Mengambil produk yang belum dihapus (Soft Delete)
     const dbProducts = await prisma.menuVariant.findMany({
       where: { isDeleted: false, isActive: true },
-      orderBy: [{ soldCount: 'desc' }, { createdAt: 'desc' }]
+      orderBy: [{ soldCount: 'desc' }, { flavorName: 'asc' }]
     })
+
 
     // THE CISO FIX: Aggregation Queries Instead of Massive Joins
     const reviewAggregates = await prisma.review.groupBy({

@@ -150,6 +150,7 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
   // Tipping UI state
   const [customTip, setCustomTip] = useState<string>('')
   const [isSubmittingTip, setIsSubmittingTip] = useState<boolean>(false)
+  const [proofPhotoError, setProofPhotoError] = useState(false)
 
   // ── 1. ETA Countdown Timer Logic ─────────────────────────────────────────
   useEffect(() => {
@@ -570,13 +571,9 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
             </div>
             {/* Progress Bar */}
             <div className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-2 overflow-hidden relative">
-              <style>{`
-                .order-progress-bar-fill-${maskedId} {
-                  width: ${progressPercent}%;
-                }
-              `}</style>
               <div
-                className={`order-progress-bar-fill-${maskedId} bg-amber-500 h-2 rounded-full transition-all duration-1000 ease-out`}
+                className="bg-amber-500 h-2 rounded-full transition-all duration-1000 ease-out"
+                style={{ width: `${progressPercent}%` }}
               />
             </div>
           </div>
@@ -589,13 +586,23 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
               📸 BUKTI PENGIRIMAN
             </h2>
             <div className="border border-zinc-100 dark:border-zinc-800 rounded-xl overflow-hidden shadow-inner">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {/* biome-ignore lint/performance/noImgElement: External proof photo from dynamic URL */}
-              <img
-                src={proofPhotoUrl}
-                alt="Bukti Pengiriman"
-                className="w-full h-auto object-cover max-h-96"
-              />
+              {proofPhotoError ? (
+                <div className="w-full h-40 flex flex-col items-center justify-center gap-2 bg-zinc-50 dark:bg-zinc-950 text-zinc-400 dark:text-zinc-600">
+                  <span className="text-2xl">🖼️</span>
+                  <p className="text-xs font-medium text-center px-4">
+                    Foto belum bisa dimuat. Pesanan Anda tetap tercatat selesai — coba muat ulang halaman ini.
+                  </p>
+                </div>
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                // biome-ignore lint/performance/noImgElement: External proof photo from dynamic URL
+                <img
+                  src={proofPhotoUrl}
+                  alt="Bukti Pengiriman"
+                  className="w-full h-auto object-cover max-h-96"
+                  onError={() => setProofPhotoError(true)}
+                />
+              )}
             </div>
             <p className="text-xs text-zinc-400 font-medium text-center italic">
               Pesanan telah berhasil diantar ke alamat Anda.
@@ -682,13 +689,9 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
             <div className="relative pl-6 space-y-8 py-2">
               {/* Stepper Connecting Line */}
               <div className="absolute left-3.5 top-5 bottom-5 w-0.5 bg-zinc-100 dark:bg-zinc-800 -translate-x-1/2" />
-              <style>{`
-                .stepper-progress-fill-${maskedId} {
-                  height: ${percent}%;
-                }
-              `}</style>
               <div
-                className={`stepper-progress-fill-${maskedId} absolute left-3.5 top-5 w-0.5 bg-amber-500 -translate-x-1/2 transition-all duration-700 ease-in-out`}
+                className="absolute left-3.5 top-5 w-0.5 bg-amber-500 -translate-x-1/2 transition-all duration-700 ease-in-out"
+                style={{ height: `${percent}%` }}
               ></div>
 
               {dynamicOrderSteps.map((step, index) => {

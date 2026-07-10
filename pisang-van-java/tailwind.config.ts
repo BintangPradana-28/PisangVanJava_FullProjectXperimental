@@ -9,6 +9,27 @@ module.exports = {
   ],
   theme: {
     extend: {
+      // ─────────────────────────────────────────────────────────────
+      // KONVENSI WARNA (dibaca sebelum menambah kelas warna baru)
+      //
+      // 1. primary / secondary / background / surface / outline / error
+      //    → sistem UTAMA. Pakai ini untuk komponen BARU secara default.
+      //
+      // 2. cream-* / brown-*  → sistem lama, MASIH backbone nyata di 41 file
+      //    (mayoritas admin panel). JANGAN migrasi paksa file yang sudah
+      //    pakai ini — tapi juga jangan tambah pemakaian baru. Kalau sedang
+      //    menyentuh file yang pakai cream/brown untuk alasan lain, boleh
+      //    sekalian migrasi bagian yang disentuh ke primary/secondary.
+      //
+      // 3. amber.brand → SATU-SATUNYA accent color brand (dipakai 34 file,
+      //    biasanya untuk CTA/badge/highlight). Jangan pakai amber-500 dkk
+      //    dari Tailwind default untuk tujuan yang sama — itu bikin dua
+      //    "oranye brand" yang beda di layar yang sama.
+      //
+      // 4. Tailwind default (zinc-*, dkk) → boleh untuk teks/border/bg netral
+      //    yang genuinely tidak butuh identitas brand (mis. skeleton loader,
+      //    divider). Jangan pakai untuk apa pun yang harusnya terasa "PVJ".
+      // ─────────────────────────────────────────────────────────────
       colors: {
         // Stitch design tokens (Material 3 heritage warm palette)
         primary: '#32170d',
@@ -20,30 +41,13 @@ module.exports = {
         'on-secondary': '#ffffff',
         'secondary-container': '#fed65b',
         'on-secondary-container': '#745c00',
-        'secondary-fixed': '#ffe088',
-        'secondary-fixed-dim': '#e9c349',
-        'on-secondary-fixed': '#241a00',
-        'on-secondary-fixed-variant': '#574500',
-        tertiary: '#201f1a',
-        'on-tertiary': '#ffffff',
-        'tertiary-container': '#35342f',
-        'on-tertiary-container': '#9f9c95',
         'surface-container-lowest': '#ffffff',
         'surface-container-low': '#fff1ec',
         'surface-container': '#ffe9e2',
         'surface-container-high': '#ffe2d8',
-        'surface-container-highest': '#fadcd2',
         'outline-variant': '#d5c3bd',
         outline: '#83746f',
-        'inverse-surface': '#3e2c26',
-        'inverse-on-surface': '#ffede7',
-        'inverse-primary': '#ecbcaa',
         'primary-container': '#4b2c20',
-        'on-primary-container': '#bf9282',
-        'primary-fixed': '#ffdbce',
-        'primary-fixed-dim': '#ecbcaa',
-        'on-primary-fixed': '#2e140a',
-        'on-primary-fixed-variant': '#613e31',
         error: '#ba1a1a',
         'on-error': '#ffffff',
         'error-container': '#ffdad6',

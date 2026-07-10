@@ -10,6 +10,7 @@ import type React from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import ReviewSection from '@/components/user/ReviewSection'
+import { TextureGlyph, TextureLegend } from '@/components/user/TextureGlyph'
 import { useLanguage } from '@/context/LanguageContext'
 import { useSettings } from '@/context/SettingsContext'
 import { type CartTopping, useCartStore } from '@/src/features/cart/stores/cart.store'
@@ -302,9 +303,12 @@ export default function ProductDetailClient({
 
             {/* Base Type Selector */}
             <div>
-              <h4 className="font-bold text-zinc-800 dark:text-zinc-200 text-sm mb-3">
-                Pilih Tipe Pisang <span className="text-red-500">*</span>
-              </h4>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-bold text-zinc-800 dark:text-zinc-200 text-sm">
+                  Pilih Tipe Pisang <span className="text-red-500">*</span>
+                </h4>
+                <TextureLegend />
+              </div>
               <div className="grid grid-cols-3 gap-3">
                 {AVAILABLE_TYPES.map((type) => {
                   const isSelected = selectedType === type
@@ -322,7 +326,8 @@ export default function ProductDetailClient({
                       type="button"
                       disabled={!isTypeAvailable}
                       onClick={() => setSelectedType(type)}
-                      className={`py-3 px-2 rounded-[4px] border-2 text-sm font-bold transition-all flex flex-col items-center gap-0.5 ${
+                      aria-pressed={isSelected}
+                      className={`py-3 px-2 rounded-[4px] border-2 text-sm font-bold transition-all flex flex-col items-center gap-1 ${
                         isSelected
                           ? 'border-amber-brand bg-amber-brand/10 text-amber-brand'
                           : isTypeAvailable
@@ -330,6 +335,10 @@ export default function ProductDetailClient({
                             : 'border-zinc-100 dark:border-zinc-900 text-zinc-400 dark:text-zinc-600 bg-zinc-100/50 dark:bg-zinc-900/30 cursor-not-allowed'
                       }`}
                     >
+                      <TextureGlyph
+                        type={type as 'Kembung' | 'Lumpia' | 'Krispy'}
+                        className="w-6 h-6"
+                      />
                       <span>{type}</span>
                       {isTypeAvailable && (
                         <span className="text-[10px] font-normal opacity-80">

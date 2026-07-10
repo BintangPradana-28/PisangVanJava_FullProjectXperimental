@@ -27,6 +27,15 @@ export default defineConfig({
     }
   ],
 
+  /* Visual snapshot testing configurations */
+  snapshotDir: './e2e/__screenshots__',
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.02,
+      animations: 'disabled',
+    },
+  },
+
   /* Run your local dev server before starting the tests */
   webServer: {
     command: 'pnpm run start',

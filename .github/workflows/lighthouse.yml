@@ -33,8 +33,6 @@ jobs:
           urls: |
             https://pisang-van-java-full-project-vg1z.vercel.app/
             https://pisang-van-java-full-project-vg1z.vercel.app/menu-spesial
+          configPath: ./pisang-van-java/lighthouserc.json
           uploadArtifacts: true
           temporaryPublicStorage: true
-          # No score thresholds set yet — this establishes a baseline first.
-          # Once a few runs give a realistic number, add a lighthouserc.json
-          # with `assert` thresholds so regressions actually fail the run.

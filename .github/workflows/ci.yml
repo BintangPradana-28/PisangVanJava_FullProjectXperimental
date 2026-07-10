@@ -44,9 +44,29 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate SBOM
+        uses: anchore/sbom-action@df80a981bc6edbc4e220a492d3cbe9f5547a6e75 # v0.17.9
+        with:
+          path: ./pisang-van-java
+          format: cyclonedx-json
+          output-file: sbom.cyclonedx.json
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: sbom-cyclonedx
+          path: sbom.cyclonedx.json
+          retention-days: 90
+
       - name: Run Prisma Generate
         working-directory: pisang-van-java
         run: pnpm prisma generate
+
+      - name: Prisma Schema Validation & Format Check
+        working-directory: pisang-van-java
+        run: |
+          pnpm prisma validate
+          pnpm prisma format --check
 
       - name: Linting (Static Analysis)
         working-directory: pisang-van-java
@@ -55,6 +75,16 @@ jobs:
       - name: TypeScript Type Check
         working-directory: pisang-van-java
         run: npx tsc --noEmit
+
+      - name: Next.js Production Build
+        working-directory: pisang-van-java
+        run: pnpm run build
+        env:
+          SKIP_ENV_VALIDATION: "true"
+
+      - name: Enforce Bundle Size Budget
+        working-directory: pisang-van-java
+        run: node scripts/check-bundle-budget.js
 
       # ── ADDITION (QA & Security): step di bawah ini sebelumnya TIDAK ADA meski job
       # ini sudah dinamai "Security Audit & Unit Tests" — tool-nya (pnpm audit, depcheck,

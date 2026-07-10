@@ -73,18 +73,18 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  accounts    Account[]
-  sessions    Session[]
-  resetTokens ResetToken[]
-  favorites   Favorite[]
-  reviews     Review[]
-  cart        UserCart?
-  orders      Order[]
-  b2bDeals    B2BDeal[]
-  addresses   Address[]
-  authLogs    AuthLog[]
-  complaints  Complaint[]
-  koinLogs    KoinPisangLog[]
+  accounts      Account[]
+  sessions      Session[]
+  resetTokens   ResetToken[]
+  favorites     Favorite[]
+  reviews       Review[]
+  cart          UserCart?
+  orders        Order[]
+  b2bDeals      B2BDeal[]
+  addresses     Address[]
+  authLogs      AuthLog[]
+  complaints    Complaint[]
+  koinLogs      KoinPisangLog[]
   notifications Notification[]
 
   @@index([email])
@@ -218,17 +218,17 @@ model Order {
   deliveryFee    Float       @default(0)
 
   // ── Delivery Tracking ──
-  courierName    String?     // e.g., "Gojek", "Grab" — persisted from checkout selection
-  courierPhone   String?     // Kurir phone number (set by admin/kitchen when assigning)
-  etaMinutes     Int?        // Dynamic ETA in minutes (set when status → OUT_FOR_DELIVERY)
-  tipAmount      Float       @default(0)
-  proofPhotoUrl  String?     // Cloudinary URL — proof of delivery photo
-  addressId      String?     // FK to Address model for structured delivery address
+  courierName     String? // e.g., "Gojek", "Grab" — persisted from checkout selection
+  courierPhone    String? // Kurir phone number (set by admin/kitchen when assigning)
+  etaMinutes      Int? // Dynamic ETA in minutes (set when status → OUT_FOR_DELIVERY)
+  tipAmount       Float   @default(0)
+  proofPhotoUrl   String? // Cloudinary URL — proof of delivery photo
+  addressId       String? // FK to Address model for structured delivery address
   biteshipOrderId String?
   waybillId       String?
 
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // -- Midtrans Integration --
   midtransToken         String?
@@ -479,11 +479,11 @@ model Payment {
 model KoinPisangLog {
   id          String   @id @default(cuid())
   userId      String
-  amount      Int      // Jumlah koin (bisa positif/negatif)
-  description String   // Deskripsi perubahan (misal: "Referral Bonus", "Redeemed at Checkout", dll)
+  amount      Int // Jumlah koin (bisa positif/negatif)
+  description String // Deskripsi perubahan (misal: "Referral Bonus", "Redeemed at Checkout", dll)
   createdAt   DateTime @default(now())
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([createdAt])
@@ -503,4 +503,3 @@ model Notification {
   @@index([userId])
   @@index([userId, isRead])
 }
-

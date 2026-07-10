@@ -49,14 +49,37 @@ Email lewat Resend/Sentry native alert cukup buat mulai — WhatsApp webhook (`a
 
 ## 4. PostHog — Event yang Direkomendasikan buat Di-track
 
-Belum ada dokumentasi funnel/event apa yang sebenarnya dipantau. Berdasarkan Success Metrics di PRD §7:
+Berikut adalah spesifikasi event tracking standar untuk mengukur funnel konversi dan drop-off di storefront serta POS:
 
-- `cart_viewed` → `checkout_started` → `payment_initiated` → `payment_completed` (funnel utama, langsung ukur drop-off checkout)
-- `order_failed` dengan property `reason` (bukan cuma count gagal, tapi kenapa gagal)
-- `kasir_order_created` terpisah dari funnel customer (biar nggak nyampur data POS sama storefront)
+### A. Naming Convention
+Semua nama event harus menggunakan format `snake_case` dengan pola `[domain]_[action]`. 
+*Contoh: `cart_viewed`, `checkout_started`, `payment_completed`*
+
+### B. Standard Properties
+Setiap event wajib melampirkan property berikut:
+*   `userId`: ID User (jika login) atau `null`/anonymous ID.
+*   `sessionId`: UUID unik per browser session.
+*   `source`: Platform pengirim event (`storefront` atau `pos`).
+*   `timestamp`: Waktu ISO-8601 saat event terjadi.
+
+### C. Event Registry
+
+| Event Name | Deskripsi | Event Properties |
+|------------|-----------|------------------|
+| `cart_viewed` | User membuka halaman keranjang belanja | `item_count` (int), `cart_total` (float) |
+| `checkout_started` | User mengklik tombol checkout | `cart_total` (float), `delivery_method` (PICKUP/DELIVERY) |
+| `payment_initiated` | Snap token Midtrans berhasil dibuat & widget muncul | `order_id` (string), `total_price` (float), `payment_method` (ONLINE/WHATSAPP) |
+| `payment_completed` | Pembayaran sukses dikonfirmasi via client-side/webhook | `order_id` (string), `transaction_id` (string), `total_amount` (float) |
+| `order_failed` | Transaksi gagal | `reason` (string), `error_code` (string), `step` (validation/midtrans/database) |
+| `kasir_order_created` | Transaksi POS berhasil dibuat kasir | `cashier_id` (string), `total_amount` (float), `payment_method` (CASH/QRIS) |
+
+---
 
 ## 5. Retensi Data — Sentry & PostHog
 
-`compliance_backup_policy.md` udah bagus soal retensi backup database, tapi belum nyentuh data analytics/error-tracking — padahal ini juga data yang berpotensi berisi info pelanggan (event property, error context).
+`compliance_backup_policy.md` sudah bagus soal retensi backup database, tapi belum menyentuh data analytics/error-tracking — padahal ini juga data yang berpotensi berisi info pelanggan (event property, error context).
 
-Aku nggak tahu retensi default di plan Sentry/PostHog kalian saat ini (tergantung tier langganan, nggak kelihatan dari kode) — jadi ini bukan sesuatu yang bisa aku audit, cuma bisa aku ingetin: cek setting retention di kedua dashboard, selaraskan sama prinsip minimalisasi data UU PDP yang udah dianut di `compliance_backup_policy.md`.
+*   **Rekomendasi Retensi Sentry**: Setel ke **90 hari** di dashboard Sentry untuk menyeimbangkan kebutuhan debugging dengan minimalisasi penyimpanan data pribadi.
+*   **Rekomendasi Retensi PostHog**: Setel ke **12 bulan** untuk data analitik perilaku jangka panjang, namun pastikan PII (seperti nomor telepon, alamat detail pelanggan) **TIDAK dikirim** sebagai custom event properties.
+*   Selaraskan kebijakan ini dengan prinsip minimalisasi data UU PDP yang sudah dianut di `compliance_backup_policy.md`.
+

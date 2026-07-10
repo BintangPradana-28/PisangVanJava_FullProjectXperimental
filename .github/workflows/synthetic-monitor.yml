@@ -1,0 +1,40 @@
+name: Synthetic Monitoring
+
+on:
+  schedule:
+    # Run every 15 minutes
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    name: Endpoint Ping Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping Landing Page
+        run: |
+          STATUS=$(curl -o /dev/null -s -w "%{http_code}" https://pisang-van-java-full-project-vg1z.vercel.app/)
+          echo "Status: $STATUS"
+          if [ "$STATUS" -ne 200 ]; then
+            echo "❌ Landing page returned status $STATUS"
+            exit 1
+          fi
+
+      - name: Ping Special Menu Page
+        run: |
+          STATUS=$(curl -o /dev/null -s -w "%{http_code}" https://pisang-van-java-full-project-vg1z.vercel.app/menu-spesial)
+          echo "Status: $STATUS"
+          if [ "$STATUS" -ne 200 ]; then
+            echo "❌ Special Menu page returned status $STATUS"
+            exit 1
+          fi
+
+      - name: Ping Health Endpoint
+        run: |
+          STATUS=$(curl -o /dev/null -s -w "%{http_code}" https://pisang-van-java-full-project-vg1z.vercel.app/api/health)
+          echo "Status: $STATUS"
+          if [ "$STATUS" -ne 200 ]; then
+            echo "❌ Health endpoint returned status $STATUS"
+            exit 1
+          fi

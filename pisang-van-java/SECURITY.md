@@ -65,8 +65,8 @@ Sumber deteksi yang sudah terhubung ke Sentry setelah audit ini:
   siap, daripada membiarkan celah terbuka sampai fix selesai ditest.
 
 ### 4. Eradication & Recovery
-- Terapkan patch, jalankan penuh test suite (`pnpm test:coverage`) + CI security gates
-  (`pnpm audit`, `pnpm depcheck`, `pnpm secretlint`, CodeQL) sebelum deploy ulang.
+- Terapkan patch, jalankan penuh test suite (`bun run test:coverage`) + CI security gates
+  (`bun pm audit`, `bunx depcheck`, `bun run secretlint`, CodeQL) sebelum deploy ulang.
 - Untuk insiden terkait data pelanggan: pertimbangkan kewajiban notifikasi di bawah
   UU PDP (Undang-Undang Pelindungan Data Pribadi) — `[ISI: kontak penasihat hukum/DPO]`.
 

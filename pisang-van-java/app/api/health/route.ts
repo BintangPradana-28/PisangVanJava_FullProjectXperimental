@@ -18,8 +18,7 @@ export const dynamic = 'force-dynamic'
  * or auth like the rest of the API surface.
  */
 export async function GET() {
-  const checks: Record<string, { status: 'ok' | 'error'; latencyMs?: number; error?: string }> =
-    {}
+  const checks: Record<string, { status: 'ok' | 'error'; latencyMs?: number; error?: string }> = {}
 
   const dbStart = Date.now()
   try {

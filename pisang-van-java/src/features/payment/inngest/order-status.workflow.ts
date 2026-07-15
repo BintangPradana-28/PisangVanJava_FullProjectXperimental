@@ -1,16 +1,14 @@
-import { inngest } from '@/src/lib/inngest'
-import { prisma } from '@/lib/prisma'
-import { sendOrderStatusEmail } from '../email'
 import { queueWhatsAppNotification } from '@/lib/notifications'
+import { prisma } from '@/lib/prisma'
 import { buildOrderStatusPushPayload, sendPushNotification } from '@/lib/push'
+import { inngest } from '@/src/lib/inngest'
+import { sendOrderStatusEmail } from '../email'
 
 export const orderStatusWorkflow = inngest.createFunction(
-  { 
-    id: 'order-status-workflow', 
+  {
+    id: 'order-status-workflow',
     name: 'Order Status Workflow',
-    triggers: [
-      { event: 'order/status.changed' }
-    ]
+    triggers: [{ event: 'order/status.changed' }]
   },
   async ({ event, step }) => {
     const orderId = event.data.orderId as string
@@ -51,12 +49,7 @@ export const orderStatusWorkflow = inngest.createFunction(
     // Send WhatsApp notification
     if (order.customerPhone) {
       await step.run('send-whatsapp-notification', async () => {
-        await queueWhatsAppNotification(
-          order.customerPhone,
-          order.customerName,
-          status,
-          order.id
-        )
+        await queueWhatsAppNotification(order.customerPhone, order.customerName, status, order.id)
       })
     }
 

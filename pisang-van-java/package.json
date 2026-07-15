@@ -4,27 +4,24 @@
   "private": true,
   "license": "UNLICENSED",
   "engines": {
-    "node": ">=20.0.0",
-    "pnpm": ">=11.0.0"
+    "bun": ">=1.2.0"
   },
-  "packageManager": "pnpm@11.8.0",
   "browserslist": [
     "last 2 years",
     "not dead",
     "not ie 11"
   ],
   "scripts": {
-    "preinstall": "npx only-allow pnpm",
-    "dev": "next dev",
-    "dev:doppler": "doppler run -- next dev",
-    "build": "prisma generate && next build",
-    "build:doppler": "doppler run -- prisma generate && doppler run -- next build",
-    "start": "next start",
+    "dev": "bun --bun next dev",
+    "dev:doppler": "doppler run -- bun --bun next dev",
+    "build": "bunx prisma generate && bun --bun next build",
+    "build:doppler": "doppler run -- bunx prisma generate && doppler run -- bun --bun next build",
+    "start": "bun --bun next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "db:push": "prisma db push",
-    "db:seed": "prisma db seed",
-    "db:studio": "prisma studio",
+    "db:push": "bunx prisma db push",
+    "db:seed": "bunx prisma db seed",
+    "db:studio": "bunx prisma studio",
     "prepare": "cd .. && husky",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -35,11 +32,11 @@
     "check": "biome check --write .",
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org pisang-van-java --project pisang-van-java .next && sentry-cli sourcemaps upload --org pisang-van-java --project pisang-van-java .next",
     "secretlint": "secretlint \"**/*\"",
-    "audit:fix": "pnpm audit --fix",
+    "audit": "bun pm audit",
     "depcheck": "depcheck",
     "depcruise": "depcruise app components lib src --config .dependency-cruiser.cjs",
     "depcruise:graph": "depcruise app components lib src --config .dependency-cruiser.cjs --output-type dot | dot -T svg > docs/dependency-graph.svg",
-    "env:check": "SKIP_ENV_VALIDATION=false node -e \"import('./src/env.ts').then(m => console.log('✅ Env valid:', Object.keys(m.env).length, 'variables'))\"",
+    "env:check": "bun -e \"import('./src/env.ts').then(m => console.log('✅ Env valid:', Object.keys(m.env).length, 'variables'))\"",
     "test:load": "k6 run load-testing/k6/checkout-stress.js",
     "test:race": "k6 run load-testing/k6/stock-race.js",
     "test:smoke": "k6 run load-testing/k6/smoke.js",
@@ -61,7 +58,6 @@
     "@asteasolutions/zod-to-openapi": "^8.5.0",
     "@auth/prisma-adapter": "^2.11.2",
     "@hookform/resolvers": "^5.4.0",
-    "@node-rs/argon2": "^2.0.2",
     "@prisma/client": "^5.10.0",
     "@prisma/extension-accelerate": "^3.0.1",
     "@react-email/components": "^1.0.12",
@@ -128,13 +124,13 @@
     "@playwright/test": "^1.60.0",
     "@secretlint/secretlint-rule-no-dotenv": "^13.0.2",
     "@secretlint/secretlint-rule-preset-recommend": "^13.0.2",
-    "dependency-cruiser": "^17.0.1",
     "@storybook/addon-a11y": "^10.4.6",
     "@storybook/addon-essentials": "^8.6.14",
     "@storybook/nextjs": "^10.4.6",
     "@storybook/react": "^10.4.6",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
+    "@types/bun": "^1.3.14",
     "@types/dompurify": "^3.2.0",
     "@types/leaflet": "^1.9.21",
     "@types/midtrans-client": "^1.4.0",
@@ -149,7 +145,7 @@
     "@vitest/coverage-v8": "^4.1.7",
     "autoprefixer": "^10.4.17",
     "depcheck": "^1.4.7",
-    "dotenv": "^17.4.2",
+    "dependency-cruiser": "^17.0.1",
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "lint-staged": "^17.0.5",
@@ -159,22 +155,22 @@
     "secretlint": "^13.0.2",
     "storybook": "^10.4.6",
     "tailwindcss": "^3.4.1",
-    "ts-node": "^10.9.2",
-    "tsx": "^4.22.4",
     "typescript": "^5.9.3",
     "vitest": "^4.1.7"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "bun prisma/seed.ts"
   },
-  "resolutions": {
-    "postcss": "^8.5.15"
+  "overrides": {
+    "postcss": "^8.5.15",
+    "form-data": "^4.0.6"
   },
-  "onlyBuiltDependencies": [
-    "@scarf/scarf",
-    "@tree-sitter-grammars/tree-sitter-yaml",
-    "core-js-pure",
-    "tree-sitter",
-    "tree-sitter-json"
+  "trustedDependencies": [
+    "@prisma/client",
+    "@prisma/engines",
+    "@sentry/cli",
+    "esbuild",
+    "prisma",
+    "sharp"
   ]
 }

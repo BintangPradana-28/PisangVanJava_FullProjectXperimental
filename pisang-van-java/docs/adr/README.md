@@ -33,6 +33,8 @@ diketahui — hanya tanggal rekonstruksinya yang tercatat.
 | [0005](./0005-prisma-db-push.md) | Prisma db push vs migrate dev | Accepted (retroaktif) |
 | [0006](./0006-argon2id-hashing.md) | Hashing Password via Argon2id over bcrypt | Accepted (retroaktif) |
 | [0007](./0007-edge-runtime-middleware.md) | CSP Nonce Generation at Edge Middleware | Accepted (retroaktif) |
+| [0008](./0008-bun-migration.md) | Migrasi dari pnpm + Node.js ke Bun | Accepted |
+
 
 ## Cara menambah ADR baru
 

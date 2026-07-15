@@ -1,5 +1,5 @@
-import * as Sentry from '@sentry/nextjs'
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi'
+import * as Sentry from '@sentry/nextjs'
 import { z } from 'zod'
 
 extendZodWithOpenApi(z)

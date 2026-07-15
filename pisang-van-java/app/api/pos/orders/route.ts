@@ -125,7 +125,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       // tidak pernah dipercaya sebagai angka final.
       const variantMap = new Map<
         string,
-        { stock: number; flavorName: string; priceKembung: number; priceLumpia: number; priceKrispy: number }
+        {
+          stock: number
+          flavorName: string
+          priceKembung: number
+          priceLumpia: number
+          priceKrispy: number
+        }
       >()
 
       for (const item of data.items) {

@@ -49,7 +49,6 @@ const getCachedMenuRaw = unstable_cache(
       orderBy: [{ soldCount: 'desc' }, { flavorName: 'asc' }]
     })
 
-
     // THE CISO FIX: Aggregation Queries Instead of Massive Joins
     const reviewAggregates = await prisma.review.groupBy({
       by: ['variantId'],

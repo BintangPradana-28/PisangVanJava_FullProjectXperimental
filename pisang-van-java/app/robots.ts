@@ -15,19 +15,19 @@ export default function robots(): MetadataRoute.Robots {
         '/manage-menu',
         '/manage-users',
         '/manage-vouchers',
-        '/orders',        // admin order list — beda dari /profile/orders milik customer
-        '/reviews',       // admin review moderation, beda dari halaman /ulasan publik
+        '/orders', // admin order list — beda dari /profile/orders milik customer
+        '/reviews', // admin review moderation, beda dari halaman /ulasan publik
         '/banners',
         '/settings',
         '/reports',
-        '/complaints',    // admin complaint inbox, beda dari /profile/bantuan milik customer
-        '/kontak-leads',  // data leads B2B — jangan sampai bocor ke hasil pencarian
+        '/complaints', // admin complaint inbox, beda dari /profile/bantuan milik customer
+        '/kontak-leads', // data leads B2B — jangan sampai bocor ke hasil pencarian
         '/b2b-pipeline',
-        '/login',         // staff login
+        '/login', // staff login
 
         // API — ini beneran di bawah /api/admin/
         '/api/admin/',
-        '/api/pos/'       // endpoint POS internal
+        '/api/pos/' // endpoint POS internal
       ]
     },
     sitemap: 'https://pisanggorengvanjava.com/sitemap.xml'

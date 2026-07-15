@@ -69,4 +69,3 @@ export const getFlavorDescriptionKey = (flavorName: string): string | null => {
   if (lower.includes('milky')) return 'menu_desc_milky'
   return null
 }
-

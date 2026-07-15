@@ -101,7 +101,9 @@ export default function NotificationBell({ useSolidHeader }: NotificationBellPro
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-lg z-50">
           <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
-            <span className="font-semibold text-sm text-zinc-800 dark:text-zinc-100">Notifikasi</span>
+            <span className="font-semibold text-sm text-zinc-800 dark:text-zinc-100">
+              Notifikasi
+            </span>
             {unreadCount > 0 && (
               <button
                 type="button"
@@ -126,9 +128,13 @@ export default function NotificationBell({ useSolidHeader }: NotificationBellPro
                   }`}
                 >
                   <div className="flex items-start gap-2">
-                    {!n.isRead && <span className="w-1.5 h-1.5 rounded-full bg-secondary mt-1.5 shrink-0" />}
+                    {!n.isRead && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-secondary mt-1.5 shrink-0" />
+                    )}
                     <div className={n.isRead ? 'ml-3.5' : ''}>
-                      <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-100">{n.title}</p>
+                      <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-100">
+                        {n.title}
+                      </p>
                       <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{n.body}</p>
                       <p className="text-[10px] text-zinc-400 mt-1">
                         {new Date(n.createdAt).toLocaleDateString('id-ID', {

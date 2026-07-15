@@ -590,7 +590,8 @@ export default function TrackOrderDetailClient({ order, storePhone }: TrackOrder
                 <div className="w-full h-40 flex flex-col items-center justify-center gap-2 bg-zinc-50 dark:bg-zinc-950 text-zinc-400 dark:text-zinc-600">
                   <span className="text-2xl">🖼️</span>
                   <p className="text-xs font-medium text-center px-4">
-                    Foto belum bisa dimuat. Pesanan Anda tetap tercatat selesai — coba muat ulang halaman ini.
+                    Foto belum bisa dimuat. Pesanan Anda tetap tercatat selesai — coba muat ulang
+                    halaman ini.
                   </p>
                 </div>
               ) : (

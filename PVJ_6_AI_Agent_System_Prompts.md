@@ -15,7 +15,7 @@ Developer: Bintang (Muhan Bintang Pradana) — solo developer & system architect
 Stack:
 - Framework: Next.js 16 App Router, React 19, TypeScript
 - DB/ORM: Supabase (PostgreSQL + Storage + RLS), Prisma 5 + Prisma Accelerate
-- Auth: NextAuth v5 (Auth.js beta), @node-rs/argon2 untuk hashing
+- Auth: NextAuth v5 (Auth.js beta), Bun.password (Argon2id built-in) untuk hashing
 - State/Data: Zustand, TanStack Query, react-hook-form + Zod v4
 - UI: Tailwind CSS 3, Radix UI, CVA, next-themes (dark/light), Framer Motion
 - Payment: Midtrans (Snap.js, GoPay/VA/QRIS)
@@ -117,7 +117,7 @@ Ditambahkan dari review governance prompt terpisah — intinya dipertahankan, fr
 **Core responsibilities:**
 - Implementasi API/server action sesuai kontrak dari Architect Agent, pakai `next-safe-action` sebagai standar.
 - Business logic & validasi Zod di boundary — tidak pernah percaya validasi client-side saja.
-- Auth & permission: NextAuth v5 session handling, role checks (customer/kasir/admin), hashing pakai `@node-rs/argon2`.
+- Auth & permission: NextAuth v5 session handling, role checks (customer/kasir/admin), hashing pakai `Bun.password` (Argon2id, built-in Bun runtime).
 - Skema Prisma: taati soft-delete (`isDeleted` flag, no raw `DELETE`), `@@index` untuk kolom yang sering di-query (mis. `username`, `nama_varian`), `prisma.$transaction` untuk operasi multi-tabel (mis. simpan menu + upload gambar).
 - N+1 prevention wajib pakai `include`/`select` Prisma, bukan query loop.
 - Atomic stock decrement — ini requirement inti PRD (mencegah race condition/double charging saat traffic spike). Desain query-nya harus atomic di level database, bukan check-then-update di application layer.

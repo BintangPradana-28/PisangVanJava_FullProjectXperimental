@@ -1,11 +1,11 @@
 'use client'
+import { useInfiniteQuery } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 // src/features/reviews/components/ReviewSystem.tsx — v2 with Verified Buyer Form
 import { useOptimistic, useState, useTransition } from 'react'
-import { useInfiniteQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { useLanguage } from '@/context/LanguageContext'
 
@@ -106,12 +106,7 @@ export default function ReviewSystem({
     return json.data as ReviewData[]
   }
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage
-  } = useInfiniteQuery({
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ['reviews', currentFilter, initialVariantId],
     queryFn: ({ pageParam }) => fetchReviews({ pageParam }),
     initialPageParam: 1,

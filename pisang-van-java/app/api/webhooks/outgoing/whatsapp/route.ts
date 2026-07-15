@@ -1,6 +1,6 @@
-import { type NextRequest, NextResponse } from 'next/server'
-import { Receiver } from '@upstash/qstash'
 import * as Sentry from '@sentry/nextjs'
+import { Receiver } from '@upstash/qstash'
+import { type NextRequest, NextResponse } from 'next/server'
 import { sendWhatsAppNotification } from '@/lib/notifications'
 import { logger } from '@/src/lib/logger'
 
@@ -8,9 +8,7 @@ const currentSigningKey = process.env.QSTASH_CURRENT_SIGNING_KEY || ''
 const nextSigningKey = process.env.QSTASH_NEXT_SIGNING_KEY || ''
 
 const receiver =
-  currentSigningKey && nextSigningKey
-    ? new Receiver({ currentSigningKey, nextSigningKey })
-    : null
+  currentSigningKey && nextSigningKey ? new Receiver({ currentSigningKey, nextSigningKey }) : null
 
 export async function POST(req: NextRequest) {
   try {

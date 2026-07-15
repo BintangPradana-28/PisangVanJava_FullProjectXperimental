@@ -28,7 +28,7 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false
   },
 
-  serverExternalPackages: ['@prisma/client', '@node-rs/argon2'],
+  serverExternalPackages: ['@prisma/client'],
 
   experimental: {
     optimizePackageImports: [

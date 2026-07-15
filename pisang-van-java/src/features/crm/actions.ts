@@ -259,6 +259,9 @@ export const applyForResellerAction = authActionClient
       return { success: true as const, data: newDeal }
     } catch (err: any) {
       console.error('[RESELLER_APPLY_ERROR]', err)
-      return { success: false as const, error: err.message || 'Gagal mengirimkan pendaftaran reseller.' }
+      return {
+        success: false as const,
+        error: err.message || 'Gagal mengirimkan pendaftaran reseller.'
+      }
     }
   })

@@ -4,21 +4,18 @@ Thank you for your interest in contributing. This document outlines the developm
 
 ---
 
-## Prerequisites
-
-- Node.js >= 20
-- pnpm >= 11 (strictly enforced -- npm and yarn will be rejected by `preinstall` hook)
+- Bun >= 1.2.0 (strictly enforced)
 
 ---
 
 ## Development Setup
 
 1. Fork and clone the repository
-2. Run `pnpm install`
+2. Run `bun install`
 3. Copy `.env.example` to `.env` and fill in all required variables
-4. Run `pnpm run db:push` to sync the database schema
-5. Run `pnpm run db:seed` to populate demo data
-6. Run `pnpm run dev` to start the development server
+4. Run `bun run db:push` to sync the database schema
+5. Run `bun run db:seed` to populate demo data
+6. Run `bun run dev` to start the development server
 
 ---
 
@@ -53,9 +50,9 @@ Use conventional commit prefixes:
 This project uses **Biome** (not ESLint/Prettier). Before committing:
 
 ```bash
-pnpm run check          # Format + lint (write mode)
-pnpm run lint:biome     # Lint only
-pnpm run format         # Format only
+bun run check          # Format + lint (write mode)
+bun run lint:biome     # Lint only
+bun run format         # Format only
 ```
 
 Pre-commit hooks (Husky + lint-staged) will run Biome and secretlint automatically.
@@ -81,10 +78,8 @@ Pre-commit hooks (Husky + lint-staged) will run Biome and secretlint automatical
 - Financial calculations must use the `src/lib/financial/money.ts` engine (Decimal.js, never floating-point arithmetic)
 - Never commit secrets -- `secretlint` runs on every commit
 
-### Testing
-
-- Unit tests: `pnpm run test` (Vitest)
-- E2E tests: `pnpm run test:e2e` (Playwright)
+- Unit tests: `bun run test` (Vitest)
+- E2E tests: `bun run test:e2e` (Playwright)
 - New features should include corresponding test coverage
 - Critical paths (checkout, payment, money calculations) must have tests
 
@@ -92,7 +87,7 @@ Pre-commit hooks (Husky + lint-staged) will run Biome and secretlint automatical
 
 ## Pull Request Process
 
-1. Ensure all checks pass: `pnpm run check`, `pnpm run test`, `pnpm run build`
+1. Ensure all checks pass: `bun run check`, `bun run test`, `bun run build`
 2. Write a clear PR description explaining the change and its rationale
 3. Link any related issues
 4. Keep PRs focused -- one logical change per PR

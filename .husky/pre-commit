@@ -1,2 +1,2 @@
 echo "🛡️ Running pre-commit hooks (Secretlint + Biome)..."
-pnpm --filter pisang-goreng-van-java exec lint-staged
+cd pisang-van-java && bunx lint-staged

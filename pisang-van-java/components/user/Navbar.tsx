@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import { useEffect, useRef, useState } from 'react'
+import NotificationBell from '@/components/notifications/NotificationBell'
 import { useLanguage } from '@/context/LanguageContext'
 import { useSettings } from '@/context/SettingsContext'
 import { useTheme } from '@/context/ThemeContext'
@@ -17,7 +18,6 @@ import {
   useCartStore
 } from '@/src/features/cart/stores/cart.store'
 import SearchDialog from './SearchDialog'
-import NotificationBell from '@/components/notifications/NotificationBell'
 
 const ShoppingBagIcon = () => (
   <svg

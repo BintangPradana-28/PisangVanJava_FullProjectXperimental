@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.2.0] - 2026-07-15
+
+### Added
+- **ADR 0008 (Bun Migration)**: Created `docs/adr/0008-bun-migration.md` to document the decision to migrate from pnpm + Node.js to Bun package manager and runtime.
+
+### Changed
+- **Package Manager Migration**: Migrated the entire workspace from `pnpm` to `Bun`. Deleted `pnpm-workspace.yaml`, `pnpm-lock.yaml`, `.npmrc`, and generated `bun.lock` at the root workspace level.
+- **Argon2 Hashing Migration**: Replaced the `@node-rs/argon2` Rust native addon (which has binary compatibility issues in Bun) with Bun's native high-performance `Bun.password` Argon2id API. Existing password hashes in the database remain fully valid and backward-compatible.
+- **Docker Setup**: Updated the `Dockerfile` to use `oven/bun:1-alpine` as the base image for both building and running Next.js.
+- **CI/CD Workflows**: Migrated `.github/workflows/ci.yml` and `backup.yml` to use `oven-sh/setup-bun@v2` and execute all scripts via `bun` instead of `pnpm` / `npx`.
+- **System and Dev Tools**: Removed redundant transpilers `ts-node`, `tsx`, and `dotenv` from development dependencies, relying on Bun's native TypeScript execution and automatic `.env` loading.
+- **Documentation**: Updated package runner examples and configuration specs in `GEMINI.md`, `README.md`, `ARCHITECTURE.md`, `SECURITY.md`, `CONTRIBUTING.md`, `BUYER_TECHNICAL_OVERVIEW.md`, and `compliance_backup_policy.md`.
+
+---
+
 ## [1.1.0] - 2026-07-03
 
 ### Added

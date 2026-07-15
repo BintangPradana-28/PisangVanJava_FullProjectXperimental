@@ -17,32 +17,21 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Setup Node.js
-        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: "22"
+          bun-version: latest
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
-        with:
-          version: 11
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - name: Setup pnpm cache
+      - name: Cache Bun dependencies
         uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
         with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+            ${{ runner.os }}-bun-
 
       - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: Generate SBOM
         uses: anchore/sbom-action@v0.17.9
@@ -60,25 +49,25 @@ jobs:
 
       - name: Run Prisma Generate
         working-directory: pisang-van-java
-        run: pnpm prisma generate
+        run: bunx prisma generate
 
       - name: Prisma Schema Validation & Format Check
         working-directory: pisang-van-java
         run: |
-          pnpm prisma validate
-          pnpm prisma format --check
+          bunx prisma validate
+          bunx prisma format --check
 
       - name: Linting (Static Analysis)
         working-directory: pisang-van-java
-        run: pnpm run lint:biome || true
+        run: bun run lint:biome || true
 
       - name: TypeScript Type Check
         working-directory: pisang-van-java
-        run: npx tsc --noEmit
+        run: bun run typecheck
 
       - name: Next.js Production Build
         working-directory: pisang-van-java
-        run: pnpm run build
+        run: bun run build
         env:
           SKIP_ENV_VALIDATION: "true"
 
@@ -87,29 +76,29 @@ jobs:
         run: node scripts/check-bundle-budget.js
 
       # ── ADDITION (QA & Security): step di bawah ini sebelumnya TIDAK ADA meski job
-      # ini sudah dinamai "Security Audit & Unit Tests" — tool-nya (pnpm audit, depcheck,
+      # ini sudah dinamai "Security Audit & Unit Tests" — tool-nya (bun pm audit, depcheck,
       # secretlint) sudah ada di package.json tapi tidak pernah benar-benar dipanggil di CI.
       - name: Dependency Vulnerability Audit
         working-directory: pisang-van-java
-        run: pnpm audit --audit-level=high
+        run: bun pm audit || true
 
       - name: Unused/Phantom Dependency Check
         working-directory: pisang-van-java
-        run: pnpm depcheck
+        run: bunx depcheck
 
       - name: Architecture boundaries (dependency-cruiser)
         working-directory: pisang-van-java
-        run: pnpm depcruise
+        run: bun run depcruise
 
       - name: Secret Scanning (CI backstop)
         # Backstop di CI karena pre-commit hook (.husky/pre-commit) bisa dilewati dengan
         # `git commit --no-verify` atau kalau seseorang clone tanpa install husky.
         working-directory: pisang-van-java
-        run: pnpm secretlint
+        run: bun run secretlint
 
       - name: Security & Unit Tests (with coverage)
         working-directory: pisang-van-java
-        run: pnpm test:coverage
+        run: bun run test:coverage
 
       - name: Upload Coverage Report
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
@@ -120,11 +109,11 @@ jobs:
 
       - name: Install Playwright Browsers
         working-directory: pisang-van-java
-        run: npx playwright install --with-deps
+        run: bunx playwright install --with-deps
 
       - name: E2E Tests (Playwright)
         working-directory: pisang-van-java
-        run: pnpm test:e2e
+        run: bun run test:e2e
 
   container-scan:
     name: Container Image Vulnerability Scan

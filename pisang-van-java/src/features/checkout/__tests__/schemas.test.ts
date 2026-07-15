@@ -31,9 +31,11 @@ vi.mock('@/lib/prisma', () => {
   return {
     prisma: {
       menuVariant: {
-        findMany: vi.fn().mockResolvedValue([
-          { id: 'cmq1qy9wq0006lvdo61smdksk', flavorName: 'Original', priceKembung: 10000 }
-        ])
+        findMany: vi
+          .fn()
+          .mockResolvedValue([
+            { id: 'cmq1qy9wq0006lvdo61smdksk', flavorName: 'Original', priceKembung: 10000 }
+          ])
       },
       topping: {
         findMany: vi.fn().mockResolvedValue([

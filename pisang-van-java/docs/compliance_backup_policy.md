@@ -12,5 +12,5 @@ This protocol ensures compliance with **UU No. 8 Tahun 1997** (10-year retention
 To recover the database in the event of catastrophic failure:
 1. Provision a clean PostgreSQL instance.
 2. Ensure `BACKUP_ENCRYPTION_KEY` and `DATABASE_URL` are set in the environment.
-3. Execute: `npx ts-node scripts/restore.ts ./backups/pvj-backup-[TIMESTAMP].sql.enc`
+3. Execute: `bun scripts/restore.ts ./backups/pvj-backup-[TIMESTAMP].sql.enc`
 4. Verify checksums and run data integrity tests.

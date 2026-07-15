@@ -74,17 +74,24 @@ export const useCartStore = create<CartStore>()(
         set((state) => {
           // Cek apakah variant + topping sama persis → increment qty
           const existing = state.items.find((i) => {
-            const sameVariantAndNotes = i.menuVariantId === newItem.menuVariantId && i.notes === newItem.notes
+            const sameVariantAndNotes =
+              i.menuVariantId === newItem.menuVariantId && i.notes === newItem.notes
             if (!sameVariantAndNotes) return false
-            
+
             const iToppings = i.toppings || []
             const newToppings = newItem.toppings || []
             if (iToppings.length !== newToppings.length) return false
 
-            const sortedIToppings = [...iToppings].sort((a, b) => a.toppingId.localeCompare(b.toppingId))
-            const sortedNewToppings = [...newToppings].sort((a, b) => a.toppingId.localeCompare(b.toppingId))
+            const sortedIToppings = [...iToppings].sort((a, b) =>
+              a.toppingId.localeCompare(b.toppingId)
+            )
+            const sortedNewToppings = [...newToppings].sort((a, b) =>
+              a.toppingId.localeCompare(b.toppingId)
+            )
 
-            return sortedIToppings.every((t, idx) => t.toppingId === sortedNewToppings[idx]?.toppingId)
+            return sortedIToppings.every(
+              (t, idx) => t.toppingId === sortedNewToppings[idx]?.toppingId
+            )
           })
           const limit = newItem.stock ?? 999
           if (existing) {

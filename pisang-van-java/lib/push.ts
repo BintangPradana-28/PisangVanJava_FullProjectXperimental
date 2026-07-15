@@ -14,9 +14,8 @@
 import 'server-only'
 
 import webpush from 'web-push'
-
-import { redis } from './redis'
 import { prisma } from './prisma'
+import { redis } from './redis'
 
 // ─── VAPID Init ───────────────────────────────────────────────────────────────
 // Sourced from process.env directly (same pattern as lib/redis.ts).

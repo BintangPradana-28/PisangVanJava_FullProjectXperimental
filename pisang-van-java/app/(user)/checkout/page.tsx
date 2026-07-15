@@ -349,15 +349,25 @@ export default function CheckoutPage() {
         return
       }
       if (!isManualAddress && !selectedAddressId) {
-        toast.error(isEn ? 'Please select a shipping address' : 'Pilih alamat pengiriman terlebih dahulu')
+        toast.error(
+          isEn ? 'Please select a shipping address' : 'Pilih alamat pengiriman terlebih dahulu'
+        )
         return
       }
       if (!coordinates) {
-        toast.error(isEn ? 'Please select your location on the map' : 'Silakan tentukan lokasi pengiriman Anda pada peta terlebih dahulu')
+        toast.error(
+          isEn
+            ? 'Please select your location on the map'
+            : 'Silakan tentukan lokasi pengiriman Anda pada peta terlebih dahulu'
+        )
         return
       }
       if (!selectedRate) {
-        toast.error(isEn ? 'Please select a courier service' : 'Silakan pilih kurir pengiriman terlebih dahulu')
+        toast.error(
+          isEn
+            ? 'Please select a courier service'
+            : 'Silakan pilih kurir pengiriman terlebih dahulu'
+        )
         return
       }
     }
@@ -822,7 +832,12 @@ export default function CheckoutPage() {
                             value: 'DELIVERY' as DeliveryMethod,
                             icon: '🛵',
                             label: isEn ? 'Delivery' : 'Diantar',
-                            sub: deliveryFee > 0 ? `+${formatPrice(deliveryFee)}` : (isEn ? 'Free' : 'Gratis')
+                            sub:
+                              deliveryFee > 0
+                                ? `+${formatPrice(deliveryFee)}`
+                                : isEn
+                                  ? 'Free'
+                                  : 'Gratis'
                           }
                         ].map((opt) => (
                           <button
@@ -926,7 +941,9 @@ export default function CheckoutPage() {
                               onClick={() => setIsManualAddress(true)}
                               className="text-xs font-bold text-amber-600 hover:text-amber-700 underline"
                             >
-                              {isEn ? '+ Write New Address Manually' : '+ Tulis Alamat Baru Secara Manual'}
+                              {isEn
+                                ? '+ Write New Address Manually'
+                                : '+ Tulis Alamat Baru Secara Manual'}
                             </button>
                           </div>
                         ) : (
@@ -934,7 +951,11 @@ export default function CheckoutPage() {
                             <textarea
                               value={address}
                               onChange={(e) => setAddress(e.target.value)}
-                              placeholder={isEn ? 'Street Name, Block, Building No...' : 'Jl. Contoh No.1, RT/RW, Kelurahan, Kecamatan, Kota...'}
+                              placeholder={
+                                isEn
+                                  ? 'Street Name, Block, Building No...'
+                                  : 'Jl. Contoh No.1, RT/RW, Kelurahan, Kecamatan, Kota...'
+                              }
                               rows={3}
                               className="w-full px-4 py-3 rounded-[4px] border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all resize-none"
                             />
@@ -944,7 +965,9 @@ export default function CheckoutPage() {
                                 onClick={() => setIsManualAddress(false)}
                                 className="text-xs font-bold text-amber-600 hover:text-amber-700 underline"
                               >
-                                {isEn ? '← Back to Saved Addresses' : '← Kembali Pilih Alamat Tersimpan'}
+                                {isEn
+                                  ? '← Back to Saved Addresses'
+                                  : '← Kembali Pilih Alamat Tersimpan'}
                               </button>
                             )}
                           </div>
@@ -1314,7 +1337,15 @@ export default function CheckoutPage() {
                 <span className="flex items-center gap-2">
                   🛒 {isEn ? 'Order Summary' : 'Ringkasan Pesanan'}
                   <span className="text-xs text-zinc-500 font-sans font-normal">
-                    ({showSummaryMobile ? (isEn ? 'Hide' : 'Sembunyikan') : (isEn ? 'Show Details' : 'Lihat Detail')})
+                    (
+                    {showSummaryMobile
+                      ? isEn
+                        ? 'Hide'
+                        : 'Sembunyikan'
+                      : isEn
+                        ? 'Show Details'
+                        : 'Lihat Detail'}
+                    )
                   </span>
                 </span>
                 <span className="text-amber-600 font-serif">{formatPrice(grandTotal)}</span>
@@ -1365,7 +1396,15 @@ export default function CheckoutPage() {
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between text-sm text-green-600 font-semibold">
-                      <span>{usePoints ? (isEn ? 'Redeem Coins' : 'Tukar Koin') : (isEn ? 'Discount' : 'Diskon')}</span>
+                      <span>
+                        {usePoints
+                          ? isEn
+                            ? 'Redeem Coins'
+                            : 'Tukar Koin'
+                          : isEn
+                            ? 'Discount'
+                            : 'Diskon'}
+                      </span>
                       <span>−{formatPrice(discount)}</span>
                     </div>
                   )}
@@ -1373,7 +1412,7 @@ export default function CheckoutPage() {
                     <div className="flex justify-between text-sm text-zinc-500">
                       <span>{isEn ? 'Shipping Fee' : 'Ongkos Kirim'}</span>
                       <span className="font-medium text-zinc-700 dark:text-zinc-300">
-                        {deliveryFee > 0 ? formatPrice(deliveryFee) : (isEn ? 'Free' : 'Gratis')}
+                        {deliveryFee > 0 ? formatPrice(deliveryFee) : isEn ? 'Free' : 'Gratis'}
                       </span>
                     </div>
                   )}
@@ -1386,7 +1425,11 @@ export default function CheckoutPage() {
                 {/* Security badge */}
                 <div className="mt-4 flex items-center gap-2 text-xs text-zinc-400 bg-zinc-50 dark:bg-zinc-800/50 rounded-[4px] px-3 py-2.5">
                   <span className="text-green-500 text-base">🔒</span>
-                  <span>{isEn ? 'Your data is encrypted. Server-side locked price, manipulation-free.' : 'Data Anda terenkripsi. Harga dikunci server, bebas manipulasi.'}</span>
+                  <span>
+                    {isEn
+                      ? 'Your data is encrypted. Server-side locked price, manipulation-free.'
+                      : 'Data Anda terenkripsi. Harga dikunci server, bebas manipulasi.'}
+                  </span>
                 </div>
               </div>
             </div>

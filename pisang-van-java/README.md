@@ -41,7 +41,7 @@ Pisang Van Java is a production-grade hybrid web application serving both B2C cu
 | **Security** | Upstash Redis (Rate Limiting, Session Store), CSP Headers, HMAC Verification |
 | **Linting** | Biome |
 | **Testing** | Vitest, Playwright |
-| **Package Manager** | pnpm (strictly enforced) |
+| **Package Manager** | Bun |
 | **Infrastructure** | Terraform (Cloudflare WAF + DNS), Docker, Vercel Edge |
 
 ---
@@ -155,8 +155,7 @@ pisang-van-java/
 
 ### Prerequisites
 
-- **Node.js** >= 20
-- **pnpm** >= 11 (strictly enforced -- npm/yarn will be rejected)
+- **Bun** >= 1.2.0
 - **Supabase** account (PostgreSQL database)
 - **Upstash** account (Redis for rate limiting + sessions)
 
@@ -165,7 +164,7 @@ pisang-van-java/
 ```bash
 git clone <your-repo-url>
 cd pisang-van-java
-pnpm install
+bun install
 ```
 
 ### 2. Configure Environment
@@ -179,14 +178,14 @@ Fill in all required variables in `.env`. The build will fail-safe if critical v
 ### 3. Setup Database
 
 ```bash
-pnpm run db:push    # Push Prisma schema to PostgreSQL
-pnpm run db:seed    # Seed demo data
+bun run db:push    # Push Prisma schema to PostgreSQL
+bun run db:seed    # Seed demo data
 ```
 
 ### 4. Run Development Server
 
 ```bash
-pnpm run dev
+bun run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
@@ -197,29 +196,29 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ```bash
 # Development
-pnpm run dev              # Start dev server with Turbopack
-pnpm run build            # Production build (prisma generate + next build)
-pnpm run start            # Start production server
+bun run dev              # Start dev server with Turbopack (Bun runtime)
+bun run build            # Production build (prisma generate + next build)
+bun run start            # Start production server
 
 # Database
-pnpm run db:push          # Sync schema to database
-pnpm run db:studio        # Open Prisma Studio GUI
-pnpm run db:seed          # Seed demo data
+bun run db:push          # Sync schema to database
+bun run db:studio        # Open Prisma Studio GUI
+bun run db:seed          # Seed demo data
 
 # Code Quality
-pnpm run check            # Biome format + lint (write mode)
-pnpm run lint:biome       # Biome lint only
-pnpm run format           # Biome format only
-pnpm run secretlint       # Scan for leaked secrets
+bun run check            # Biome format + lint (write mode)
+bun run lint:biome       # Biome lint only
+bun run format           # Biome format only
+bun run secretlint       # Scan for leaked secrets
 
 # Testing
-pnpm run test             # Unit tests (Vitest)
-pnpm run test:watch       # Unit tests in watch mode
-pnpm run test:e2e         # End-to-end tests (Playwright)
+bun run test             # Unit tests (Vitest)
+bun run test:watch       # Unit tests in watch mode
+bun run test:e2e         # End-to-end tests (Playwright)
 
 # Infrastructure
-pnpm run sentry:sourcemaps   # Upload source maps to Sentry
-pnpm run audit:fix           # Fix vulnerable dependencies
+bun run sentry:sourcemaps   # Upload source maps to Sentry
+bun run audit               # Audit dependencies
 ```
 
 ---

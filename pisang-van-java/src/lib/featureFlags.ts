@@ -12,7 +12,14 @@ export async function isFeatureEnabled(distinctId: string, flagKey: string): Pro
     const isEnabled = await client.isFeatureEnabled(flagKey, distinctId)
     return !!isEnabled
   } catch (error) {
-    console.error('[POSTHOG] Failed to check feature flag', flagKey, 'for', distinctId, 'error:', error)
+    console.error(
+      '[POSTHOG] Failed to check feature flag',
+      flagKey,
+      'for',
+      distinctId,
+      'error:',
+      error
+    )
     return false
   }
 }

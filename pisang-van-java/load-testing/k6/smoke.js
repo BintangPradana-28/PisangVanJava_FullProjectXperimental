@@ -5,8 +5,9 @@
 //
 // Cakupan sengaja dibatasi ke endpoint publik/read-only. Lihat
 // load-testing/README.md bagian "Cakupan saat ini" untuk alasannya.
-import http from 'k6/http'
+
 import { check } from 'k6'
+import http from 'k6/http'
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000'
 

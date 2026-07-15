@@ -17,7 +17,7 @@ Target respons awal: 48 jam. Kerentanan yang dikonfirmasi akan diperbaiki dulu s
 
 ## Ringkasan Postur Keamanan Teknis
 
-- **Password hashing:** `@node-rs/argon2` — lihat `ARCHITECTURE.md` §2.
+- **Password hashing:** `Bun.password` (Argon2id, built-in Bun runtime) — lihat `ARCHITECTURE.md` §2.
 - **Validasi input:** Zod di semua form & URL params sebelum menyentuh database.
 - **Webhook Midtrans:** wajib signature verification + Cloudflare WAF IP-allowlist (`infra/cloudflare/`).
 - **Rate limiting:** Upstash Ratelimit di endpoint login, checkout, dan webhook.
@@ -28,7 +28,7 @@ Target respons awal: 48 jam. Kerentanan yang dikonfirmasi akan diperbaiki dulu s
 
 ## Dependency Security
 
-Dependency di-cek lewat `pnpm audit` dan pipeline di `.github/workflows/ci.yml`. Update dependency dengan CVE aktif diprioritaskan di luar jadwal rilis normal.
+Dependency di-cek lewat `bun pm audit` dan pipeline di `.github/workflows/ci.yml`. Update dependency dengan CVE aktif diprioritaskan di luar jadwal rilis normal.
 
 ---
 *Dokumen ini dibuat 02-Juli-2026 menggantikan placeholder SECURITY.md default yang sebelumnya kosong dan salah lokasi (ada di root wrapper, bukan di sini). Isi kontak di bagian "Melaporkan Kerentanan" masih perlu diisi manual.*

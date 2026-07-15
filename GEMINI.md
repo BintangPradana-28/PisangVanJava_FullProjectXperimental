@@ -26,7 +26,7 @@
 - URL State : nuqs
 - State Management: Zustand
 - Data Fetching : Server Actions + next-safe-action
-- Package Manager : pnpm
+- Package Manager : Bun
 - Deployment : Vercel (with Security Headers)
 - Payments : Midtrans
 - Communication : Resend & React Email
@@ -41,28 +41,28 @@
 
 ```bash
 # Development
-pnpm run dev # Run dev server
-pnpm run build # Build for production
-pnpm run start # Start production build
-pnpm run lint # Run linter (Biome)
-pnpm run format # Format code (Biome)
+bun run dev # Run dev server (Bun runtime)
+bun run build # Build for production
+bun run start # Start production build
+bun run lint # Run linter (Biome)
+bun run format # Format code (Biome)
 
 # Package Management
-pnpm add [package] # Install new package
+bun add [package] # Install new package
 
 # Testing
-pnpm run test # Run all tests
-pnpm run test:unit # Run unit tests only
-pnpm run test:e2e # Run e2e tests only
+bun run test # Run all tests
+bun run test:unit # Run unit tests only
+bun run test:e2e # Run e2e tests only
 
 # Database
-pnpm run db:push # Sync database schema
-pnpm run db:migrate # Run migrations
-pnpm run db:seed # Seed initial data
-pnpm run db:studio # Open Prisma Studio
+bun run db:push # Sync database schema
+bun run db:migrate # Run migrations
+bun run db:seed # Seed initial data
+bun run db:studio # Open Prisma Studio
 ```
 
-> **NEVER** use npm or yarn — **always use pnpm**.
+> **NEVER** use npm, yarn, or pnpm — **always use bun**.
 
 ---
 

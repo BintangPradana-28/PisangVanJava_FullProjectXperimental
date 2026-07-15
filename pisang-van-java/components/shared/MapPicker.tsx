@@ -49,7 +49,12 @@ interface MapPickerProps {
   draggable?: boolean
 }
 
-function LocationMarker({ position, setPosition, setAddressName, draggable = true }: MapPickerProps) {
+function LocationMarker({
+  position,
+  setPosition,
+  setAddressName,
+  draggable = true
+}: MapPickerProps) {
   function reverseGeocode(lat: number, lng: number) {
     fetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`

@@ -26,3 +26,16 @@ File ini mendokumentasikan instruksi-instruksi utama yang diberikan kepada AI se
 - **Lanjutan ketiga (05-Juli-2026):** ralat temuan sendiri — sebelumnya diduga rate limiting nggak ada di endpoint checkout/register (dari grep pattern yang kurang luas). Dicek ulang langsung ke kode: `enforceCheckoutRateLimit()` beneran dipanggil di `app/api/orders/route.ts` POST handler, dan `rateLimit.limit()` beneran dipanggil di `app/api/auth/register/route.ts` — keduanya nyata, bukan cuma diimpor. **Sengaja TIDAK ditulis kode baru untuk "fix" gap yang ternyata nggak ada** — ini di luar boundary Docs & Observability Agent juga (itu kerjaan Backend Agent, dan nyentuh auth-adjacent surface yang butuh konfirmasi eksplisit dulu).
   - Ditemukan: 4 file draft notifikasi (`*.tsx.txt`, `*.prisma.txt`, 2 route dengan nama salah) isinya sebenarnya reasonable (pola auth session-scoped, no BOLA) tapi eksplisit masih "MVP scope" & butuh schema Prisma baru yang belum di-merge — **sengaja tidak diintegrasikan**, itu keputusan fitur + schema, bukan docs.
   - Dibersihkan: 42 file di seluruh codebase masih punya sisa komentar `// RAG Source: ...` / `State Source: RAG —...` (artefak proses AI-generation, murni komentar, 0 perubahan logic) — semua dihapus. Satu di antaranya (`src/lib/animations.ts`) ternyata nyimpen path lokal Windows developer (`c:\Users\prada\...`) di komentar yang sekarang jadi "orphan" — sekalian dibersihkan karena itu kebocoran info personal kecil kalau repo ini ditunjukin ke orang lain. File serupa (`docs/cro_audit_full.txt`) juga masih ada path yang sama — disaranin dipindah keluar dari `docs/` atau dihapus, bukan didokumentasikan sebagai referensi.
+
+### 15-Juli-2026: Migrasi Node.js + pnpm ke Bun (Fase 1+2)
+
+- **Instruksi User:** Meminta migrasi menyeluruh dari pnpm + Node.js ke Bun sebagai package manager dan runtime untuk meningkatkan kecepatan development/CI.
+- **Hasil/Keputusan:**
+  - Melakukan migrasi package manager dari `pnpm` ke `bun` (menghapus `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `.npmrc`, menghasilkan `bun.lock`).
+  - Mengganti `@node-rs/argon2` (native addon yang bermasalah di Bun runtime) dengan `Bun.password` API bawaan runtime.
+  - Memperbarui `Dockerfile` dan Docker setup menggunakan base image `oven/bun:1-alpine`.
+  - Memperbarui file workflow CI/CD (`ci.yml` & `backup.yml`) ke `oven-sh/setup-bun@v2`.
+  - Memperbarui seluruh dokumentasi (`GEMINI.md`, `README.md`, `ARCHITECTURE.md`, `SECURITY.md`, `CONTRIBUTING.md`, `BUYER_TECHNICAL_OVERVIEW.md`, `compliance_backup_policy.md`).
+  - Menyusun ADR baru (`0008-bun-migration.md`) mendokumentasikan keputusan arsitektur ini.
+  - Penundaan Fase 3 (aktifkan Vercel Bun runtime `bunVersion` di production) untuk meminimalkan risiko stabilitas.
+

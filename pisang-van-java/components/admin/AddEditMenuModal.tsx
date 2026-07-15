@@ -164,7 +164,9 @@ export default function AddEditMenuModal({ open, editItem, onClose, onSaved }: P
                     { key: 'priceKrispy', label: 'Krispy (Isi 5)' }
                   ].map(({ key, label }) => (
                     <div key={key}>
-                      <label htmlFor={`input-${key}`} className="block text-xs text-brown-400 mb-1">{label}</label>
+                      <label htmlFor={`input-${key}`} className="block text-xs text-brown-400 mb-1">
+                        {label}
+                      </label>
                       <input
                         id={`input-${key}`}
                         type="number"
@@ -242,7 +244,10 @@ export default function AddEditMenuModal({ open, editItem, onClose, onSaved }: P
                 </label>
 
                 <div className="flex items-center gap-2">
-                  <label htmlFor="input-sortOrder" className="text-xs font-semibold text-brown-400 uppercase tracking-wider">
+                  <label
+                    htmlFor="input-sortOrder"
+                    className="text-xs font-semibold text-brown-400 uppercase tracking-wider"
+                  >
                     Urutan
                   </label>
                   <input

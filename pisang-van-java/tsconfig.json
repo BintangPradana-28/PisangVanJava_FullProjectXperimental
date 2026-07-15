@@ -22,7 +22,7 @@
     "paths": {
       "@/*": ["./*"]
     },
-    "types": []
+    "types": ["bun"]
   },
   "include": [
     "next-env.d.ts",

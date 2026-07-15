@@ -45,7 +45,7 @@ module.exports = {
       comment:
         'src/features/X may not reach into src/features/Y internals (repositories, ' +
         'services, components, stores). It MAY import: (a) type-only exports from ' +
-        "another feature (e.g. pos importing `import type { ProductType }` from menu), " +
+        'another feature (e.g. pos importing `import type { ProductType }` from menu), ' +
         "or (b) a feature's actions.ts, which is this project's sanctioned Server Action " +
         "contract for cross-feature calls (e.g. cart calling checkout's validateVoucher). " +
         'Both of these existing, audited cases are allowlisted below — anything else ' +
@@ -69,12 +69,12 @@ module.exports = {
       name: 'no-new-files-in-legacy-src-app',
       severity: 'error',
       comment:
-        "src/app/ is NOT read by Next.js App Router — only the top-level app/ is. " +
-        "A dead duplicate webhook route (src/app/api/webhooks/midtrans/route.ts) lived " +
-        "here for multiple audit cycles before being caught, because it silently did " +
-        "nothing rather than erroring. This rule makes src/app/** a hard error so a new " +
-        "file placed here (never reachable by any real request) fails fast instead of " +
-        "sitting there looking functional.",
+        'src/app/ is NOT read by Next.js App Router — only the top-level app/ is. ' +
+        'A dead duplicate webhook route (src/app/api/webhooks/midtrans/route.ts) lived ' +
+        'here for multiple audit cycles before being caught, because it silently did ' +
+        'nothing rather than erroring. This rule makes src/app/** a hard error so a new ' +
+        'file placed here (never reachable by any real request) fails fast instead of ' +
+        'sitting there looking functional.',
       from: {},
       to: {
         path: '^src/app/'
@@ -103,7 +103,7 @@ module.exports = {
         'src/lib/store/usePosStore.ts (a duplicate, outdated Zustand store — the real one ' +
         'lives at src/features/pos/store/usePosStore.ts) and src/lib/SearchDialog.tsx (a ' +
         'byte-identical copy of components/user/SearchDialog.tsx) sat unnoticed. Warn, not ' +
-        "error, because some orphans are legitimate (Next.js route handlers and page.tsx " +
+        'error, because some orphans are legitimate (Next.js route handlers and page.tsx ' +
         "files are 'orphans' by dependency-cruiser's definition since the framework, not " +
         'another source file, is what calls them) — pathNot below excludes those, plus ' +
         "dependency-cruiser's own default exclusions (dotfiles, .d.ts, tsconfig, etc).",

@@ -32,8 +32,8 @@ export default defineConfig({
   expect: {
     toHaveScreenshot: {
       maxDiffPixelRatio: 0.02,
-      animations: 'disabled',
-    },
+      animations: 'disabled'
+    }
   },
 
   /* Run your local dev server before starting the tests */

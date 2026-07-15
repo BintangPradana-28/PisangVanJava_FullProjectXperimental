@@ -164,8 +164,8 @@ export default function SecurityClient({
               Aktivasi 2FA wajib untuk akun staff
             </p>
             <p className="text-sm text-zinc-700 dark:text-zinc-300 mt-1">
-              Akun Anda memiliki akses ke data/operasi sensitif, jadi verifikasi dua langkah
-              wajib diaktifkan sebelum melanjutkan ke halaman lain. Ikuti langkah di bawah ini.
+              Akun Anda memiliki akses ke data/operasi sensitif, jadi verifikasi dua langkah wajib
+              diaktifkan sebelum melanjutkan ke halaman lain. Ikuti langkah di bawah ini.
             </p>
           </div>
         </div>
@@ -317,8 +317,8 @@ export default function SecurityClient({
               Unduh Data Saya
             </h3>
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Unduh salinan data pribadi Anda (profil, alamat, riwayat pesanan, ulasan,
-              favorit) dalam format JSON.
+              Unduh salinan data pribadi Anda (profil, alamat, riwayat pesanan, ulasan, favorit)
+              dalam format JSON.
             </p>
           </div>
         </div>

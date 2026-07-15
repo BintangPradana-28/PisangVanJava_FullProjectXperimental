@@ -39,8 +39,6 @@ interface Topping {
 
 const AVAILABLE_TYPES = ['Kembung', 'Lumpia', 'Krispy']
 
-
-
 const TYPE_EMOJI: Record<string, string> = { Kembung: '🥟', Lumpia: '🌯', Krispy: '🥨' }
 
 export default function QuickViewModal({
@@ -152,8 +150,6 @@ export default function QuickViewModal({
 
   const unitPrice = basePrice + toppingsPrice
   const totalPrice = unitPrice * quantity
-
-
 
   // RAG Source:
   // src/features/checkout/schemas.ts

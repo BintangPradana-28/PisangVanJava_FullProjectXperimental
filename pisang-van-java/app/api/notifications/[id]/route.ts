@@ -4,10 +4,7 @@ import { auth } from '@/src/auth'
 
 export const dynamic = 'force-dynamic'
 
-export async function PATCH(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const session = await auth()

@@ -157,7 +157,10 @@ export default function ManageComplaintsClient({
 
             <form onSubmit={handleResolve} className="space-y-4">
               <div>
-                <label htmlFor="adminResponse" className="block text-xs font-bold text-gray-700 mb-1">
+                <label
+                  htmlFor="adminResponse"
+                  className="block text-xs font-bold text-gray-700 mb-1"
+                >
                   Pesan Tanggapan (Terlihat oleh pelanggan)
                 </label>
                 <textarea
@@ -170,7 +173,10 @@ export default function ManageComplaintsClient({
                 />
               </div>
               <div>
-                <label htmlFor="compensationKoin" className="block text-xs font-bold text-gray-700 mb-1">
+                <label
+                  htmlFor="compensationKoin"
+                  className="block text-xs font-bold text-gray-700 mb-1"
+                >
                   Kompensasi Koin Pisang (Opsional)
                 </label>
                 <input

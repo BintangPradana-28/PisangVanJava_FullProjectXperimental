@@ -2,19 +2,22 @@
   "name": "pisang-van-java-workspace",
   "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "pisang-van-java"
+  ],
   "scripts": {
-    "dev": "pnpm --filter pisang-goreng-van-java dev",
-    "build": "pnpm --filter pisang-goreng-van-java build",
-    "start": "pnpm --filter pisang-goreng-van-java start",
-    "lint": "pnpm --filter pisang-goreng-van-java lint",
-    "format": "pnpm --filter pisang-goreng-van-java format",
-    "test": "pnpm --filter pisang-goreng-van-java test",
-    "test:unit": "pnpm --filter pisang-goreng-van-java test:unit",
-    "test:e2e": "pnpm --filter pisang-goreng-van-java test:e2e",
-    "db:push": "pnpm --filter pisang-goreng-van-java db:push",
-    "db:migrate": "pnpm --filter pisang-goreng-van-java db:migrate",
-    "db:seed": "pnpm --filter pisang-goreng-van-java db:seed",
-    "db:studio": "pnpm --filter pisang-goreng-van-java db:studio"
+    "dev": "bun --filter pisang-goreng-van-java dev",
+    "build": "bun --filter pisang-goreng-van-java build",
+    "start": "bun --filter pisang-goreng-van-java start",
+    "lint": "bun --filter pisang-goreng-van-java lint",
+    "format": "bun --filter pisang-goreng-van-java format",
+    "test": "bun --filter pisang-goreng-van-java test",
+    "test:unit": "bun --filter pisang-goreng-van-java test:unit",
+    "test:e2e": "bun --filter pisang-goreng-van-java test:e2e",
+    "db:push": "bun --filter pisang-goreng-van-java db:push",
+    "db:migrate": "bun --filter pisang-goreng-van-java db:migrate",
+    "db:seed": "bun --filter pisang-goreng-van-java db:seed",
+    "db:studio": "bun --filter pisang-goreng-van-java db:studio"
   },
   "type": "module",
   "devDependencies": {

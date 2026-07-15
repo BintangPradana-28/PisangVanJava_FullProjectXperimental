@@ -335,10 +335,7 @@ export default function AlamatPage() {
                         </span>
                       )}
                     </label>
-                    <MapPicker
-                      position={mapPosition}
-                      setPosition={(pos) => setMapPosition(pos)}
-                    />
+                    <MapPicker position={mapPosition} setPosition={(pos) => setMapPosition(pos)} />
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">
                       {t('address_map_help')}
                     </p>

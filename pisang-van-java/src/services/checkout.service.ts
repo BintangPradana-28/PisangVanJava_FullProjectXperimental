@@ -5,7 +5,6 @@ import { prisma } from '@/lib/prisma'
 import { redis } from '@/lib/redis'
 import { normalizePhoneNumber } from '@/lib/utils'
 import { auth } from '@/src/auth'
-import { isStoreOpen } from '@/src/lib/time'
 import {
   type CheckoutActor,
   CheckoutSecurityError,
@@ -18,6 +17,7 @@ import {
 } from '@/src/features/checkout/schemas'
 import { createPendingPayment } from '@/src/features/payment/payment.service'
 import { generateSnapToken } from '@/src/features/payment/service'
+import { isStoreOpen } from '@/src/lib/time'
 import {
   evaluateVoucher,
   executeCheckoutTransaction,

@@ -47,7 +47,7 @@ starts from a known baseline instead of zero information.
 - Unauthenticated endpoints (`/api/log`, `/api/admin/events`) that allowed unbounded writes / unauthenticated data streaming — both now require an authenticated session
 
 **Currently in place:**
-- Argon2 password hashing (`@node-rs/argon2`)
+- Argon2id password hashing (`Bun.password` built-in)
 - 2FA (TOTP via `otplib`, QR enrollment)
 - Session revocation via Redis, fail-closed if Redis is unreachable
 - Rate limiting (Upstash) on auth, checkout, reviews, complaints, and contact endpoints

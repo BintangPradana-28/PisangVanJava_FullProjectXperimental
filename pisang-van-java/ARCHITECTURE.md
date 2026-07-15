@@ -14,7 +14,7 @@ Prinsip Karantina (Isolation): Komponen dalam satu fitur tidak boleh mengimpor *
 ## 2. Zero Trust Security & Validasi
 - **Validasi Zod:** Semua *input form* dan *URL Parameters* harus divalidasi dengan skema Zod sebelum diproses atau menyentuh *database*.
 - **Otorisasi Middleware:** Setiap akses *endpoint API* mutasi data (POST, PUT, DELETE) wajib melewati pengecekan token/sesi.
-- **Enkripsi:** Password selalu di-hash satu arah menggunakan `@node-rs/argon2`. Tidak ada password *plain-text*.
+- **Enkripsi:** Password selalu di-hash satu arah menggunakan `Bun.password` (Argon2id, built-in Bun runtime). Tidak ada password *plain-text*.
 
 ## 3. Flawless Database (Prisma)
 - **Soft Deletes:** Tidak menggunakan perintah `DELETE`. Rekaman ditandai dengan flag `isDeleted = true`.

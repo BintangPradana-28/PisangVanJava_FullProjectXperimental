@@ -1,8 +1,8 @@
 import crypto from 'node:crypto'
+import { OrderStatus, type Prisma } from '@prisma/client'
+import * as Sentry from '@sentry/nextjs'
 import { type NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { OrderStatus, Prisma } from '@prisma/client'
-import * as Sentry from '@sentry/nextjs'
 import { logger } from '@/src/lib/logger'
 
 function safeSecretEquals(a: string, b: string): boolean {
@@ -20,7 +20,10 @@ export async function GET(req: NextRequest) {
   // dan dibandingkan dengan timing-safe comparison.
   const cronSecret = process.env.CRON_SECRET
   if (!cronSecret) {
-    logger.error(new Error('CRON_SECRET missing'), '[SECURITY] CRON_SECRET belum dikonfigurasi — menolak semua request cron demi keamanan.')
+    logger.error(
+      new Error('CRON_SECRET missing'),
+      '[SECURITY] CRON_SECRET belum dikonfigurasi — menolak semua request cron demi keamanan.'
+    )
     Sentry.captureMessage(
       '[SECURITY][MISCONFIG] CRON_SECRET belum di-set — semua cron job (expire order, cleanup log) berhenti berjalan.',
       'error'
@@ -43,7 +46,7 @@ export async function GET(req: NextRequest) {
     // Task 1: Expire Orders older than 24 hours
     if (!task || task === 'expire-orders') {
       const expiredThreshold = new Date(Date.now() - 24 * 60 * 60 * 1000)
-      
+
       // Fetch expired orders
       const expiredOrders = await prisma.order.findMany({
         where: {
@@ -67,7 +70,9 @@ export async function GET(req: NextRequest) {
               if (order.items) {
                 await Promise.all(
                   order.items
-                    .filter((item: { variantId: string | null; quantity: number }) => item.variantId)
+                    .filter(
+                      (item: { variantId: string | null; quantity: number }) => item.variantId
+                    )
                     .map((item: { variantId: string | null; quantity: number }) =>
                       tx.menuVariant.update({
                         where: { id: item.variantId! },
@@ -87,7 +92,7 @@ export async function GET(req: NextRequest) {
     // Task 2: Cleanup logs older than 90 days
     if (!task || task === 'cleanup-logs') {
       const logsThreshold = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
-      
+
       const deletedAudit = await prisma.auditLog.deleteMany({
         where: { createdAt: { lt: logsThreshold } }
       })
@@ -100,7 +105,9 @@ export async function GET(req: NextRequest) {
         deletedAudit: deletedAudit.count,
         deletedAuth: deletedAuth.count
       }
-      logger.info(`[CRON] Cleaned up ${deletedAudit.count} audit logs and ${deletedAuth.count} auth logs.`)
+      logger.info(
+        `[CRON] Cleaned up ${deletedAudit.count} audit logs and ${deletedAuth.count} auth logs.`
+      )
     }
 
     return NextResponse.json({ success: true, results })

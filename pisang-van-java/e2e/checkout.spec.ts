@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 test.describe('Checkout Flow E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
@@ -55,7 +55,9 @@ test.describe('Checkout Flow E2E Tests', () => {
     })
   })
 
-  test('should successfully complete checkout happy path with cash/WhatsApp redirect', async ({ page }) => {
+  test('should successfully complete checkout happy path with cash/WhatsApp redirect', async ({
+    page
+  }) => {
     // Mock checkout POST endpoint to succeed
     await page.route('**/api/orders', async (route) => {
       await route.fulfill({
@@ -75,14 +77,16 @@ test.describe('Checkout Flow E2E Tests', () => {
 
     // Mock window.open to prevent actual WhatsApp navigation during testing
     await page.addInitScript(() => {
-      window.open = () => window;
+      window.open = () => window
     })
 
     await page.goto('/checkout')
     await expect(page).toHaveURL(/\/checkout|\/member-login/)
   })
 
-  test('should show correct error dialog when checkout fails due to out-of-stock', async ({ page }) => {
+  test('should show correct error dialog when checkout fails due to out-of-stock', async ({
+    page
+  }) => {
     // Mock checkout POST endpoint to return out of stock error
     await page.route('**/api/orders', async (route) => {
       await route.fulfill({

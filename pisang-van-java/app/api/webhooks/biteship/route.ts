@@ -63,10 +63,7 @@ export async function POST(req: NextRequest) {
       console.error(
         '[SECURITY] BITESHIP_WEBHOOK_TOKEN belum dikonfigurasi di server — menolak semua webhook demi keamanan.'
       )
-      return NextResponse.json(
-        { success: false, error: 'Webhook not configured' },
-        { status: 503 }
-      )
+      return NextResponse.json({ success: false, error: 'Webhook not configured' }, { status: 503 })
     }
 
     const token = req.headers.get('x-biteship-token') || req.nextUrl.searchParams.get('token')

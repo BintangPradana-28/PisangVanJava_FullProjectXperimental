@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Run OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.14.0
+        uses: zaproxy/action-baseline@7c4deb17904b779435b868615926b4847e17812f # v0.14.0
         with:
           target: "https://pisang-van-java-full-project-vg1z.vercel.app/"
           rules_file_name: ".zap/rules.tsv"

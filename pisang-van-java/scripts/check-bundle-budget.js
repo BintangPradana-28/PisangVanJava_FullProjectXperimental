@@ -24,7 +24,11 @@ Object.keys(manifest.pages).forEach((page) => {
   let totalPageSize = 0
 
   files.forEach((file) => {
-    const filePath = path.join(NEXT_DIR, file)
+    const filePath = path.resolve(NEXT_DIR, file)
+    if (!filePath.startsWith(NEXT_DIR)) {
+      console.error(`❌ Security Error: Path traversal detected in file path: ${file}`)
+      process.exit(1)
+    }
     if (fs.existsSync(filePath)) {
       const stats = fs.statSync(filePath)
       totalPageSize += stats.size
@@ -49,7 +53,11 @@ const commonFiles = manifest.lowPriorityFiles || []
 let totalCommonSize = 0
 
 commonFiles.forEach((file) => {
-  const filePath = path.join(NEXT_DIR, file)
+  const filePath = path.resolve(NEXT_DIR, file)
+  if (!filePath.startsWith(NEXT_DIR)) {
+    console.error(`❌ Security Error: Path traversal detected in file path: ${file}`)
+    process.exit(1)
+  }
   if (fs.existsSync(filePath)) {
     const stats = fs.statSync(filePath)
     totalCommonSize += stats.size

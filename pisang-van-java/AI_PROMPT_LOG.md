@@ -38,4 +38,10 @@ File ini mendokumentasikan instruksi-instruksi utama yang diberikan kepada AI se
   - Memperbarui seluruh dokumentasi (`GEMINI.md`, `README.md`, `ARCHITECTURE.md`, `SECURITY.md`, `CONTRIBUTING.md`, `BUYER_TECHNICAL_OVERVIEW.md`, `compliance_backup_policy.md`).
   - Menyusun ADR baru (`0008-bun-migration.md`) mendokumentasikan keputusan arsitektur ini.
   - Penundaan Fase 3 (aktifkan Vercel Bun runtime `bunVersion` di production) untuk meminimalkan risiko stabilitas.
+  - **Fixes Pasca-Audit (CI/CD & Security)**:
+    - Menyelesaikan error build Vercel akibat hilangnya package `dotenv` dengan mengecualikan folder `scripts` dari `tsconfig.json`.
+    - Mengamankan file scan budget dari path traversal vulnerability di `check-bundle-budget.js` menggunakan validasi `path.resolve` + `startsWith`.
+    - Menyematkan commit SHA absolut (full 40-character SHA) pada GitHub Actions (`setup-bun`, `sbom-action`, `action-baseline`) guna mematuhi security policy Semgrep.
+    - Menambahkan environment variable database dummy (`DATABASE_URL` & `DIRECT_URL`) di workflow lint schema Prisma.
+    - Menyalin `bun.lock` secara dinamis sebelum building Docker container di workflow `ci.yml` untuk mengatasi error build context.
 

@@ -103,7 +103,7 @@
     "radix-ui": "^1.4.3",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-easy-crop": "^5.5.7",
+    "react-easy-crop": "^6.2.2",
     "react-hook-form": "^7.76.1",
     "react-hot-toast": "^2.4.1",
     "react-leaflet": "^5.0.0",

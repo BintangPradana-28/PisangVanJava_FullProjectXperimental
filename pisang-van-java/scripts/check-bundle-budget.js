@@ -4,6 +4,19 @@ const path = require('path')
 const NEXT_DIR = path.join(__dirname, '..', '.next')
 const MANIFEST_PATH = path.join(NEXT_DIR, 'build-manifest.json')
 
+// path.relative()-based containment check — startsWith(NEXT_DIR) alone has a
+// classic prefix-bypass flaw: a resolved path like "/app/.next-evil/x" would
+// incorrectly pass a raw startsWith("/app/.next") check, since it's a string
+// prefix match, not a directory-boundary match. path.relative() only returns
+// a path that doesn't start with ".." (or isn't absolute) when `target` is
+// genuinely nested inside `dir`. Not exploitable today — `file` values below
+// always come from Next's own build-manifest.json, never external input —
+// but this is the correct pattern regardless of current call-site safety.
+function isWithinDir(dir, target) {
+  const rel = path.relative(dir, target)
+  return rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel)
+}
+
 // Budget in bytes
 const PAGE_BUDGET_LIMIT = 200 * 1024 // 200 KB
 const COMMON_BUDGET_LIMIT = 250 * 1024 // 250 KB (shared assets)
@@ -25,7 +38,7 @@ Object.keys(manifest.pages).forEach((page) => {
 
   files.forEach((file) => {
     const filePath = path.resolve(NEXT_DIR, file)
-    if (!filePath.startsWith(NEXT_DIR)) {
+    if (!isWithinDir(NEXT_DIR, filePath)) {
       console.error(`❌ Security Error: Path traversal detected in file path: ${file}`)
       process.exit(1)
     }
@@ -54,7 +67,7 @@ let totalCommonSize = 0
 
 commonFiles.forEach((file) => {
   const filePath = path.resolve(NEXT_DIR, file)
-  if (!filePath.startsWith(NEXT_DIR)) {
+  if (!isWithinDir(NEXT_DIR, filePath)) {
     console.error(`❌ Security Error: Path traversal detected in file path: ${file}`)
     process.exit(1)
   }

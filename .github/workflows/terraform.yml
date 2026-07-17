@@ -14,6 +14,8 @@ jobs:
   terraform:
     name: Terraform Format and Validate
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout Code

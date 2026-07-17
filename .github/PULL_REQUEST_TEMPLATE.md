@@ -12,8 +12,8 @@
 
 ## Checklist
 
-- [ ] Sudah dites lokal (`pnpm dev`)
-- [ ] `pnpm test` lolos
+- [ ] Sudah dites lokal (`bun run dev`)
+- [ ] `bun run test` lolos
 - [ ] `npx tsc --noEmit` tidak ada error
 - [ ] Kalau ada perubahan `schema.prisma` — migration sudah dibuat (`prisma migrate dev`) dan di-commit
 - [ ] Kalau ada perubahan di route/API — sudah dicek ownership check (BOLA/IDOR) dan rate limiting

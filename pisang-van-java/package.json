@@ -14,8 +14,8 @@
   "scripts": {
     "dev": "bun --bun next dev",
     "dev:doppler": "doppler run -- bun --bun next dev",
-    "build": "bunx prisma generate && bun --bun next build",
-    "build:doppler": "doppler run -- bunx prisma generate && doppler run -- bun --bun next build",
+    "build": "bunx prisma generate && bunx prisma migrate deploy && bun --bun next build",
+    "build:doppler": "doppler run -- bunx prisma generate && doppler run -- bunx prisma migrate deploy && doppler run -- bun --bun next build",
     "start": "bun --bun next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",

@@ -10,6 +10,9 @@ jobs:
   ping:
     name: Endpoint Ping Test
     runs-on: ubuntu-latest
+    # This job never checks out code or touches the repo — it only curls a
+    # public URL — so it needs zero GITHUB_TOKEN permissions.
+    permissions: {}
 
     steps:
       - name: Ping Landing Page

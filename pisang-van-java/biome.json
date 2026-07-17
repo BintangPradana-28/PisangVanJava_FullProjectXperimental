@@ -14,7 +14,7 @@
       "!**/dist",
       "!**/build",
       "!**/tsconfig.tsbuildinfo",
-      "!**/pnpm-lock.yaml",
+      "!**/bun.lock",
       "!**/package.json",
       "!**/out"
     ],
@@ -34,7 +34,7 @@
       "!**/dist",
       "!**/build",
       "!**/tsconfig.tsbuildinfo",
-      "!**/pnpm-lock.yaml",
+      "!**/bun.lock",
       "!**/package.json",
       "!**/out"
     ],

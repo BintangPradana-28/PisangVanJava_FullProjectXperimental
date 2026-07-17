@@ -127,11 +127,15 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
+      # FIX: Dockerfile is now workspace-aware (COPY'd package.json/bun.lock at
+      # repo root, plus pisang-van-java/package.json) and expects to be built
+      # FROM the repo root — matches how the rest of the toolchain already
+      # treats this repo (next.config.js's turbopack.root points here too).
+      # The old `cp ../bun.lock .` workaround only existed because the previous
+      # Dockerfile assumed bun.lock was colocated with pisang-van-java/, which
+      # stopped being true the moment this became a proper Bun workspace.
       - name: Build Docker Image
-        working-directory: pisang-van-java
-        run: |
-          cp ../bun.lock .
-          docker build -t pisang-van-java:ci-scan .
+        run: docker build -f pisang-van-java/Dockerfile -t pisang-van-java:ci-scan .
 
       - name: Scan Image with Trivy
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0

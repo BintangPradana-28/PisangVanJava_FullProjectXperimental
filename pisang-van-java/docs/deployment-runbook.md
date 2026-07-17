@@ -8,11 +8,11 @@ This document defines the deployment verification checklist and instant rollback
 
 Before promoting any pull request or preview deployment to production, verify the following steps locally or in the Preview environment:
 
-- [ ] **Typecheck passes**: `pnpm run typecheck` completes with 0 errors.
-- [ ] **Lint and format checks pass**: `pnpm run lint:biome` and `pnpm run format` complete with 0 errors.
-- [ ] **Tests pass**: `pnpm run test` (Vitest unit tests) and `pnpm run test:e2e` (Playwright E2E tests) pass.
-- [ ] **Bundle Budget complies**: `pnpm run build` completed under bundle budget limits (`scripts/check-bundle-budget.js` exits with 0).
-- [ ] **Migration Check**: Prisma schema is valid and formatted (`pnpm prisma validate` and `pnpm prisma format --check`).
+- [ ] **Typecheck passes**: `bun run typecheck` completes with 0 errors.
+- [ ] **Lint and format checks pass**: `bun run lint:biome` and `bun run format` complete with 0 errors.
+- [ ] **Tests pass**: `bun run test` (Vitest unit tests) and `bun run test:e2e` (Playwright E2E tests) pass.
+- [ ] **Bundle Budget complies**: `bun run build` completed under bundle budget limits (`scripts/check-bundle-budget.js` exits with 0).
+- [ ] **Migration Check**: Prisma schema is valid and formatted (`bunx prisma validate` and `bunx prisma format --check`).
 
 ---
 

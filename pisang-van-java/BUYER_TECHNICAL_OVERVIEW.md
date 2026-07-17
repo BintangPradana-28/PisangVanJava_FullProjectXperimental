@@ -61,13 +61,13 @@ starts from a known baseline instead of zero information.
 ## 4. Architecture
 
 - **Layering:** business logic for the highest-stakes domain (checkout: pricing, stock, vouchers) lives in `src/repositories/` + `src/services/`, not inline in route handlers. Most other CRUD domains query Prisma directly from route handlers — a deliberate, documented tradeoff (see `ARCHITECTURE.md`), not an oversight.
-- **Automated boundary enforcement:** `.dependency-cruiser.cjs`, run in CI, blocks: client components importing Prisma directly, unsanctioned cross-feature imports, circular dependencies, and new files in two locations known to have accumulated dead/duplicate code in the past. Run it yourself: `pnpm depcruise`.
+- **Automated boundary enforcement:** `.dependency-cruiser.cjs`, run in CI, blocks: client components importing Prisma directly, unsanctioned cross-feature imports, circular dependencies, and new files in two locations known to have accumulated dead/duplicate code in the past. Run it yourself: `bun run depcruise`.
 - **Infrastructure as code:** Cloudflare WAF and rate-limiting rules are defined in Terraform (`infra/cloudflare/`), not click-ops. Uncommon at this project's scale — most comparable projects have none.
 - **CI:** lint (Biome), typecheck (`tsc --noEmit`), architecture boundaries (dependency-cruiser), unit tests (Vitest), secret scanning (secretlint), and a security scan (semgrep) all run on every push/PR (`.github/workflows/ci.yml`).
 
 ## 5. Test coverage — stated honestly, not rounded up
 
-- Unit tests: solid coverage of the checkout domain (pricing, voucher application, Zod schemas). Vitest, `pnpm test`.
+- Unit tests: solid coverage of the checkout domain (pricing, voucher application, Zod schemas). Vitest, `bun run test`.
 - E2E: one Playwright spec (`e2e/checkout.spec.ts`) covering the checkout happy path. POS, Kitchen, and admin dispatch flows do not yet have E2E coverage — this is the single largest testing gap in the project.
 - No test currently exists that would have caught the POS price-manipulation or stock-race issues in §3 before manual audit found them; both now have server-side guards, but neither has a regression test locking that guard in place yet.
 
@@ -98,13 +98,13 @@ verify against current Cloudflare pricing before assuming cost).
 ## 8. How to verify any claim in this document
 
 ```bash
-pnpm install
-pnpm env:check      # confirms env schema loads
-pnpm typecheck       # tsc --noEmit
-pnpm lint:biome
-pnpm depcruise       # architecture boundary check — should report 0 errors
-pnpm test            # unit tests
-pnpm build           # production build
+bun install
+bun run env:check      # confirms env schema loads
+bun run typecheck       # tsc --noEmit
+bun run lint:biome
+bun run depcruise       # architecture boundary check — should report 0 errors
+bun run test            # unit tests
+bun run build           # production build
 ```
 
 If any of these fail on a clean checkout, that's a real finding worth

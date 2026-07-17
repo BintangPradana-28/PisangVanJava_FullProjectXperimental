@@ -2,7 +2,7 @@
 # kerentanan di package pihak ketiga hanya akan diketahui kalau ada yang audit manual.
 version: 2
 updates:
-  # npm/pnpm dependencies
+  # npm/bun dependencies
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -37,7 +37,7 @@ updates:
       - "dependencies"
       - "ci"
 
-  # Docker base image (node:20-alpine di Dockerfile)
+  # Docker base images (oven/bun + node:22-alpine di Dockerfile)
   - package-ecosystem: "docker"
     directory: "/"
     schedule:

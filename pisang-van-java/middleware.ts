@@ -257,6 +257,12 @@ export default async function middleware(req: NextRequest, event: NextFetchEvent
 // ─── Route matcher ────────────────────────────────────────────────────────────
 
 export const config = {
+  // Explicit, even though Vercel currently defaults to Node.js here (no
+  // bunVersion set in vercel.json): per Vercel's Bun runtime docs, Routing
+  // Middleware needs this override once bunVersion is enabled project-wide,
+  // or this Redis/NextAuth-heavy middleware can break silently. No-op today;
+  // becomes load-bearing the moment bunVersion is turned on.
+  runtime: 'nodejs',
   matcher: [
     '/dashboard/:path*',
     '/manage-menu/:path*',

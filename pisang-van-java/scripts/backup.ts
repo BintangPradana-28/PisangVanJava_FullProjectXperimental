@@ -3,10 +3,11 @@ import { createCipheriv, randomBytes } from 'node:crypto'
 import { createWriteStream, promises as fs } from 'node:fs'
 import * as path from 'node:path'
 import { pipeline } from 'node:stream/promises'
-import * as dotenv from 'dotenv'
 
-// Load environment variables for local runs
-dotenv.config({ path: path.join(__dirname, '../.env.local') })
+// dotenv removed in the Bun migration — Bun auto-loads .env.local natively
+// (highest precedence of any .env file it reads), so no explicit loading
+// call is needed here anymore. This script is invoked as `bun scripts/backup.ts`
+// (see .github/workflows/backup.yml), so that auto-load applies.
 
 // --- CONFIGURATION & VALIDATION ---
 const DB_URL = process.env.DATABASE_URL

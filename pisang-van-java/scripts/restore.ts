@@ -1,12 +1,12 @@
 import { spawn } from 'node:child_process'
 import { createDecipheriv } from 'node:crypto'
 import { createReadStream, promises as fs } from 'node:fs'
-import * as path from 'node:path'
 import { pipeline } from 'node:stream/promises'
-import * as dotenv from 'dotenv'
 
-// Load environment variables for local runs
-dotenv.config({ path: path.join(__dirname, '../.env.local') })
+// dotenv removed in the Bun migration — Bun auto-loads .env.local natively,
+// so no explicit loading call is needed here anymore (see backup.ts for the
+// same fix). node:path is no longer used elsewhere in this file, so it's
+// removed along with it rather than left as a dead import.
 
 const DB_URL = process.env.DATABASE_URL
 const ENCRYPTION_KEY = process.env.BACKUP_ENCRYPTION_KEY

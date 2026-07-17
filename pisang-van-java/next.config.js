@@ -1,4 +1,5 @@
 const path = require('path')
+const { withSentryConfig } = require('@sentry/nextjs')
 
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true'
@@ -8,12 +9,20 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 const nextConfig = {
   reactStrictMode: true,
 
-  // REQUIRED by Dockerfile's runner stage — it does
-  // `COPY --from=builder /app/.next/standalone ./`, but `.next/standalone` is
-  // only generated when this is set. Without it, that COPY step fails with
-  // "no such file or directory" (previously masked because the Docker build
-  // always failed earlier, at the deps/install stage, before ever reaching it).
+  // Required for the multi-stage Dockerfile, which copies .next/standalone
+  // into the final image — that directory doesn't exist without this.
   output: 'standalone',
+
+  // Next.js 16's file tracing does not reliably bundle Prisma's query engine
+  // binary into the standalone output on its own (serverExternalPackages
+  // below marks it as external, but doesn't guarantee it gets *copied* —
+  // this is a currently open gap tracked across several Next.js/Prisma
+  // GitHub discussions). Without this, the Docker image builds successfully
+  // but crashes at runtime on the first DB query with
+  // "PrismaClientInitializationError: Query Engine not found".
+  outputFileTracingIncludes: {
+    '/**/*': ['./node_modules/.prisma/client/**/*']
+  },
 
   turbopack: {
     root: path.join(__dirname, '..')

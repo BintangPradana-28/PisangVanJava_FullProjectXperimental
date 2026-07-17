@@ -154,7 +154,7 @@
     "prisma": "^5.10.0",
     "secretlint": "^13.0.2",
     "storybook": "^10.4.6",
-    "tailwindcss": "^3.4.1",
+    "tailwindcss": "^4.3.2",
     "typescript": "^5.9.3",
     "vitest": "^4.1.7"
   },

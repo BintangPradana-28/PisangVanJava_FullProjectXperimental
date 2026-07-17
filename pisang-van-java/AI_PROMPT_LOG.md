@@ -44,4 +44,10 @@ File ini mendokumentasikan instruksi-instruksi utama yang diberikan kepada AI se
     - Menyematkan commit SHA absolut (full 40-character SHA) pada GitHub Actions (`setup-bun`, `sbom-action`, `action-baseline`) guna mematuhi security policy Semgrep.
     - Menambahkan environment variable database dummy (`DATABASE_URL` & `DIRECT_URL`) di workflow lint schema Prisma.
     - Menyalin `bun.lock` secara dinamis sebelum building Docker container di workflow `ci.yml` untuk mengatasi error build context.
+  - **Round 3 Performance & Security Updates (17-Juli-2026)**:
+    - Melakukan paralelisasi query database (grafik penjualan + metrics) di admin dashboard (`page.tsx`) dan melapisinya dengan Next.js `unstable_cache` (TTL 2 menit).
+    - Melakukan paralelisasi query `findMany`, `aggregate`, dan `groupBy` di Reviews API (`GET /api/reviews`).
+    - Memperketat otorisasi ulasan (`POST /api/reviews`) agar hanya menerima `orderId` yang sahih milik user pengulas dan berstatus `DELIVERED`/`COMPLETED` (mitigasi review bombing).
+    - Menerapkan caching pemanggilan API eksternal BiteShip Sandbox (`unstable_cache` TTL 3 menit) berbasis koordinat lokasi desimal presisi tinggi dan berat/nilai paket.
+    - Menghapus folder cadangan sementara `pisang-van-java-perf-updates` dan `fix_round3` untuk merapikan workspace.
 

@@ -44,16 +44,36 @@ export async function GET(req: NextRequest) {
   if (withPhoto) where.imageUrl = { not: null, gt: '' }
 
   try {
-    const reviews = await prisma.review.findMany({
-      where,
-      skip,
-      take: safeLimit,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: { select: { name: true } },
-        variant: { select: { flavorName: true } }
-      }
-    })
+    const allReviewsWhere: Prisma.ReviewWhereInput = variantId
+      ? { variantId, isHidden: false }
+      : { isHidden: false }
+
+    // PERFORMANCE (backend & data audit — "ngacir" pass): these three queries
+    // are fully independent of each other (none depends on another's result)
+    // but previously ran as three sequential awaits. Parallelized here so
+    // this route costs one round-trip batch instead of three.
+    const [reviews, aggregates, starCountsGroup] = await Promise.all([
+      prisma.review.findMany({
+        where,
+        skip,
+        take: safeLimit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: { select: { name: true } },
+          variant: { select: { flavorName: true } }
+        }
+      }),
+      prisma.review.aggregate({
+        where: allReviewsWhere,
+        _avg: { rating: true },
+        _count: { id: true }
+      }),
+      prisma.review.groupBy({
+        by: ['rating'],
+        where: allReviewsWhere,
+        _count: { id: true }
+      })
+    ])
 
     const data = reviews.map((r: any) => {
       const maskName = (name: string | null) => {
@@ -73,22 +93,6 @@ export async function GET(req: NextRequest) {
         isHidden: r.isHidden,
         createdAt: r.createdAt.toISOString()
       }
-    })
-
-    const allReviewsWhere: Prisma.ReviewWhereInput = variantId
-      ? { variantId, isHidden: false }
-      : { isHidden: false }
-
-    const aggregates = await prisma.review.aggregate({
-      where: allReviewsWhere,
-      _avg: { rating: true },
-      _count: { id: true }
-    })
-
-    const starCountsGroup = await prisma.review.groupBy({
-      by: ['rating'],
-      where: allReviewsWhere,
-      _count: { id: true }
     })
 
     const starCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }

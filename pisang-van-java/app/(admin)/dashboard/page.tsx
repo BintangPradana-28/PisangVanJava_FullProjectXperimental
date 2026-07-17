@@ -13,37 +13,6 @@ async function getDashboardDataInternal() {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const [totalProducts, recentOrders, todaysOrdersAggregation, pendingOrders] = await Promise.all([
-    prisma.menuVariant.count({ where: { isDeleted: false } }),
-    prisma.order.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-      select: {
-        id: true,
-        customerName: true,
-        source: true,
-        totalPrice: true,
-        createdAt: true,
-        items: {
-          select: {
-            id: true
-          }
-        }
-      }
-    }),
-    prisma.order.aggregate({
-      where: { createdAt: { gte: today } },
-      _sum: { totalPrice: true },
-      _count: { id: true }
-    }),
-    prisma.order.count({
-      where: { status: 'PENDING_PAYMENT' }
-    })
-  ])
-
-  const todayRevenue = todaysOrdersAggregation._sum.totalPrice || 0
-  const todaysOrdersCount = todaysOrdersAggregation._count.id || 0
-
   // Hitung grafik penjualan 7 hari terakhir
   const last7Days = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date()
@@ -51,12 +20,47 @@ async function getDashboardDataInternal() {
     d.setHours(0, 0, 0, 0)
     return d
   })
-
   const weekStart = new Date(last7Days[0])
-  const weekOrders = await prisma.order.findMany({
-    where: { createdAt: { gte: weekStart } },
-    select: { createdAt: true, totalPrice: true }
-  })
+
+  // PERFORMANCE (backend & data audit — "ngacir" pass): weekOrders previously
+  // ran as its own `await` *after* this Promise.all resolved, even though it
+  // doesn't depend on any of the other four queries' results — folded in here
+  // so a dashboard cache-miss costs one round-trip batch instead of two.
+  const [totalProducts, recentOrders, todaysOrdersAggregation, pendingOrders, weekOrders] =
+    await Promise.all([
+      prisma.menuVariant.count({ where: { isDeleted: false } }),
+      prisma.order.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        select: {
+          id: true,
+          customerName: true,
+          source: true,
+          totalPrice: true,
+          createdAt: true,
+          items: {
+            select: {
+              id: true
+            }
+          }
+        }
+      }),
+      prisma.order.aggregate({
+        where: { createdAt: { gte: today } },
+        _sum: { totalPrice: true },
+        _count: { id: true }
+      }),
+      prisma.order.count({
+        where: { status: 'PENDING_PAYMENT' }
+      }),
+      prisma.order.findMany({
+        where: { createdAt: { gte: weekStart } },
+        select: { createdAt: true, totalPrice: true }
+      })
+    ])
+
+  const todayRevenue = todaysOrdersAggregation._sum.totalPrice || 0
+  const todaysOrdersCount = todaysOrdersAggregation._count.id || 0
 
   const chartData = last7Days.map((date) => {
     const dayOrders = weekOrders.filter((o: any) => {

@@ -92,7 +92,7 @@ export async function getShippingRates(
     // Load user cart
     const { redis } = await import('@/lib/redis')
     const { prisma } = await import('@/lib/prisma')
-    const { calculateShippingRates } = await import('@/src/services/shipping.service')
+    const { getCachedShippingRates } = await import('@/src/services/shipping.service')
 
     const redisKey = `user:cart:${actor.userId}`
     let items: any[] = []
@@ -122,7 +122,7 @@ export async function getShippingRates(
       }
     })
 
-    const rates = await calculateShippingRates({
+    const rates = await getCachedShippingRates({
       destinationLat: lat,
       destinationLng: lng,
       items: mappedItems

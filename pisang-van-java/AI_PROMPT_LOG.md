@@ -44,10 +44,11 @@ File ini mendokumentasikan instruksi-instruksi utama yang diberikan kepada AI se
     - Menyematkan commit SHA absolut (full 40-character SHA) pada GitHub Actions (`setup-bun`, `sbom-action`, `action-baseline`) guna mematuhi security policy Semgrep.
     - Menambahkan environment variable database dummy (`DATABASE_URL` & `DIRECT_URL`) di workflow lint schema Prisma.
     - Menyalin `bun.lock` secara dinamis sebelum building Docker container di workflow `ci.yml` untuk mengatasi error build context.
-  - **Round 3 Performance & Security Updates (17-Juli-2026)**:
-    - Melakukan paralelisasi query database (grafik penjualan + metrics) di admin dashboard (`page.tsx`) dan melapisinya dengan Next.js `unstable_cache` (TTL 2 menit).
-    - Melakukan paralelisasi query `findMany`, `aggregate`, dan `groupBy` di Reviews API (`GET /api/reviews`).
-    - Memperketat otorisasi ulasan (`POST /api/reviews`) agar hanya menerima `orderId` yang sahih milik user pengulas dan berstatus `DELIVERED`/`COMPLETED` (mitigasi review bombing).
-    - Menerapkan caching pemanggilan API eksternal BiteShip Sandbox (`unstable_cache` TTL 3 menit) berbasis koordinat lokasi desimal presisi tinggi dan berat/nilai paket.
-    - Menghapus folder cadangan sementara `pisang-van-java-perf-updates` dan `fix_round3` untuk merapikan workspace.
 
+### 17-Juli-2026: Fix pino-pretty crash di Bun runtime (ditemukan via web research)
+
+- **Instruksi User:** "fix docs and observability errors and bug after bun migration from node.js"
+- **Temuan:** `src/lib/logger.ts` masih pakai `transport: { target: 'pino-pretty' }` — pola ini men-spawn worker thread yang butuh dynamic module resolution yang Bun nggak bisa handle dengan benar di bawah `bun --bun`. Ini bug Bun yang terkonfirmasi & masih terbuka (dicek via web search: `oven-sh/bun#4280`, `#23062`, `#10246` — error persis "unable to determine transport target for pino-pretty"/"TypeError: undefined is not an object (evaluating 'callers')", direproduksi dari Bun v0.8 sampai v1.2.22, belum ada fix resmi dari pihak Bun).
+- **Fix:** ganti ke pola stream langsung (`pino(options, pretty(prettyOptions))`) — ini alternatif resmi yang didokumentasikan `pino-pretty` sendiri untuk menghindari worker thread sama sekali. Nggak nambah dependency baru (`pino-pretty` udah ada di devDependencies).
+- **Dicek, sudah beres duluan (nggak perlu disentuh):** referensi `Bun.password`/Argon2 di ARCHITECTURE.md udah akurat, CI/README/CONTRIBUTING udah konsisten pakai `bun`/`bunx`, `app/robots.ts` udah lengkap & benar (route group admin di-disallow dengan tepat).
+- **Belum dicek:** apakah ada pino-pretty error yang sama juga muncul di konteks lain (mis. script CLI terpisah di luar `src/lib/logger.ts`) — baru satu titik yang diverifikasi.

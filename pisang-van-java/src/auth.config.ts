@@ -124,8 +124,11 @@ export const authConfig = {
   },
   providers: [
     GoogleProvider({
-      clientId: process.env.AUTH_GOOGLE_ID || 'MOCK_CLIENT_ID',
-      clientSecret: process.env.AUTH_GOOGLE_SECRET || 'MOCK_CLIENT_SECRET',
+      // SECURITY FIX (Finding #14 — production audit): sebelumnya fallback ke 'MOCK_CLIENT_ID'
+      // yang membuat Google login silently fail di user-facing — sekarang crash jelas jika
+      // AUTH_GOOGLE_ID/AUTH_GOOGLE_SECRET belum di-set.
+      clientId: process.env.AUTH_GOOGLE_ID!,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
       // SECURITY FIX: sebelumnya `true`. Karena registrasi Credentials di aplikasi ini
       // TIDAK memverifikasi kepemilikan email (emailVerified tidak pernah di-set — lihat
       // src/features/auth/actions.ts), auto-linking akun Google ke akun password dengan

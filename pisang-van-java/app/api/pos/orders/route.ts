@@ -250,16 +250,51 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         }
       })
 
-      // 5. Atomic Decrement of Stock
+      // 5. Atomic Decrement of Stock — OCC (Optimistic Concurrency Control)
+      // SECURITY FIX (Finding #4 — production audit): sebelumnya menggunakan plain
+      // `update` tanpa version check — dua kasir bisa oversell item terakhir karena
+      // Postgres READ COMMITTED tidak mencegah `stock = stock - N` menjadi negatif.
+      // Sekarang memakai pola yang sama dengan checkout customer di
+      // checkout.repository.ts: aggregate qty per variant, lalu updateMany dengan
+      // version + gte guard. Jika updateMany.count === 0, berarti ada race condition
+      // atau stok sudah habis — transaksi di-rollback.
+      const variantQuantities = new Map<string, { qty: number; version: number }>()
       for (const item of data.items) {
-        await tx.menuVariant.update({
-          where: { id: item.variantId },
+        const variant = variantMap.get(item.variantId)!
+        const existing = variantQuantities.get(item.variantId)
+        if (existing) {
+          existing.qty += item.quantity
+        } else {
+          // Fetch version for OCC — we need to re-read inside the tx
+          const freshVariant = await tx.menuVariant.findUnique({
+            where: { id: item.variantId },
+            select: { version: true }
+          })
+          variantQuantities.set(item.variantId, {
+            qty: item.quantity,
+            version: freshVariant?.version ?? 0
+          })
+        }
+      }
+
+      for (const [variantId, { qty, version }] of Array.from(variantQuantities.entries())) {
+        const updateResult = await tx.menuVariant.updateMany({
+          where: {
+            id: variantId,
+            version: version,
+            stock: { gte: qty }
+          },
           data: {
-            stock: {
-              decrement: item.quantity
-            }
+            stock: { decrement: qty },
+            version: { increment: 1 }
           }
         })
+        if (updateResult.count === 0) {
+          const v = variantMap.get(variantId)
+          throw new Error(
+            `Stok ${v?.flavorName ?? variantId} berubah saat transaksi. Silakan coba lagi.`
+          )
+        }
       }
 
       return { order: newOrder, isIdempotent: false, finalPrice }

@@ -6,12 +6,16 @@ import { z } from 'zod'
 
 export const env = createEnv({
   server: {
-    DATABASE_URL: z.string().optional(),
-    DIRECT_URL: z.string().optional(),
-    AUTH_SECRET: z.string().optional(),
+    // SECURITY FIX (Finding #2 — production audit): sebelumnya semua env variable
+    // ditandai optional(), sehingga app bisa boot tanpa DATABASE_URL, AUTH_SECRET, dsb.
+    // dan baru crash saat user pertama kali hit endpoint. Sekarang hard dependencies
+    // ditandai min(1) — build/boot akan gagal jika tidak di-set, bukan runtime crash.
+    DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
+    DIRECT_URL: z.string().min(1, 'DIRECT_URL is required'),
+    AUTH_SECRET: z.string().min(1, 'AUTH_SECRET is required'),
     MIDTRANS_SERVER_KEY: z.string().optional(),
-    UPSTASH_REDIS_REST_URL: z.string().optional(),
-    UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
+    UPSTASH_REDIS_REST_URL: z.string().min(1, 'UPSTASH_REDIS_REST_URL is required'),
+    UPSTASH_REDIS_REST_TOKEN: z.string().min(1, 'UPSTASH_REDIS_REST_TOKEN is required'),
     RESEND_API_KEY: z.string().optional(),
     FONNTE_API_TOKEN: z.string().min(1).optional(),
     DOPPLER_TOKEN: z.string().optional(),

@@ -73,8 +73,18 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json()
     const { userId, role } = body
 
-    if (!userId || !role || !['ADMIN', 'CUSTOMER', 'RESELLER'].includes(role)) {
+    if (!userId || !role || !['ADMIN', 'CUSTOMER', 'RESELLER', 'KITCHEN', 'CASHIER'].includes(role)) {
       return NextResponse.json({ success: false, message: 'Data tidak valid' }, { status: 400 })
+    }
+
+    // SECURITY FIX (Finding #6 — production audit): sebelumnya ADMIN bisa mempromosikan
+    // user lain menjadi ADMIN juga — celah privilege escalation jika akun ADMIN compromise.
+    // Sekarang hanya SUPER_ADMIN yang bisa membuat ADMIN baru.
+    if (role === 'ADMIN' && session.user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json(
+        { success: false, message: 'Hanya Super Admin yang dapat mempromosikan ke Admin.' },
+        { status: 403 }
+      )
     }
 
     const targetUser = await prisma.user.findUnique({

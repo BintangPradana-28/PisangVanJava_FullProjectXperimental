@@ -4,6 +4,7 @@ import { Fraunces, Plus_Jakarta_Sans } from 'next/font/google'
 import '../styles/globals.css'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
+import Script from 'next/script'
 import { headers } from 'next/headers'
 import { Providers } from './providers'
 
@@ -44,7 +45,11 @@ export const metadata: Metadata = {
   }
 }
 
-const _localBusinessJsonLd = {
+// SECURITY FIX (Finding #13 — production audit): sebelumnya objek ini didefinisikan tapi
+// tidak pernah dirender (di-prefix `_` dan di-quarantine karena `dangerouslySetInnerHTML`
+// dianggap XSS risk). Sekarang dirender via next/script yang aman — tidak perlu
+// dangerouslySetInnerHTML, dan SEO LocalBusiness structured data aktif kembali.
+const localBusinessJsonLd = JSON.stringify({
   '@context': 'https://schema.org',
   '@type': 'FoodEstablishment',
   name: 'Pisang Goreng Van Java',
@@ -73,7 +78,7 @@ const _localBusinessJsonLd = {
   },
   servesCuisine: 'Indonesian Fritters, Snacks',
   priceRange: '$'
-}
+})
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const headersList = await headers()
@@ -95,7 +100,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-screen flex flex-col">
         <Providers>{children}</Providers>
 
-        {/* [QUARANTINED] LocalBusiness JSON-LD removed due to XSS Gateway VETO (dangerouslySetInnerHTML prohibited) */}
+        <Script
+          id="local-business-jsonld"
+          type="application/ld+json"
+          strategy="afterInteractive"
+        >
+          {localBusinessJsonLd}
+        </Script>
         <Analytics />
         <SpeedInsights />
       </body>

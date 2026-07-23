@@ -18,17 +18,21 @@ export const dynamic = 'force-dynamic'
  * or auth like the rest of the API surface.
  */
 export async function GET() {
-  const checks: Record<string, { status: 'ok' | 'error'; latencyMs?: number; error?: string }> = {}
+  const checks: Record<string, { status: 'ok' | 'error'; latencyMs?: number }> = {}
 
   const dbStart = Date.now()
   try {
     await prisma.$queryRaw`SELECT 1`
     checks.database = { status: 'ok', latencyMs: Date.now() - dbStart }
   } catch (error) {
+    // SECURITY FIX (Finding #12 — production audit): sebelumnya raw error.message
+    // (bisa berisi connection string, hostname internal, dsb.) dikirim ke response JSON.
+    // Sekarang detail error hanya di-log server-side, client hanya dapat status 'error'.
+    const errMsg = error instanceof Error ? error.message : 'Unknown database error'
+    console.error('[HEALTH] Database check failed:', errMsg)
     checks.database = {
       status: 'error',
-      latencyMs: Date.now() - dbStart,
-      error: error instanceof Error ? error.message : 'Unknown database error'
+      latencyMs: Date.now() - dbStart
     }
   }
 
@@ -41,10 +45,11 @@ export async function GET() {
     await redis.get('__health_check__')
     checks.redis = { status: 'ok', latencyMs: Date.now() - redisStart }
   } catch (error) {
+    const errMsg = error instanceof Error ? error.message : 'Unknown redis error'
+    console.error('[HEALTH] Redis check failed:', errMsg)
     checks.redis = {
       status: 'error',
-      latencyMs: Date.now() - redisStart,
-      error: error instanceof Error ? error.message : 'Unknown redis error'
+      latencyMs: Date.now() - redisStart
     }
   }
 

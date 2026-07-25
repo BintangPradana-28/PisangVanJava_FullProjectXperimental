@@ -34,7 +34,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Generate SBOM
-        uses: anchore/sbom-action@72b9a764d8a5996053351ec103a074092b724578 # v0.17.9
+        uses: anchore/sbom-action@df80a981bc6edbc4e220a492d3cbe9f5547a6e75 # v0.17.9
         with:
           path: ./pisang-van-java
           format: cyclonedx-json
